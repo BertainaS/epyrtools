@@ -12,16 +12,15 @@ Its main purpose is to handle the creation of boolean masks from
 user-defined regions of interest and exclusion zones, for both 1D and 2D data.
 """
 
-import numpy as np
 import warnings
 
+import numpy as np
 
 # --- 1D Masking Utility ---
 
+
 def _create_fit_mask(
-    reference_axis: np.ndarray,
-    fit_window: tuple = None,
-    exclude_regions: list = None
+    reference_axis: np.ndarray, fit_window: tuple = None, exclude_regions: list = None
 ) -> np.ndarray:
     """Creates a boolean mask for data points to be used in 1D fitting.
 
@@ -54,7 +53,8 @@ def _create_fit_mask(
             warnings.warn(
                 f"Fit window start ({start_fw}) is not less than its end "
                 f"({end_fw}). The window will be ignored, and the full range "
-                f"considered (before exclusions).", UserWarning
+                f"considered (before exclusions).",
+                UserWarning,
             )
         else:
             mask &= (reference_axis >= start_fw) & (reference_axis <= end_fw)
@@ -66,7 +66,8 @@ def _create_fit_mask(
             if start_ex >= end_ex:
                 warnings.warn(
                     f"Exclusion region #{region_idx} start ({start_ex}) is not "
-                    f"less than its end ({end_ex}). This region will be ignored.", UserWarning
+                    f"less than its end ({end_ex}). This region will be ignored.",
+                    UserWarning,
                 )
                 continue
             # The ~ operator inverts the boolean mask for the exclusion region
@@ -75,6 +76,7 @@ def _create_fit_mask(
 
 
 # --- 2D Masking Utilities ---
+
 
 def _get_slice_from_region(
     axis_data: np.ndarray, start_val: float, end_val: float
@@ -90,14 +92,14 @@ def _get_slice_from_region(
         slice: An index slice `slice(start_index, end_index)` corresponding
                to the value range.
     """
-    if start_val > end_val: # Allow reversed specification for convenience
+    if start_val > end_val:  # Allow reversed specification for convenience
         start_val, end_val = end_val, start_val
 
     # searchsorted finds where elements should be inserted to maintain order.
     # 'left' includes the start value, 'right' includes the end value.
-    idx_start = np.searchsorted(axis_data, start_val, side='left')
-    idx_end = np.searchsorted(axis_data, end_val, side='right')
-    
+    idx_start = np.searchsorted(axis_data, start_val, side="left")
+    idx_end = np.searchsorted(axis_data, end_val, side="right")
+
     # Clip to ensure indices are within array bounds for slicing
     idx_start = max(0, idx_start)
     idx_end = min(len(axis_data), idx_end)
@@ -110,7 +112,7 @@ def _create_fit_mask_2d(
     x_axis_coords: np.ndarray = None,
     y_axis_coords: np.ndarray = None,
     fit_window_roi: tuple = None,
-    exclude_regions: list = None
+    exclude_regions: list = None,
 ) -> np.ndarray:
     """Creates a 2D boolean mask for fitting based on ROI and exclusions.
 
@@ -150,5 +152,5 @@ def _create_fit_mask_2d(
             x_slice_excl = _get_slice_from_region(_x_axis, x_excl_start, x_excl_end)
             y_slice_excl = _get_slice_from_region(_y_axis, y_excl_start, y_excl_end)
             mask[y_slice_excl, x_slice_excl] = False
-            
+
     return mask

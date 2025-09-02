@@ -40,19 +40,19 @@ To run the unit tests:
     The tests are run automatically after the examples when the script is executed.
 """
 
-import numpy as np
+import unittest
 import warnings
-from scipy.optimize import curve_fit
+
 # For examples and tests:
 import matplotlib.pyplot as plt
-import unittest
+import numpy as np
+from scipy.optimize import curve_fit
 
 # --- Helper Function for Masking ---
 
+
 def _create_fit_mask(
-    reference_axis: np.ndarray,
-    fit_window: tuple = None,
-    exclude_regions: list = None
+    reference_axis: np.ndarray, fit_window: tuple = None, exclude_regions: list = None
 ) -> np.ndarray:
     """Creates a boolean mask for data points to be used in 1D fitting.
 
@@ -85,7 +85,8 @@ def _create_fit_mask(
             warnings.warn(
                 f"Fit window start ({start_fw}) is not less than its end "
                 f"({end_fw}). The window will be ignored, and the full range "
-                f"considered (before exclusions).", UserWarning
+                f"considered (before exclusions).",
+                UserWarning,
             )
         else:
             mask &= (reference_axis >= start_fw) & (reference_axis <= end_fw)
@@ -97,7 +98,8 @@ def _create_fit_mask(
             if start_ex >= end_ex:
                 warnings.warn(
                     f"Exclusion region #{region_idx} start ({start_ex}) is not "
-                    f"less than its end ({end_ex}). This region will be ignored.", UserWarning
+                    f"less than its end ({end_ex}). This region will be ignored.",
+                    UserWarning,
                 )
                 continue
             # The ~ operator inverts the boolean mask for the exclusion region
@@ -107,12 +109,13 @@ def _create_fit_mask(
 
 # --- 1D Baseline Correction Functions ---
 
+
 def baseline_polynomial(
     y_data: np.ndarray,
     x_data: np.ndarray = None,
     poly_order: int = 1,
     exclude_regions: list = None,
-    roi: tuple = None
+    roi: tuple = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Performs baseline correction by subtracting a polynomial fit.
 
@@ -153,7 +156,7 @@ def baseline_polynomial(
         raise ValueError("poly_order must be a non-negative integer.")
 
     n_points = len(y_data)
-    
+
     # Determine the reference axis for fitting and evaluation
     if x_data is not None:
         if not isinstance(x_data, np.ndarray) or x_data.ndim != 1:
@@ -177,14 +180,17 @@ def baseline_polynomial(
                 )
 
     # Create the mask for points to include in the fit
-    fit_mask = _create_fit_mask(reference_axis, fit_window=roi, exclude_regions=exclude_regions)
+    fit_mask = _create_fit_mask(
+        reference_axis, fit_window=roi, exclude_regions=exclude_regions
+    )
 
     num_points_for_fit = np.sum(fit_mask)
     if num_points_for_fit <= poly_order:
         warnings.warn(
             f"Not enough points ({num_points_for_fit}) for polynomial fit of "
             f"order {poly_order} after applying ROI/exclusions. "
-            "Returning original data.", UserWarning
+            "Returning original data.",
+            UserWarning,
         )
         return y_data, np.zeros_like(y_data)
 
@@ -196,14 +202,15 @@ def baseline_polynomial(
         y_corrected = y_data - baseline
         return y_corrected, baseline
     except (np.linalg.LinAlgError, ValueError) as e:
-        warnings.warn(f"Polynomial baseline fit failed: {e}. Returning original data.", UserWarning)
+        warnings.warn(
+            f"Polynomial baseline fit failed: {e}. Returning original data.",
+            UserWarning,
+        )
         return y_data, np.zeros_like(y_data)
 
 
 def baseline_constant_offset(
-    y_data: np.ndarray,
-    offset_region_indices: tuple = None,
-    method: str = 'mean'
+    y_data: np.ndarray, offset_region_indices: tuple = None, method: str = "mean"
 ) -> tuple[np.ndarray, np.ndarray]:
     """Performs baseline correction by subtracting a constant offset.
 
@@ -230,40 +237,55 @@ def baseline_constant_offset(
     """
     if not isinstance(y_data, np.ndarray) or y_data.ndim != 1:
         raise ValueError("y_data must be a 1D NumPy array.")
-    if method.lower() not in ['mean', 'median']:
+    if method.lower() not in ["mean", "median"]:
         raise ValueError("Method must be 'mean' or 'median'.")
 
     # Determine the slice of data to use for offset calculation
     if offset_region_indices:
-        if not (isinstance(offset_region_indices, tuple) and len(offset_region_indices) == 2):
-            raise ValueError("offset_region_indices must be a (start_index, end_index) tuple.")
+        if not (
+            isinstance(offset_region_indices, tuple) and len(offset_region_indices) == 2
+        ):
+            raise ValueError(
+                "offset_region_indices must be a (start_index, end_index) tuple."
+            )
         try:
             start_idx, end_idx = map(int, offset_region_indices)
         except (ValueError, TypeError):
-             raise ValueError("offset_region_indices components must be convertible to int.")
-        
+            raise ValueError(
+                "offset_region_indices components must be convertible to int."
+            )
+
         start_idx = max(0, start_idx)
         end_idx = min(len(y_data), end_idx)
 
         if start_idx >= end_idx:
             warnings.warn(
                 f"Invalid offset_region_indices ({offset_region_indices}). "
-                "Start index must be less than end index. Using whole array.", UserWarning
+                "Start index must be less than end index. Using whole array.",
+                UserWarning,
             )
             region_for_offset = y_data
         else:
             region_for_offset = y_data[start_idx:end_idx]
     else:
-        warnings.warn("offset_region_indices not provided. Using whole array for offset.", UserWarning)
+        warnings.warn(
+            "offset_region_indices not provided. Using whole array for offset.",
+            UserWarning,
+        )
         region_for_offset = y_data
 
     if region_for_offset.size == 0:
-        warnings.warn("Offset calculation region is empty. Returning original data.", UserWarning)
+        warnings.warn(
+            "Offset calculation region is empty. Returning original data.", UserWarning
+        )
         return y_data, np.zeros_like(y_data)
 
     # Calculate the offset value
-    offset_value = (np.mean(region_for_offset) if method.lower() == 'mean'
-                    else np.median(region_for_offset))
+    offset_value = (
+        np.mean(region_for_offset)
+        if method.lower() == "mean"
+        else np.median(region_for_offset)
+    )
 
     baseline = np.full_like(y_data, offset_value)
     y_corrected = y_data - offset_value
@@ -272,26 +294,28 @@ def baseline_constant_offset(
 
 # --- Model Functions for Curve Fitting ---
 
+
 def _stretched_exponential_decay_model(t, y0, amplitude, tau, beta):
     """Model: y0 + amplitude * exp(-(t / tau)**beta)."""
     if tau <= 1e-12:  # Prevent division by zero or extremely small tau
         return np.inf
-    if not (1e-3 < beta <= 1.0001): # Beta is typically 0 < beta <= 1
+    if not (1e-3 < beta <= 1.0001):  # Beta is typically 0 < beta <= 1
         return np.inf
     decay_arg = t / tau
     # Ensure argument to exponentiation is non-negative
     decay_arg_safe = np.maximum(decay_arg, 0)
-    return y0 + amplitude * np.exp(-(decay_arg_safe)**beta)
+    return y0 + amplitude * np.exp(-((decay_arg_safe) ** beta))
 
 
 def _mono_exponential_decay_model(t, y0, amplitude, tau):
     """Model: y0 + amplitude * exp(-t / tau)."""
-    if tau <= 1e-12: # Prevent division by zero or extremely small tau
+    if tau <= 1e-12:  # Prevent division by zero or extremely small tau
         return np.inf
     return y0 + amplitude * np.exp(-t / tau)
 
 
 # --- Exponential Baseline Core Logic ---
+
 
 def _fit_exponential_baseline(
     y_data: np.ndarray,
@@ -303,14 +327,14 @@ def _fit_exponential_baseline(
     user_initial_guess: list = None,
     user_bounds: tuple = None,
     fit_region: tuple = None,
-    exclude_regions: list = None
+    exclude_regions: list = None,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """A generic helper to fit an exponential-like baseline model.
 
     This function abstracts the common logic for fitting an exponential model using
     `scipy.optimize.curve_fit`, including handling of initial guesses, bounds,
     and fit regions.
-    
+
     Returns:
         tuple[np.ndarray, np.ndarray, dict]: Corrected data, baseline, and parameters.
             Returns original data, zero baseline, and None if fit fails.
@@ -323,27 +347,34 @@ def _fit_exponential_baseline(
         raise ValueError(f"{model_func.__name__} requires x_data as a 1D NumPy array.")
     if len(x_data) != len(y_data):
         raise ValueError("x_data and y_data must have the same length.")
-    
+
     # Validate region formats
-    if fit_region is not None and not (isinstance(fit_region, tuple) and len(fit_region) == 2):
+    if fit_region is not None and not (
+        isinstance(fit_region, tuple) and len(fit_region) == 2
+    ):
         raise ValueError("fit_region must be a (start_x, end_x) tuple.")
     if exclude_regions is not None:
         if not isinstance(exclude_regions, list):
-            raise ValueError("exclude_regions must be a list of (start_x, end_x) tuples.")
+            raise ValueError(
+                "exclude_regions must be a list of (start_x, end_x) tuples."
+            )
         for i, region in enumerate(exclude_regions):
             if not (isinstance(region, tuple) and len(region) == 2):
                 raise ValueError(
                     f"Each item in exclude_regions (item {i}) must be a (start_x, end_x) tuple."
                 )
 
-    fit_mask = _create_fit_mask(x_data, fit_window=fit_region, exclude_regions=exclude_regions)
+    fit_mask = _create_fit_mask(
+        x_data, fit_window=fit_region, exclude_regions=exclude_regions
+    )
     x_masked, y_masked = x_data[fit_mask], y_data[fit_mask]
 
     if len(x_masked) < n_params:
         warnings.warn(
             f"Not enough points ({len(x_masked)}) to fit {model_func.__name__} "
             f"with {n_params} parameters after applying regions. "
-            "Returning original data.", UserWarning
+            "Returning original data.",
+            UserWarning,
         )
         return y_data, np.zeros_like(y_data), None
 
@@ -353,73 +384,110 @@ def _fit_exponential_baseline(
         param_order_str = ", ".join(param_names)
         warnings.warn(
             f"Using heuristic initial guess for {model_func.__name__} "
-            f"([{param_order_str}]): {current_initial_guess}", UserWarning
+            f"([{param_order_str}]): {current_initial_guess}",
+            UserWarning,
         )
     else:
-        if not (isinstance(user_initial_guess, (list, np.ndarray)) and len(user_initial_guess) == n_params):
-            raise ValueError(f"initial_guess must be a list/array of {n_params} values.")
+        if not (
+            isinstance(user_initial_guess, (list, np.ndarray))
+            and len(user_initial_guess) == n_params
+        ):
+            raise ValueError(
+                f"initial_guess must be a list/array of {n_params} values."
+            )
         current_initial_guess = user_initial_guess
 
     # Handle parameter bounds
     current_bounds = default_bounds
     if user_bounds is not None:
-        if not (isinstance(user_bounds, tuple) and len(user_bounds) == 2 and
-                len(user_bounds[0]) == n_params and len(user_bounds[1]) == n_params):
+        if not (
+            isinstance(user_bounds, tuple)
+            and len(user_bounds) == 2
+            and len(user_bounds[0]) == n_params
+            and len(user_bounds[1]) == n_params
+        ):
             raise ValueError(
                 f"bounds must be a tuple of two lists/arrays of length {n_params}: "
                 "([lowers], [uppers])"
             )
         current_bounds = user_bounds
-    
+
     try:
         popt, pcov = curve_fit(
-            model_func, x_masked, y_masked,
-            p0=current_initial_guess, bounds=current_bounds,
-            maxfev=10000, method='trf'
+            model_func,
+            x_masked,
+            y_masked,
+            p0=current_initial_guess,
+            bounds=current_bounds,
+            maxfev=10000,
+            method="trf",
         )
 
         baseline = model_func(x_data, *popt)
         y_corrected = y_data - baseline
 
         # Calculate parameter standard errors from covariance matrix
-        if pcov is not None and not np.any(np.isinf(pcov)) and np.all(np.diag(pcov) >= 0):
+        if (
+            pcov is not None
+            and not np.any(np.isinf(pcov))
+            and np.all(np.diag(pcov) >= 0)
+        ):
             perr = np.sqrt(np.diag(pcov))
         else:
             perr = [np.nan] * n_params
             if pcov is not None:
-                 warnings.warn("Covariance matrix from fit is problematic. Std errors set to NaN.", UserWarning)
+                warnings.warn(
+                    "Covariance matrix from fit is problematic. Std errors set to NaN.",
+                    UserWarning,
+                )
 
         # Compile results into a dictionary
         fit_parameters = {param_names[i]: popt[i] for i in range(n_params)}
-        fit_parameters.update({f"std_{param_names[i]}": perr[i] for i in range(n_params)})
-        
+        fit_parameters.update(
+            {f"std_{param_names[i]}": perr[i] for i in range(n_params)}
+        )
+
         return y_corrected, baseline, fit_parameters
 
     except RuntimeError as e:
-        warnings.warn(f"{model_func.__name__} fit did not converge: {e}. Returning original data.", UserWarning)
-    except ValueError as e: 
-        warnings.warn(f"ValueError during {model_func.__name__} fit: {e}. Returning original data.", UserWarning)
-    except Exception as e: 
-        warnings.warn(f"Unexpected error in {model_func.__name__} fit: {e}. Returning original data.", UserWarning)
-        
+        warnings.warn(
+            f"{model_func.__name__} fit did not converge: {e}. Returning original data.",
+            UserWarning,
+        )
+    except ValueError as e:
+        warnings.warn(
+            f"ValueError during {model_func.__name__} fit: {e}. Returning original data.",
+            UserWarning,
+        )
+    except Exception as e:
+        warnings.warn(
+            f"Unexpected error in {model_func.__name__} fit: {e}. Returning original data.",
+            UserWarning,
+        )
+
     return y_data, np.zeros_like(y_data), None
+
 
 # --- Heuristic Initial Guess Generators for Exponential Models ---
 
+
 def _heuristic_stretched_exp_guess(x_masked, y_masked):
     """Generates a heuristic initial guess for a stretched exponential fit."""
-    guess_y0 = np.mean(y_masked[-max(1, len(y_masked)//20):]) # Offset is mean of tail
-    guess_A = y_masked[0] - guess_y0 if len(y_masked) > 0 else 0 # Amplitude
+    guess_y0 = np.mean(
+        y_masked[-max(1, len(y_masked) // 20) :]
+    )  # Offset is mean of tail
+    guess_A = y_masked[0] - guess_y0 if len(y_masked) > 0 else 0  # Amplitude
     if len(x_masked) > 1 and x_masked[-1] > x_masked[0]:
-        guess_tau = (x_masked[-1] - x_masked[0]) / 3.0 # Decay time is ~1/3 of range
+        guess_tau = (x_masked[-1] - x_masked[0]) / 3.0  # Decay time is ~1/3 of range
     else:
         guess_tau = 1.0
-    guess_beta = 0.8 # Common value for stretched exponential
+    guess_beta = 0.8  # Common value for stretched exponential
     return [guess_y0, guess_A, max(guess_tau, 1e-9), guess_beta]
+
 
 def _heuristic_mono_exp_guess(x_masked, y_masked):
     """Generates a heuristic initial guess for a mono-exponential fit."""
-    guess_y0 = np.mean(y_masked[-max(1, len(y_masked)//20):])
+    guess_y0 = np.mean(y_masked[-max(1, len(y_masked) // 20) :])
     guess_A = y_masked[0] - guess_y0 if len(y_masked) > 0 else 0
     if len(x_masked) > 1 and x_masked[-1] > x_masked[0]:
         guess_tau = (x_masked[-1] - x_masked[0]) / 3.0
@@ -427,7 +495,9 @@ def _heuristic_mono_exp_guess(x_masked, y_masked):
         guess_tau = 1.0
     return [guess_y0, guess_A, max(guess_tau, 1e-9)]
 
+
 # --- Public Exponential Baseline Functions ---
+
 
 def baseline_stretched_exponential(
     y_data: np.ndarray,
@@ -435,10 +505,10 @@ def baseline_stretched_exponential(
     initial_guess: list = None,
     bounds: tuple = None,
     fit_region: tuple = None,
-    exclude_regions: list = None
+    exclude_regions: list = None,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """Fits and subtracts a stretched exponential decay baseline.
-    
+
     The model fitted is: ``y(x) = y0 + A * exp(-((x / τ)**β))``
 
     Args:
@@ -464,18 +534,21 @@ def baseline_stretched_exponential(
               parameters (`y0`, `A`, `tau`, `beta`) and their standard errors
               (`std_y0`, etc.). Returns `None` if the fit fails.
     """
-    param_names = ['y0', 'A', 'tau', 'beta']
-    default_bounds = (
-        [-np.inf, -np.inf, 1e-12, 1e-3], 
-        [np.inf, np.inf, np.inf, 1.0]    
-    )
+    param_names = ["y0", "A", "tau", "beta"]
+    default_bounds = ([-np.inf, -np.inf, 1e-12, 1e-3], [np.inf, np.inf, np.inf, 1.0])
     return _fit_exponential_baseline(
-        y_data, x_data,
+        y_data,
+        x_data,
         _stretched_exponential_decay_model,
-        param_names, _heuristic_stretched_exp_guess, default_bounds,
-        user_initial_guess=initial_guess, user_bounds=bounds,
-        fit_region=fit_region, exclude_regions=exclude_regions
+        param_names,
+        _heuristic_stretched_exp_guess,
+        default_bounds,
+        user_initial_guess=initial_guess,
+        user_bounds=bounds,
+        fit_region=fit_region,
+        exclude_regions=exclude_regions,
     )
+
 
 def baseline_mono_exponential(
     y_data: np.ndarray,
@@ -483,10 +556,10 @@ def baseline_mono_exponential(
     initial_guess: list = None,
     bounds: tuple = None,
     fit_region: tuple = None,
-    exclude_regions: list = None
+    exclude_regions: list = None,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """Fits and subtracts a mono-exponential decay baseline.
-    
+
     The model fitted is: ``y(x) = y0 + A * exp(-(x / τ))``
 
     Args:
@@ -511,27 +584,27 @@ def baseline_mono_exponential(
               parameters (`y0`, `A`, `tau`) and their standard errors
               (`std_y0`, etc.). Returns `None` if the fit fails.
     """
-    param_names = ['y0', 'A', 'tau']
-    default_bounds = (
-        [-np.inf, -np.inf, 1e-12], 
-        [np.inf, np.inf, np.inf]   
-    )
+    param_names = ["y0", "A", "tau"]
+    default_bounds = ([-np.inf, -np.inf, 1e-12], [np.inf, np.inf, np.inf])
     return _fit_exponential_baseline(
-        y_data, x_data,
+        y_data,
+        x_data,
         _mono_exponential_decay_model,
-        param_names, _heuristic_mono_exp_guess, default_bounds,
-        user_initial_guess=initial_guess, user_bounds=bounds,
-        fit_region=fit_region, exclude_regions=exclude_regions
+        param_names,
+        _heuristic_mono_exp_guess,
+        default_bounds,
+        user_initial_guess=initial_guess,
+        user_bounds=bounds,
+        fit_region=fit_region,
+        exclude_regions=exclude_regions,
     )
 
 
 # --- 2D Baseline Correction Helpers ---
 
+
 def _polynomial_features_2d(
-    x_coords: np.ndarray,
-    y_coords: np.ndarray,
-    order_x: int,
-    order_y: int
+    x_coords: np.ndarray, y_coords: np.ndarray, order_x: int, order_y: int
 ) -> np.ndarray:
     """Generates a 2D polynomial design matrix (Vandermonde-like).
 
@@ -567,12 +640,13 @@ def _polynomial_features_2d(
             col_idx += 1
     return design_matrix
 
+
 def _evaluate_polynomial_surface(
     x_mesh: np.ndarray,
     y_mesh: np.ndarray,
     coeffs: np.ndarray,
     order_x: int,
-    order_y: int
+    order_y: int,
 ) -> np.ndarray:
     """Evaluates a 2D polynomial surface on a coordinate grid.
 
@@ -592,7 +666,7 @@ def _evaluate_polynomial_surface(
         raise ValueError("x_mesh and y_mesh must have the same shape.")
     if coeffs.ndim != 1:
         raise ValueError("coeffs must be a 1D array.")
-    
+
     expected_num_coeffs = (order_x + 1) * (order_y + 1)
     if len(coeffs) != expected_num_coeffs:
         raise ValueError(
@@ -608,6 +682,7 @@ def _evaluate_polynomial_surface(
             coeff_idx += 1
     return surface
 
+
 def _get_slice_from_region(
     axis_data: np.ndarray, start_val: float, end_val: float
 ) -> slice:
@@ -622,12 +697,12 @@ def _get_slice_from_region(
         slice: An index slice `slice(start_index, end_index)` corresponding
                to the value range.
     """
-    if start_val > end_val: # Allow reversed specification for convenience
+    if start_val > end_val:  # Allow reversed specification for convenience
         start_val, end_val = end_val, start_val
 
-    idx_start = np.searchsorted(axis_data, start_val, side='left')
-    idx_end = np.searchsorted(axis_data, end_val, side='right')
-    
+    idx_start = np.searchsorted(axis_data, start_val, side="left")
+    idx_end = np.searchsorted(axis_data, end_val, side="right")
+
     # Clip to ensure indices are within array bounds for slicing
     idx_start = max(0, idx_start)
     idx_end = min(len(axis_data), idx_end)
@@ -640,7 +715,7 @@ def _create_fit_mask_2d(
     x_axis_coords: np.ndarray = None,
     y_axis_coords: np.ndarray = None,
     fit_window_roi: tuple = None,
-    exclude_regions: list = None
+    exclude_regions: list = None,
 ) -> np.ndarray:
     """Creates a 2D boolean mask for fitting based on ROI and exclusions.
 
@@ -680,10 +755,12 @@ def _create_fit_mask_2d(
             x_slice_excl = _get_slice_from_region(_x_axis, x_excl_start, x_excl_end)
             y_slice_excl = _get_slice_from_region(_y_axis, y_excl_start, y_excl_end)
             mask[y_slice_excl, x_slice_excl] = False
-            
+
     return mask
 
+
 # --- 2D Baseline Correction Function ---
+
 
 def baseline_polynomial_2d(
     z_data: np.ndarray,
@@ -691,7 +768,7 @@ def baseline_polynomial_2d(
     y_data: np.ndarray = None,
     poly_order: int | tuple[int, int] = (1, 1),
     exclude_regions: list[tuple[tuple[float, float], tuple[float, float]]] = None,
-    roi: tuple[tuple[float, float], tuple[float, float]] = None
+    roi: tuple[tuple[float, float], tuple[float, float]] = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Performs 2D baseline correction by subtracting a fitted polynomial surface.
 
@@ -739,7 +816,12 @@ def baseline_polynomial_2d(
         order_x, order_y = poly_order, poly_order
     elif isinstance(poly_order, tuple) and len(poly_order) == 2:
         order_x, order_y = poly_order
-        if not (isinstance(order_x, int) and isinstance(order_y, int) and order_x >= 0 and order_y >= 0):
+        if not (
+            isinstance(order_x, int)
+            and isinstance(order_y, int)
+            and order_x >= 0
+            and order_y >= 0
+        ):
             raise ValueError("poly_order tuple elements must be non-negative integers.")
     else:
         raise ValueError("poly_order must be an int or a tuple of two ints.")
@@ -756,17 +838,30 @@ def baseline_polynomial_2d(
     # Validate region formats
     region_format_error = "must be a tuple of ((x_start, x_end), (y_start, y_end))."
     if roi is not None:
-        if not (isinstance(roi, tuple) and len(roi) == 2 and isinstance(roi[0], tuple) and
-                len(roi[0]) == 2 and isinstance(roi[1], tuple) and len(roi[1]) == 2):
+        if not (
+            isinstance(roi, tuple)
+            and len(roi) == 2
+            and isinstance(roi[0], tuple)
+            and len(roi[0]) == 2
+            and isinstance(roi[1], tuple)
+            and len(roi[1]) == 2
+        ):
             raise ValueError(f"roi {region_format_error}")
     if exclude_regions is not None:
         if not isinstance(exclude_regions, list):
             raise ValueError("exclude_regions must be a list of region tuples.")
         for i, region in enumerate(exclude_regions):
-            if not (isinstance(region, tuple) and len(region) == 2 and
-                    isinstance(region[0], tuple) and len(region[0]) == 2 and
-                    isinstance(region[1], tuple) and len(region[1]) == 2):
-                raise ValueError(f"Each item in exclude_regions (item {i}) {region_format_error}")
+            if not (
+                isinstance(region, tuple)
+                and len(region) == 2
+                and isinstance(region[0], tuple)
+                and len(region[0]) == 2
+                and isinstance(region[1], tuple)
+                and len(region[1]) == 2
+            ):
+                raise ValueError(
+                    f"Each item in exclude_regions (item {i}) {region_format_error}"
+                )
 
     # Create coordinate meshgrid for full surface evaluation
     XX_eval, YY_eval = np.meshgrid(x_coords_eval, y_coords_eval)
@@ -777,7 +872,7 @@ def baseline_polynomial_2d(
         x_axis_coords=x_coords_eval,
         y_axis_coords=y_coords_eval,
         fit_window_roi=roi,
-        exclude_regions=exclude_regions
+        exclude_regions=exclude_regions,
     )
 
     # Select the points for fitting based on the mask (flattened to 1D)
@@ -792,57 +887,69 @@ def baseline_polynomial_2d(
         warnings.warn(
             f"Not enough points ({num_points_for_fit}) for polynomial fit with "
             f"orders ({order_x}, {order_y}), which requires {num_coeffs_needed} coefficients. "
-            "Returning original data.", UserWarning
+            "Returning original data.",
+            UserWarning,
         )
         return z_data, np.zeros_like(z_data)
 
     # Construct the design matrix and perform the least-squares fit
-    design_matrix = _polynomial_features_2d(x_points_to_fit, y_points_to_fit, order_x, order_y)
+    design_matrix = _polynomial_features_2d(
+        x_points_to_fit, y_points_to_fit, order_x, order_y
+    )
     try:
         coeffs, _, rank, _ = np.linalg.lstsq(design_matrix, z_values_to_fit, rcond=None)
-        
+
         if rank < num_coeffs_needed:
-             warnings.warn(
+            warnings.warn(
                 f"Polynomial fit may be poorly conditioned. Rank deficiency detected: "
                 f"rank={rank}, expected_coeffs={num_coeffs_needed}. Results might be unreliable.",
-                UserWarning
+                UserWarning,
             )
 
         # Evaluate the fitted surface over the entire grid and subtract
-        baseline_surface = _evaluate_polynomial_surface(XX_eval, YY_eval, coeffs, order_x, order_y)
+        baseline_surface = _evaluate_polynomial_surface(
+            XX_eval, YY_eval, coeffs, order_x, order_y
+        )
         z_corrected = z_data - baseline_surface
         return z_corrected, baseline_surface
 
     except np.linalg.LinAlgError as e:
-        warnings.warn(f"Polynomial surface fit failed: {e}. Returning original data.", UserWarning)
+        warnings.warn(
+            f"Polynomial surface fit failed: {e}. Returning original data.", UserWarning
+        )
         return z_data, np.zeros_like(z_data)
 
 
 # --- Example Usage and Demonstrations ---
 
+
 def generate_gaussian(x, amplitude, mu, sigma):
     """Generates a Gaussian peak for example data."""
-    return amplitude * np.exp(-(x - mu)**2 / (2 * sigma**2))
+    return amplitude * np.exp(-((x - mu) ** 2) / (2 * sigma**2))
+
 
 def plot_correction(x, y_original, baseline, y_corrected, title):
     """Helper function for plotting 1D correction results."""
     plt.figure(figsize=(10, 6))
-    plt.plot(x, y_original, label='Original Data', alpha=0.7)
-    plt.plot(x, baseline, label='Calculated Baseline', linestyle='--', color='k')
-    plt.plot(x, y_corrected, label='Corrected Data', linestyle='-', color='r', alpha=0.8)
+    plt.plot(x, y_original, label="Original Data", alpha=0.7)
+    plt.plot(x, baseline, label="Calculated Baseline", linestyle="--", color="k")
+    plt.plot(
+        x, y_corrected, label="Corrected Data", linestyle="-", color="r", alpha=0.8
+    )
     plt.title(title)
-    plt.xlabel('X-axis')
-    plt.ylabel('Y-axis')
+    plt.xlabel("X-axis")
+    plt.ylabel("Y-axis")
     plt.legend()
-    plt.grid(True, linestyle=':', alpha=0.6)
+    plt.grid(True, linestyle=":", alpha=0.6)
     plt.show()
+
 
 def run_examples():
     """Runs and plots a series of example demonstrations for the baseline
     correction functions.
     """
     print("--- Running Baseline Correction Examples ---")
-    
+
     # --- Common data parameters ---
     x = np.linspace(0, 100, 500)
     signal1 = generate_gaussian(x, amplitude=20, mu=30, sigma=5)
@@ -854,63 +961,85 @@ def run_examples():
     print("\n1. Polynomial Baseline Example")
     poly_baseline_true = 10 + 0.1 * x - 0.001 * x**2
     y_poly = poly_baseline_true + pure_signal + noise
-    
+
     y_corrected_poly, baseline_poly = baseline_polynomial(
-        y_poly, x, poly_order=2, 
-        exclude_regions=[(20, 40), (60, 80)] # Exclude signal peaks
+        y_poly,
+        x,
+        poly_order=2,
+        exclude_regions=[(20, 40), (60, 80)],  # Exclude signal peaks
     )
-    plot_correction(x, y_poly, baseline_poly, y_corrected_poly, 
-                    'Polynomial Baseline Correction (Order 2)')
-    
+    plot_correction(
+        x,
+        y_poly,
+        baseline_poly,
+        y_corrected_poly,
+        "Polynomial Baseline Correction (Order 2)",
+    )
+
     # --- 2. Constant Offset Baseline Example ---
     print("\n2. Constant Offset Baseline Example")
     constant_offset_true = 5.0
     y_const = constant_offset_true + pure_signal + noise
-    
+
     y_corrected_const, baseline_const = baseline_constant_offset(
-        y_const, 
-        offset_region_indices=(0, 50), # Use first 50 points
-        method='mean'
+        y_const, offset_region_indices=(0, 50), method="mean"  # Use first 50 points
     )
-    plot_correction(x, y_const, baseline_const, y_corrected_const, 
-                    'Constant Offset Baseline Correction')
+    plot_correction(
+        x,
+        y_const,
+        baseline_const,
+        y_corrected_const,
+        "Constant Offset Baseline Correction",
+    )
 
     # --- 3. Mono-Exponential Baseline Example ---
     print("\n3. Mono-Exponential Baseline Example")
-    mono_exp_baseline_true = _mono_exponential_decay_model(x, y0=2.0, amplitude=30.0, tau=25.0)
+    mono_exp_baseline_true = _mono_exponential_decay_model(
+        x, y0=2.0, amplitude=30.0, tau=25.0
+    )
     y_mono_exp = mono_exp_baseline_true + pure_signal + noise
-    
+
     # Here we use the automatic heuristic guess
     y_corrected_mono, baseline_mono, params_mono = baseline_mono_exponential(
-        y_mono_exp, x,
-        exclude_regions=[(20, 40), (60, 80)]
+        y_mono_exp, x, exclude_regions=[(20, 40), (60, 80)]
     )
     if params_mono:
         print(f"Fitted Mono-Exponential Params: {params_mono}")
-    plot_correction(x, y_mono_exp, baseline_mono, y_corrected_mono, 
-                    'Mono-Exponential Baseline Correction (Heuristic Guess)')
+    plot_correction(
+        x,
+        y_mono_exp,
+        baseline_mono,
+        y_corrected_mono,
+        "Mono-Exponential Baseline Correction (Heuristic Guess)",
+    )
 
     # --- 4. Stretched Exponential Baseline Example ---
     print("\n4. Stretched Exponential Baseline Example")
-    s_exp_baseline_true = _stretched_exponential_decay_model(x, y0=1.5, amplitude=25.0, tau=30.0, beta=0.7)
+    s_exp_baseline_true = _stretched_exponential_decay_model(
+        x, y0=1.5, amplitude=25.0, tau=30.0, beta=0.7
+    )
     y_s_exp = s_exp_baseline_true + pure_signal + noise
-    
+
     # Provide an explicit initial guess
-    initial_guess_s = [1.0, 20.0, 35.0, 0.8] # y0, A, tau, beta
+    initial_guess_s = [1.0, 20.0, 35.0, 0.8]  # y0, A, tau, beta
     y_corrected_s, baseline_s, params_s = baseline_stretched_exponential(
-        y_s_exp, x,
-        initial_guess=initial_guess_s,
-        exclude_regions=[(25, 35), (65, 75)]
+        y_s_exp, x, initial_guess=initial_guess_s, exclude_regions=[(25, 35), (65, 75)]
     )
     if params_s:
         print(f"Fitted Stretched Exponential Params: {params_s}")
-    plot_correction(x, y_s_exp, baseline_s, y_corrected_s, 
-                    'Stretched Exponential Baseline Correction (Manual Guess)')
-    
+    plot_correction(
+        x,
+        y_s_exp,
+        baseline_s,
+        y_corrected_s,
+        "Stretched Exponential Baseline Correction (Manual Guess)",
+    )
+
     print("\n--- Examples Finished ---")
 
 
 # --- Unit Tests ---
+
 
 class TestBaselineCorrection(unittest.TestCase):
     """A unittest.TestCase class for testing the baseline correction functions."""
@@ -927,18 +1056,20 @@ class TestBaselineCorrection(unittest.TestCase):
         """Test polynomial correction with order 0 (constant offset)."""
         y_signal_offset = self.gaussian + 5.0 + self.noise
         corrected, baseline = baseline_polynomial(
-            y_signal_offset, self.x, poly_order=0, exclude_regions=[(4,6)]
+            y_signal_offset, self.x, poly_order=0, exclude_regions=[(4, 6)]
         )
         self.assertAlmostEqual(np.mean(baseline), 5.0, delta=0.5)
-        self.assertTrue(np.allclose(corrected, y_signal_offset - np.mean(baseline), atol=1e-1))
+        self.assertTrue(
+            np.allclose(corrected, y_signal_offset - np.mean(baseline), atol=1e-1)
+        )
 
     def test_polynomial_linear(self):
         """Test polynomial correction with order 1 (linear)."""
         y_signal_linear = self.gaussian + (0.5 * self.x + 2) + self.noise
-        true_baseline_points = (0.5 * self.x + 2)
-        
+        true_baseline_points = 0.5 * self.x + 2
+
         corrected, baseline = baseline_polynomial(
-            y_signal_linear, self.x, poly_order=1, exclude_regions=[(3,7)]
+            y_signal_linear, self.x, poly_order=1, exclude_regions=[(3, 7)]
         )
         np.testing.assert_allclose(baseline, true_baseline_points, atol=0.5)
         np.testing.assert_allclose(corrected, self.gaussian + self.noise, atol=0.5)
@@ -946,17 +1077,25 @@ class TestBaselineCorrection(unittest.TestCase):
     def test_polynomial_no_xdata(self):
         """Test polynomial correction when no x_data is provided (using indices)."""
         indices = np.arange(len(self.x))
-        y_idx_linear = 0.1 * indices + 2 + generate_gaussian(indices, 10, 50, 10) + self.noise
-        
-        corrected, baseline = baseline_polynomial(y_idx_linear, poly_order=1, exclude_regions=[(40,60)])
-        self.assertEqual(y_idx_linear.shape, corrected.shape, "Corrected data shape mismatch")
+        y_idx_linear = (
+            0.1 * indices + 2 + generate_gaussian(indices, 10, 50, 10) + self.noise
+        )
+
+        corrected, baseline = baseline_polynomial(
+            y_idx_linear, poly_order=1, exclude_regions=[(40, 60)]
+        )
+        self.assertEqual(
+            y_idx_linear.shape, corrected.shape, "Corrected data shape mismatch"
+        )
         self.assertGreater(np.std(baseline), 0, "Baseline should not be flat")
 
     def test_polynomial_insufficient_points(self):
         """Test polynomial fit behavior with too few points."""
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            corrected, baseline = baseline_polynomial(self.y_linear, self.x, poly_order=2, roi=(0,1))
+            corrected, baseline = baseline_polynomial(
+                self.y_linear, self.x, poly_order=2, roi=(0, 1)
+            )
             self.assertTrue(any("Not enough points" in str(warn.message) for warn in w))
             np.testing.assert_array_equal(corrected, self.y_linear)
             np.testing.assert_array_equal(baseline, np.zeros_like(self.y_linear))
@@ -965,10 +1104,12 @@ class TestBaselineCorrection(unittest.TestCase):
         """Test constant offset correction using the mean."""
         y_const_signal = self.gaussian + 10.0 + self.noise
         offset_region = (0, 20)
-        true_offset_in_region = np.mean((10.0 + self.noise)[offset_region[0]:offset_region[1]])
+        true_offset_in_region = np.mean(
+            (10.0 + self.noise)[offset_region[0] : offset_region[1]]
+        )
 
         corrected, baseline = baseline_constant_offset(
-            y_const_signal, offset_region_indices=offset_region, method='mean'
+            y_const_signal, offset_region_indices=offset_region, method="mean"
         )
         self.assertAlmostEqual(baseline[0], true_offset_in_region, delta=0.5)
 
@@ -976,10 +1117,12 @@ class TestBaselineCorrection(unittest.TestCase):
         """Test constant offset correction using the median."""
         y_const_signal = self.gaussian + 7.0 + self.noise
         offset_region = (80, 100)
-        true_offset_in_region_median = np.median((7.0 + self.noise)[offset_region[0]:offset_region[1]])
+        true_offset_in_region_median = np.median(
+            (7.0 + self.noise)[offset_region[0] : offset_region[1]]
+        )
 
         corrected, baseline = baseline_constant_offset(
-            y_const_signal, offset_region_indices=offset_region, method='median'
+            y_const_signal, offset_region_indices=offset_region, method="median"
         )
         self.assertAlmostEqual(baseline[0], true_offset_in_region_median, delta=0.5)
 
@@ -987,8 +1130,12 @@ class TestBaselineCorrection(unittest.TestCase):
         """Test constant offset with an invalid (reversed) region."""
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            _, baseline = baseline_constant_offset(self.y_flat, offset_region_indices=(50, 10))
-            self.assertTrue(any("Invalid offset_region_indices" in str(warn.message) for warn in w))
+            _, baseline = baseline_constant_offset(
+                self.y_flat, offset_region_indices=(50, 10)
+            )
+            self.assertTrue(
+                any("Invalid offset_region_indices" in str(warn.message) for warn in w)
+            )
             self.assertAlmostEqual(baseline[0], np.mean(self.y_flat), delta=0.2)
 
     def test_mono_exponential_fit(self):
@@ -996,54 +1143,64 @@ class TestBaselineCorrection(unittest.TestCase):
         y0, A, tau = 1.0, 5.0, 3.0
         true_baseline = _mono_exponential_decay_model(self.x, y0, A, tau)
         y_data = true_baseline + self.gaussian + self.noise
-        
+
         initial_guess = [0.5, 6.0, 2.5]
         exclude = [(4, 6)]
-        
-        _, _, params = baseline_mono_exponential(y_data, self.x, initial_guess, exclude_regions=exclude)
+
+        _, _, params = baseline_mono_exponential(
+            y_data, self.x, initial_guess, exclude_regions=exclude
+        )
         self.assertIsNotNone(params)
-        self.assertAlmostEqual(params['y0'], y0, delta=0.5)
-        self.assertAlmostEqual(params['A'], A, delta=1.0)
-        self.assertAlmostEqual(params['tau'], tau, delta=0.8)
+        self.assertAlmostEqual(params["y0"], y0, delta=0.5)
+        self.assertAlmostEqual(params["A"], A, delta=1.0)
+        self.assertAlmostEqual(params["tau"], tau, delta=0.8)
 
     def test_stretched_exponential_fit(self):
         """Test the stretched exponential baseline fitting."""
         y0, A, tau, beta = 0.5, 4.0, 2.5, 0.7
         true_baseline = _stretched_exponential_decay_model(self.x, y0, A, tau, beta)
         y_data = true_baseline + self.gaussian + self.noise
-        
+
         initial_guess = [0.3, 4.5, 2.0, 0.8]
         exclude = [(4, 6)]
-        
-        _, _, params = baseline_stretched_exponential(y_data, self.x, initial_guess, exclude_regions=exclude)
+
+        _, _, params = baseline_stretched_exponential(
+            y_data, self.x, initial_guess, exclude_regions=exclude
+        )
         self.assertIsNotNone(params)
-        self.assertAlmostEqual(params['y0'], y0, delta=0.5)
-        self.assertAlmostEqual(params['beta'], beta, delta=0.2)
-        
+        self.assertAlmostEqual(params["y0"], y0, delta=0.5)
+        self.assertAlmostEqual(params["beta"], beta, delta=0.2)
+
     def test_exponential_fit_insufficient_points(self):
         """Test exponential fit behavior with too few points."""
         y_data = _mono_exponential_decay_model(self.x, 1, 5, 3) + self.noise
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            corrected, _, params = baseline_mono_exponential(y_data, self.x, fit_region=(0, 0.1))
+            corrected, _, params = baseline_mono_exponential(
+                y_data, self.x, fit_region=(0, 0.1)
+            )
             self.assertTrue(any("Not enough points" in str(warn.message) for warn in w))
             self.assertIsNone(params)
             np.testing.assert_array_equal(corrected, y_data)
-            
+
     def test_input_validations(self):
         """Test that functions raise ValueError on invalid input shapes."""
-        y_2d = np.array([[1,2],[3,4]])
-        with self.assertRaises(ValueError): baseline_polynomial(y_2d, self.x)
-        with self.assertRaises(ValueError): baseline_polynomial(self.x, x_data=np.array([1,2]))
-        with self.assertRaises(ValueError): baseline_constant_offset(y_2d)
-        with self.assertRaises(ValueError): baseline_mono_exponential(y_2d, self.x)
-        with self.assertRaises(ValueError): baseline_mono_exponential(self.x, x_data=y_2d)
+        y_2d = np.array([[1, 2], [3, 4]])
+        with self.assertRaises(ValueError):
+            baseline_polynomial(y_2d, self.x)
+        with self.assertRaises(ValueError):
+            baseline_polynomial(self.x, x_data=np.array([1, 2]))
+        with self.assertRaises(ValueError):
+            baseline_constant_offset(y_2d)
+        with self.assertRaises(ValueError):
+            baseline_mono_exponential(y_2d, self.x)
+        with self.assertRaises(ValueError):
+            baseline_mono_exponential(self.x, x_data=y_2d)
 
 
 # --- Main execution block ---
 # This block runs when the script is executed directly.
 if __name__ == "__main__":
-    
     # First, run the visual examples to demonstrate functionality.
     run_examples()
 

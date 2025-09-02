@@ -6,20 +6,22 @@ Created on Tue May  6 15:57:27 2025
 @author: sylvainbertaina
 """
 
-import numpy as np
 import warnings
-# from scipy.signal import savgol_filter # If needed for other methods
-from scipy.optimize import curve_fit # np.polyfit/polyval don't need this directly
 
+import numpy as np
+
+# from scipy.signal import savgol_filter # If needed for other methods
+from scipy.optimize import curve_fit  # np.polyfit/polyval don't need this directly
 
 # --- Baseline Correction Functions ---
+
 
 def baseline_polynomial(
     y_data: np.ndarray,
     x_data: np.ndarray = None,
     poly_order: int = 1,
     exclude_regions: list = None,
-    roi: tuple = None
+    roi: tuple = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Performs baseline correction on 1D data by subtracting a polynomial fit.
@@ -66,7 +68,7 @@ def baseline_polynomial(
             raise ValueError("x_data and y_data must have the same length.")
         x_axis_for_fitting = np.copy(x_data)
     else:
-        x_axis_for_fitting = np.arange(len(y_data)) # Use indices if x_data is None
+        x_axis_for_fitting = np.arange(len(y_data))  # Use indices if x_data is None
 
     y_to_fit = np.copy(y_data)
 
@@ -78,16 +80,21 @@ def baseline_polynomial(
             raise ValueError("roi must be a tuple of (start, end).")
         roi_start, roi_end = roi
         if roi_start >= roi_end:
-            warnings.warn(f"ROI start ({roi_start}) is not less than ROI end ({roi_end}). ROI ignored.")
+            warnings.warn(
+                f"ROI start ({roi_start}) is not less than ROI end ({roi_end}). ROI ignored."
+            )
         else:
             # Initially, mask everything outside this ROI
-            fit_mask[:] = False # Mask all
+            fit_mask[:] = False  # Mask all
             # Unmask the ROI
-            if x_data is not None: # ROI is in x_data units
-                roi_active_mask = (x_axis_for_fitting >= roi_start) & (x_axis_for_fitting <= roi_end)
-            else: # ROI is in index units
-                roi_active_mask = (np.arange(len(y_to_fit)) >= roi_start) & \
-                                  (np.arange(len(y_to_fit)) <= roi_end)
+            if x_data is not None:  # ROI is in x_data units
+                roi_active_mask = (x_axis_for_fitting >= roi_start) & (
+                    x_axis_for_fitting <= roi_end
+                )
+            else:  # ROI is in index units
+                roi_active_mask = (np.arange(len(y_to_fit)) >= roi_start) & (
+                    np.arange(len(y_to_fit)) <= roi_end
+                )
             fit_mask[roi_active_mask] = True
 
     if exclude_regions is not None:
@@ -95,18 +102,25 @@ def baseline_polynomial(
             raise ValueError("exclude_regions must be a list of (start, end) tuples.")
         for region in exclude_regions:
             if not (isinstance(region, tuple) and len(region) == 2):
-                raise ValueError("Each item in exclude_regions must be a (start, end) tuple.")
+                raise ValueError(
+                    "Each item in exclude_regions must be a (start, end) tuple."
+                )
             start, end = region
             if start >= end:
-                warnings.warn(f"Exclusion region start ({start}) is not less than end ({end}). Region ignored.")
+                warnings.warn(
+                    f"Exclusion region start ({start}) is not less than end ({end}). Region ignored."
+                )
                 continue
 
-            if x_data is not None: # Exclusion is in x_data units
-                current_exclusion_mask = (x_axis_for_fitting >= start) & (x_axis_for_fitting <= end)
-            else: # Exclusion is in index units
-                current_exclusion_mask = (np.arange(len(y_to_fit)) >= start) & \
-                                         (np.arange(len(y_to_fit)) <= end)
-            fit_mask[current_exclusion_mask] = False # Exclude these points
+            if x_data is not None:  # Exclusion is in x_data units
+                current_exclusion_mask = (x_axis_for_fitting >= start) & (
+                    x_axis_for_fitting <= end
+                )
+            else:  # Exclusion is in index units
+                current_exclusion_mask = (np.arange(len(y_to_fit)) >= start) & (
+                    np.arange(len(y_to_fit)) <= end
+                )
+            fit_mask[current_exclusion_mask] = False  # Exclude these points
 
     # Ensure there are enough points left for fitting
     num_points_for_fit = np.sum(fit_mask)
@@ -119,7 +133,9 @@ def baseline_polynomial(
 
     try:
         # Fit polynomial using only the masked (True) points
-        coeffs = np.polyfit(x_axis_for_fitting[fit_mask], y_to_fit[fit_mask], poly_order)
+        coeffs = np.polyfit(
+            x_axis_for_fitting[fit_mask], y_to_fit[fit_mask], poly_order
+        )
 
         # Evaluate the polynomial over the entire original x_range (or indices)
         baseline = np.polyval(coeffs, x_axis_for_fitting)
@@ -132,9 +148,7 @@ def baseline_polynomial(
 
 
 def baseline_constant_offset(
-    y_data: np.ndarray,
-    offset_region_indices: tuple = None,
-    method: str = 'mean'
+    y_data: np.ndarray, offset_region_indices: tuple = None, method: str = "mean"
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Performs baseline correction by subtracting a constant offset.
@@ -164,12 +178,16 @@ def baseline_constant_offset(
     if not isinstance(y_data, np.ndarray) or y_data.ndim != 1:
         raise ValueError("y_data must be a 1D NumPy array.")
 
-    if method.lower() not in ['mean', 'median']:
+    if method.lower() not in ["mean", "median"]:
         raise ValueError("Method must be 'mean' or 'median'.")
 
     if offset_region_indices:
-        if not (isinstance(offset_region_indices, tuple) and len(offset_region_indices) == 2):
-            raise ValueError("offset_region_indices must be a (start_index, end_index) tuple.")
+        if not (
+            isinstance(offset_region_indices, tuple) and len(offset_region_indices) == 2
+        ):
+            raise ValueError(
+                "offset_region_indices must be a (start_index, end_index) tuple."
+            )
         start_idx, end_idx = offset_region_indices
         # Ensure indices are valid and form a valid slice
         start_idx = max(0, int(start_idx))
@@ -184,21 +202,26 @@ def baseline_constant_offset(
         else:
             region_data_for_offset = y_data[start_idx:end_idx]
     else:
-        warnings.warn("offset_region_indices not provided. Using whole array for offset calculation.")
+        warnings.warn(
+            "offset_region_indices not provided. Using whole array for offset calculation."
+        )
         region_data_for_offset = y_data
 
     if region_data_for_offset.size == 0:
-        warnings.warn("Offset calculation region is empty after slicing. Returning original data.")
+        warnings.warn(
+            "Offset calculation region is empty after slicing. Returning original data."
+        )
         return y_data, np.zeros_like(y_data)
 
-    if method.lower() == 'mean':
+    if method.lower() == "mean":
         offset_value = np.mean(region_data_for_offset)
-    else: # 'median'
+    else:  # 'median'
         offset_value = np.median(region_data_for_offset)
 
     baseline = np.full_like(y_data, offset_value)
-    y_corrected = y_data - offset_value # Broadcasting subtracts scalar from array
+    y_corrected = y_data - offset_value  # Broadcasting subtracts scalar from array
     return y_corrected, baseline
+
 
 # --- Stretched Exponential Decay Function ---
 def stretched_exponential_decay(t, y0, amplitude, tau, beta):
@@ -210,14 +233,16 @@ def stretched_exponential_decay(t, y0, amplitude, tau, beta):
     # However, for typical decays, t is expected to be non-negative.
     # We might need to handle negative t if the x-axis allows it and adjust the model.
     # For simplicity, assume t >= 0 and tau > 0.
-    if tau <= 0: # tau must be positive
-        return np.inf # Return a large number to penalize invalid tau in fitting
-    if beta <= 0 or beta > 1.0001 : # Beta typically 0 < beta <= 1 (allow slight >1 for fitting robustness)
+    if tau <= 0:  # tau must be positive
+        return np.inf  # Return a large number to penalize invalid tau in fitting
+    if (
+        beta <= 0 or beta > 1.0001
+    ):  # Beta typically 0 < beta <= 1 (allow slight >1 for fitting robustness)
         return np.inf
-    
+
     # Handle potential issues with (t/tau) being negative if t or x_offset not handled properly.
     # If t is always positive and starts from 0 (or t-t0), this is usually fine.
-    decay_term = (t / tau)**beta
+    decay_term = (t / tau) ** beta
     return y0 + amplitude * np.exp(-decay_term)
 
 
@@ -227,7 +252,7 @@ def baseline_stretched_exponential(
     initial_guess: list = None,
     bounds: tuple = None,
     fit_region: tuple = None,
-    exclude_regions: list = None
+    exclude_regions: list = None,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """
     Performs baseline correction by fitting and subtracting a stretched exponential decay.
@@ -272,7 +297,9 @@ def baseline_stretched_exponential(
     if not isinstance(y_data, np.ndarray) or y_data.ndim != 1:
         raise ValueError("y_data must be a 1D NumPy array.")
     if not isinstance(x_data, np.ndarray) or x_data.ndim != 1:
-        raise ValueError("x_data must be a 1D NumPy array for stretched exponential fit.")
+        raise ValueError(
+            "x_data must be a 1D NumPy array for stretched exponential fit."
+        )
     if len(x_data) != len(y_data):
         raise ValueError("x_data and y_data must have the same length.")
 
@@ -283,45 +310,56 @@ def baseline_stretched_exponential(
     mask = np.ones_like(x_fit, dtype=bool)
 
     if fit_region:
-        if len(fit_region) != 2: raise ValueError("fit_region must be a tuple (start_x, end_x).")
+        if len(fit_region) != 2:
+            raise ValueError("fit_region must be a tuple (start_x, end_x).")
         start_x_fit, end_x_fit = fit_region
         if start_x_fit >= end_x_fit:
-            warnings.warn(f"Fit region start ({start_x_fit}) not less than end ({end_x_fit}). Region ignored.")
+            warnings.warn(
+                f"Fit region start ({start_x_fit}) not less than end ({end_x_fit}). Region ignored."
+            )
         else:
             mask &= (x_fit >= start_x_fit) & (x_fit <= end_x_fit)
 
     if exclude_regions:
         if not isinstance(exclude_regions, list):
-            raise ValueError("exclude_regions must be a list of (start_x, end_x) tuples.")
+            raise ValueError(
+                "exclude_regions must be a list of (start_x, end_x) tuples."
+            )
         for region in exclude_regions:
             if not (isinstance(region, tuple) and len(region) == 2):
-                raise ValueError("Each item in exclude_regions must be a (start_x, end_x) tuple.")
+                raise ValueError(
+                    "Each item in exclude_regions must be a (start_x, end_x) tuple."
+                )
             start_ex, end_ex = region
             if start_ex >= end_ex:
-                warnings.warn(f"Exclusion region start ({start_ex}) not less than end ({end_ex}). Region ignored.")
+                warnings.warn(
+                    f"Exclusion region start ({start_ex}) not less than end ({end_ex}). Region ignored."
+                )
                 continue
-            mask &= ~((x_fit >= start_ex) & (x_fit <= end_ex)) # Exclude these points
+            mask &= ~((x_fit >= start_ex) & (x_fit <= end_ex))  # Exclude these points
 
     # Apply mask
     x_masked = x_fit[mask]
     y_masked = y_fit_data[mask]
 
-    if len(x_masked) < 4: # Need at least as many points as parameters
-        warnings.warn("Not enough points to fit stretched exponential after applying regions. Returning original data.")
+    if len(x_masked) < 4:  # Need at least as many points as parameters
+        warnings.warn(
+            "Not enough points to fit stretched exponential after applying regions. Returning original data."
+        )
         return y_data, np.zeros_like(y_data), None
 
     # Heuristic initial guesses if not provided
     if initial_guess is None:
         # y0: Guess as the mean of the last few points of the *masked* data (or overall mean if fit_region is small)
         if len(y_masked) > 10:
-            guess_y0 = np.mean(y_masked[-min(10, len(y_masked)//10):])
+            guess_y0 = np.mean(y_masked[-min(10, len(y_masked) // 10) :])
         else:
             guess_y0 = np.mean(y_masked)
 
         # A: Difference between first point (or max) and guess_y0
         # This assumes a decaying trend from the start of the masked data.
         first_masked_y = y_masked[0]
-        guess_A = first_masked_y - guess_y0 # If decaying from high to low
+        guess_A = first_masked_y - guess_y0  # If decaying from high to low
         # If data might increase initially and then decay, or always increase (A < 0)
         # max_y = np.max(y_masked)
         # min_y = np.min(y_masked)
@@ -334,30 +372,43 @@ def baseline_stretched_exponential(
         # This is a very rough guess and highly dependent on the data.
         if len(x_masked) > 1:
             guess_tau = (x_masked[-1] - x_masked[0]) / 3.0
-            if guess_tau <= 0: guess_tau = (x_masked[-1] - x_masked[0]) if (x_masked[-1] - x_masked[0]) > 0 else 1.0
+            if guess_tau <= 0:
+                guess_tau = (
+                    (x_masked[-1] - x_masked[0])
+                    if (x_masked[-1] - x_masked[0]) > 0
+                    else 1.0
+                )
         else:
             guess_tau = 1.0
-        guess_tau = max(guess_tau, 1e-9) # Ensure tau is positive
+        guess_tau = max(guess_tau, 1e-9)  # Ensure tau is positive
 
         # β: Start with 1 (simple exponential) or 0.5
         guess_beta = 0.8
         initial_guess = [guess_y0, guess_A, guess_tau, guess_beta]
-        warnings.warn(f"Using heuristic initial guess for stretched exponential: {initial_guess}")
+        warnings.warn(
+            f"Using heuristic initial guess for stretched exponential: {initial_guess}"
+        )
 
     # Default bounds if not provided
     if bounds is None:
         # y0, A, tau, beta
         # Tau must be > 0. Beta usually 0 < beta <= 1.
         lower_bounds = [-np.inf, -np.inf, 1e-12, 1e-3]  # Smallest tau and beta
-        upper_bounds = [np.inf, np.inf, np.inf, 1.0] # Max beta = 1
+        upper_bounds = [np.inf, np.inf, np.inf, 1.0]  # Max beta = 1
         bounds = (lower_bounds, upper_bounds)
     else:
         # Ensure bounds are correctly structured
-        if not (isinstance(bounds, tuple) and len(bounds) == 2 and
-                isinstance(bounds[0], (list, np.ndarray)) and len(bounds[0]) == 4 and
-                isinstance(bounds[1], (list, np.ndarray)) and len(bounds[1]) == 4):
-            raise ValueError("Bounds must be a tuple of two lists/arrays of length 4: ([lowers], [uppers])")
-
+        if not (
+            isinstance(bounds, tuple)
+            and len(bounds) == 2
+            and isinstance(bounds[0], (list, np.ndarray))
+            and len(bounds[0]) == 4
+            and isinstance(bounds[1], (list, np.ndarray))
+            and len(bounds[1]) == 4
+        ):
+            raise ValueError(
+                "Bounds must be a tuple of two lists/arrays of length 4: ([lowers], [uppers])"
+            )
 
     try:
         # --- Perform the fit on the masked data ---
@@ -366,14 +417,14 @@ def baseline_stretched_exponential(
         # we might need to introduce an x_offset parameter in `stretched_exponential_decay`
         # and fit for it: e.g., ((x - x_offset) / tau).
         # For now, assuming x_masked[0] is close enough to the effective start.
-        
+
         popt, pcov = curve_fit(
             stretched_exponential_decay,
             x_masked,  # Fit using the selected region's x values
             y_masked,
             p0=initial_guess,
             bounds=bounds,
-            maxfev=5000 # Increase max iterations if convergence is an issue
+            maxfev=5000,  # Increase max iterations if convergence is an issue
         )
 
         # Calculate the baseline over the *entire original* x_data range
@@ -381,33 +432,49 @@ def baseline_stretched_exponential(
         y_corrected = y_data - baseline
 
         # Extract parameter errors (standard deviations)
-        perr = np.sqrt(np.diag(pcov)) if pcov is not None and not np.any(np.isinf(pcov)) else [np.nan]*len(popt)
+        perr = (
+            np.sqrt(np.diag(pcov))
+            if pcov is not None and not np.any(np.isinf(pcov))
+            else [np.nan] * len(popt)
+        )
 
         fit_parameters = {
-            'y0': popt[0], 'A': popt[1], 'tau': popt[2], 'beta': popt[3],
-            'std_y0': perr[0], 'std_A': perr[1], 'std_tau': perr[2], 'std_beta': perr[3]
+            "y0": popt[0],
+            "A": popt[1],
+            "tau": popt[2],
+            "beta": popt[3],
+            "std_y0": perr[0],
+            "std_A": perr[1],
+            "std_tau": perr[2],
+            "std_beta": perr[3],
         }
         return y_corrected, baseline, fit_parameters
 
     except RuntimeError as e:
-        warnings.warn(f"Stretched exponential fit did not converge: {e}. Returning original data.")
+        warnings.warn(
+            f"Stretched exponential fit did not converge: {e}. Returning original data."
+        )
         return y_data, np.zeros_like(y_data), None
-    except ValueError as e: # Can happen from bounds or initial guess issues
-        warnings.warn(f"ValueError during stretched exponential fit (check bounds/guesses): {e}. Returning original data.")
+    except ValueError as e:  # Can happen from bounds or initial guess issues
+        warnings.warn(
+            f"ValueError during stretched exponential fit (check bounds/guesses): {e}. Returning original data."
+        )
         return y_data, np.zeros_like(y_data), None
-    except Exception as e: # Catch any other fitting errors
-        warnings.warn(f"An unexpected error occurred during stretched exponential fit: {e}. Returning original data.")
+    except Exception as e:  # Catch any other fitting errors
+        warnings.warn(
+            f"An unexpected error occurred during stretched exponential fit: {e}. Returning original data."
+        )
         return y_data, np.zeros_like(y_data), None
-    
-    
+
+
 # --- Mono-Exponential Decay Function ---
 def mono_exponential_decay(t, y0, amplitude, tau):
     """
     Mono-exponential decay function.
     f(t) = y0 + amplitude * exp(-t / tau)
     """
-    if tau <= 0: # tau must be positive
-        return np.inf # Penalize invalid tau during fitting
+    if tau <= 0:  # tau must be positive
+        return np.inf  # Penalize invalid tau during fitting
     return y0 + amplitude * np.exp(-t / tau)
 
 
@@ -417,7 +484,7 @@ def baseline_mono_exponential(
     initial_guess: list = None,
     bounds: tuple = None,
     fit_region: tuple = None,
-    exclude_regions: list = None
+    exclude_regions: list = None,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """
     Performs baseline correction by fitting and subtracting a mono-exponential decay.
@@ -466,45 +533,67 @@ def baseline_mono_exponential(
     # Create a mask for points to include in the fit (similar to stretched_exponential)
     mask = np.ones_like(x_fit, dtype=bool)
     if fit_region:
-        if len(fit_region) != 2: raise ValueError("fit_region must be a tuple (start_x, end_x).")
+        if len(fit_region) != 2:
+            raise ValueError("fit_region must be a tuple (start_x, end_x).")
         start_x_fit, end_x_fit = fit_region
-        if start_x_fit >= end_x_fit: warnings.warn(f"Fit region start not less than end. Region ignored.")
-        else: mask &= (x_fit >= start_x_fit) & (x_fit <= end_x_fit)
+        if start_x_fit >= end_x_fit:
+            warnings.warn(f"Fit region start not less than end. Region ignored.")
+        else:
+            mask &= (x_fit >= start_x_fit) & (x_fit <= end_x_fit)
 
     if exclude_regions:
-        if not isinstance(exclude_regions, list): raise ValueError("exclude_regions must be a list.")
+        if not isinstance(exclude_regions, list):
+            raise ValueError("exclude_regions must be a list.")
         for region in exclude_regions:
-            if not (isinstance(region, tuple) and len(region)==2): raise ValueError("Each exclude region must be (start,end).")
+            if not (isinstance(region, tuple) and len(region) == 2):
+                raise ValueError("Each exclude region must be (start,end).")
             start_ex, end_ex = region
-            if start_ex >= end_ex: warnings.warn(f"Exclusion region start not less than end. Region ignored.")
-            else: mask &= ~((x_fit >= start_ex) & (x_fit <= end_ex))
+            if start_ex >= end_ex:
+                warnings.warn(
+                    f"Exclusion region start not less than end. Region ignored."
+                )
+            else:
+                mask &= ~((x_fit >= start_ex) & (x_fit <= end_ex))
 
     x_masked = x_fit[mask]
     y_masked = y_fit_data[mask]
 
-    if len(x_masked) < 3: # Need at least as many points as parameters (y0, A, τ)
-        warnings.warn("Not enough points for mono-exponential fit after applying regions. Returning original data.")
+    if len(x_masked) < 3:  # Need at least as many points as parameters (y0, A, τ)
+        warnings.warn(
+            "Not enough points for mono-exponential fit after applying regions. Returning original data."
+        )
         return y_data, np.zeros_like(y_data), None
 
     # Heuristic initial guesses if not provided
     if initial_guess is None:
         if len(y_masked) > 10:
-            guess_y0 = np.mean(y_masked[-min(10, len(y_masked)//10):]) # Offset at long times
+            guess_y0 = np.mean(
+                y_masked[-min(10, len(y_masked) // 10) :]
+            )  # Offset at long times
         else:
             guess_y0 = np.mean(y_masked)
 
         first_masked_y = y_masked[0]
-        guess_A = first_masked_y - guess_y0 # Amplitude (assumes decay from start)
+        guess_A = first_masked_y - guess_y0  # Amplitude (assumes decay from start)
 
         if len(x_masked) > 1:
-            guess_tau = (x_masked[-1] - x_masked[0]) / 3.0 # Characteristic time (very rough)
-            if guess_tau <= 0 : guess_tau = (x_masked[-1] - x_masked[0]) if (x_masked[-1] - x_masked[0]) > 0 else 1.0
+            guess_tau = (
+                x_masked[-1] - x_masked[0]
+            ) / 3.0  # Characteristic time (very rough)
+            if guess_tau <= 0:
+                guess_tau = (
+                    (x_masked[-1] - x_masked[0])
+                    if (x_masked[-1] - x_masked[0]) > 0
+                    else 1.0
+                )
         else:
             guess_tau = 1.0
-        guess_tau = max(guess_tau, 1e-9) # Ensure tau is positive
+        guess_tau = max(guess_tau, 1e-9)  # Ensure tau is positive
 
         initial_guess = [guess_y0, guess_A, guess_tau]
-        warnings.warn(f"Using heuristic initial guess for mono-exponential: {initial_guess}")
+        warnings.warn(
+            f"Using heuristic initial guess for mono-exponential: {initial_guess}"
+        )
 
     if bounds is None:
         # y0, A, tau
@@ -512,11 +601,17 @@ def baseline_mono_exponential(
         upper_bounds = [np.inf, np.inf, np.inf]
         bounds = (lower_bounds, upper_bounds)
     else:
-        if not (isinstance(bounds, tuple) and len(bounds) == 2 and
-                isinstance(bounds[0], (list, np.ndarray)) and len(bounds[0]) == 3 and
-                isinstance(bounds[1], (list, np.ndarray)) and len(bounds[1]) == 3):
-            raise ValueError("Bounds must be a tuple of two lists/arrays of length 3 for mono-exponential.")
-
+        if not (
+            isinstance(bounds, tuple)
+            and len(bounds) == 2
+            and isinstance(bounds[0], (list, np.ndarray))
+            and len(bounds[0]) == 3
+            and isinstance(bounds[1], (list, np.ndarray))
+            and len(bounds[1]) == 3
+        ):
+            raise ValueError(
+                "Bounds must be a tuple of two lists/arrays of length 3 for mono-exponential."
+            )
 
     try:
         popt, pcov = curve_fit(
@@ -525,26 +620,42 @@ def baseline_mono_exponential(
             y_masked,
             p0=initial_guess,
             bounds=bounds,
-            maxfev=5000
+            maxfev=5000,
         )
 
-        baseline = mono_exponential_decay(x_data, *popt) # Calculate over full original x_data
+        baseline = mono_exponential_decay(
+            x_data, *popt
+        )  # Calculate over full original x_data
         y_corrected = y_data - baseline
 
-        perr = np.sqrt(np.diag(pcov)) if pcov is not None and not np.any(np.isinf(pcov)) else [np.nan]*len(popt)
+        perr = (
+            np.sqrt(np.diag(pcov))
+            if pcov is not None and not np.any(np.isinf(pcov))
+            else [np.nan] * len(popt)
+        )
 
         fit_parameters = {
-            'y0': popt[0], 'A': popt[1], 'tau': popt[2],
-            'std_y0': perr[0], 'std_A': perr[1], 'std_tau': perr[2]
+            "y0": popt[0],
+            "A": popt[1],
+            "tau": popt[2],
+            "std_y0": perr[0],
+            "std_A": perr[1],
+            "std_tau": perr[2],
         }
         return y_corrected, baseline, fit_parameters
 
     except RuntimeError as e:
-        warnings.warn(f"Mono-exponential fit did not converge: {e}. Returning original data.")
+        warnings.warn(
+            f"Mono-exponential fit did not converge: {e}. Returning original data."
+        )
         return y_data, np.zeros_like(y_data), None
     except ValueError as e:
-        warnings.warn(f"ValueError during mono-exponential fit (check bounds/guesses): {e}. Returning original data.")
+        warnings.warn(
+            f"ValueError during mono-exponential fit (check bounds/guesses): {e}. Returning original data."
+        )
         return y_data, np.zeros_like(y_data), None
     except Exception as e:
-        warnings.warn(f"An unexpected error occurred during mono-exponential fit: {e}. Returning original data.")
+        warnings.warn(
+            f"An unexpected error occurred during mono-exponential fit: {e}. Returning original data."
+        )
         return y_data, np.zeros_like(y_data), None

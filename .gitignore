@@ -5,7 +5,7 @@ __pycache__/
 .vscode
 .pytest_cache/
 Test_files/
-Trash/ 
+Trash/
 .DS_Store
 # Compiled source #
 ###################
@@ -29,3 +29,13 @@ Trash/
 *.rar
 *.tar
 *.zip
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# Distribution / packaging
+*.egg-info/
+build/
+dist/

@@ -11,19 +11,18 @@ user through the `epyrtools.baseline` sub-package.
 Currently, it provides a polynomial surface fitting method.
 """
 
-import numpy as np
 import warnings
+
+import numpy as np
 
 # Import shared utility functions from within the same sub-package
 from ._utils import _create_fit_mask_2d
 
 # --- 2D Baseline Correction Helpers ---
 
+
 def _polynomial_features_2d(
-    x_coords: np.ndarray,
-    y_coords: np.ndarray,
-    order_x: int,
-    order_y: int
+    x_coords: np.ndarray, y_coords: np.ndarray, order_x: int, order_y: int
 ) -> np.ndarray:
     """Generates a 2D polynomial design matrix (Vandermonde-like).
 
@@ -59,12 +58,13 @@ def _polynomial_features_2d(
             col_idx += 1
     return design_matrix
 
+
 def _evaluate_polynomial_surface(
     x_mesh: np.ndarray,
     y_mesh: np.ndarray,
     coeffs: np.ndarray,
     order_x: int,
-    order_y: int
+    order_y: int,
 ) -> np.ndarray:
     """Evaluates a 2D polynomial surface on a coordinate grid.
 
@@ -84,7 +84,7 @@ def _evaluate_polynomial_surface(
         raise ValueError("x_mesh and y_mesh must have the same shape.")
     if coeffs.ndim != 1:
         raise ValueError("coeffs must be a 1D array.")
-    
+
     expected_num_coeffs = (order_x + 1) * (order_y + 1)
     if len(coeffs) != expected_num_coeffs:
         raise ValueError(
@@ -100,7 +100,9 @@ def _evaluate_polynomial_surface(
             coeff_idx += 1
     return surface
 
+
 # --- Public 2D Baseline Correction Function ---
+
 
 def baseline_polynomial_2d(
     z_data: np.ndarray,
@@ -108,7 +110,7 @@ def baseline_polynomial_2d(
     y_data: np.ndarray = None,
     poly_order: int | tuple[int, int] = (1, 1),
     exclude_regions: list[tuple[tuple[float, float], tuple[float, float]]] = None,
-    roi: tuple[tuple[float, float], tuple[float, float]] = None
+    roi: tuple[tuple[float, float], tuple[float, float]] = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Performs 2D baseline correction by subtracting a fitted polynomial surface.
 
@@ -155,7 +157,12 @@ def baseline_polynomial_2d(
         order_x, order_y = poly_order, poly_order
     elif isinstance(poly_order, tuple) and len(poly_order) == 2:
         order_x, order_y = poly_order
-        if not (isinstance(order_x, int) and isinstance(order_y, int) and order_x >= 0 and order_y >= 0):
+        if not (
+            isinstance(order_x, int)
+            and isinstance(order_y, int)
+            and order_x >= 0
+            and order_y >= 0
+        ):
             raise ValueError("poly_order tuple elements must be non-negative integers.")
     else:
         raise ValueError("poly_order must be an int or a tuple of two ints.")
@@ -172,17 +179,30 @@ def baseline_polynomial_2d(
     # Validate region formats
     region_format_error = "must be a tuple of ((x_start, x_end), (y_start, y_end))."
     if roi is not None:
-        if not (isinstance(roi, tuple) and len(roi) == 2 and isinstance(roi[0], tuple) and
-                len(roi[0]) == 2 and isinstance(roi[1], tuple) and len(roi[1]) == 2):
+        if not (
+            isinstance(roi, tuple)
+            and len(roi) == 2
+            and isinstance(roi[0], tuple)
+            and len(roi[0]) == 2
+            and isinstance(roi[1], tuple)
+            and len(roi[1]) == 2
+        ):
             raise ValueError(f"roi {region_format_error}")
     if exclude_regions is not None:
         if not isinstance(exclude_regions, list):
             raise ValueError("exclude_regions must be a list of region tuples.")
         for i, region in enumerate(exclude_regions):
-            if not (isinstance(region, tuple) and len(region) == 2 and
-                    isinstance(region[0], tuple) and len(region[0]) == 2 and
-                    isinstance(region[1], tuple) and len(region[1]) == 2):
-                raise ValueError(f"Each item in exclude_regions (item {i}) {region_format_error}")
+            if not (
+                isinstance(region, tuple)
+                and len(region) == 2
+                and isinstance(region[0], tuple)
+                and len(region[0]) == 2
+                and isinstance(region[1], tuple)
+                and len(region[1]) == 2
+            ):
+                raise ValueError(
+                    f"Each item in exclude_regions (item {i}) {region_format_error}"
+                )
 
     # Create coordinate meshgrid for full surface evaluation
     XX_eval, YY_eval = np.meshgrid(x_coords_eval, y_coords_eval)
@@ -193,7 +213,7 @@ def baseline_polynomial_2d(
         x_axis_coords=x_coords_eval,
         y_axis_coords=y_coords_eval,
         fit_window_roi=roi,
-        exclude_regions=exclude_regions
+        exclude_regions=exclude_regions,
     )
 
     # Select the points for fitting based on the mask (flattened to 1D)
@@ -208,27 +228,34 @@ def baseline_polynomial_2d(
         warnings.warn(
             f"Not enough points ({num_points_for_fit}) for polynomial fit with "
             f"orders ({order_x}, {order_y}), which requires {num_coeffs_needed} coefficients. "
-            "Returning original data.", UserWarning
+            "Returning original data.",
+            UserWarning,
         )
         return z_data, np.zeros_like(z_data)
 
     # Construct the design matrix and perform the least-squares fit
-    design_matrix = _polynomial_features_2d(x_points_to_fit, y_points_to_fit, order_x, order_y)
+    design_matrix = _polynomial_features_2d(
+        x_points_to_fit, y_points_to_fit, order_x, order_y
+    )
     try:
         coeffs, _, rank, _ = np.linalg.lstsq(design_matrix, z_values_to_fit, rcond=None)
-        
+
         if rank < num_coeffs_needed:
-             warnings.warn(
+            warnings.warn(
                 f"Polynomial fit may be poorly conditioned. Rank deficiency detected: "
                 f"rank={rank}, expected_coeffs={num_coeffs_needed}. Results might be unreliable.",
-                UserWarning
+                UserWarning,
             )
 
         # Evaluate the fitted surface over the entire grid and subtract
-        baseline_surface = _evaluate_polynomial_surface(XX_eval, YY_eval, coeffs, order_x, order_y)
+        baseline_surface = _evaluate_polynomial_surface(
+            XX_eval, YY_eval, coeffs, order_x, order_y
+        )
         z_corrected = z_data - baseline_surface
         return z_corrected, baseline_surface
 
     except np.linalg.LinAlgError as e:
-        warnings.warn(f"Polynomial surface fit failed: {e}. Returning original data.", UserWarning)
+        warnings.warn(
+            f"Polynomial surface fit failed: {e}. Returning original data.", UserWarning
+        )
         return z_data, np.zeros_like(z_data)

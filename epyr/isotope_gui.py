@@ -9,10 +9,9 @@ or the current working directory.
 
 import os
 import platform
-import traceback
 import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
+import traceback
+from tkinter import messagebox, ttk
 
 import pandas as pd
 
@@ -73,9 +72,7 @@ def element_class(atomic_number):
             element_category = 2  # Rare Earth
             # Group for positioning Ln/Ac block (visual column index 3-17)
             group = (
-                (atomic_number - 57 + 3)
-                if is_lanthanide
-                else (atomic_number - 89 + 3)
+                (atomic_number - 57 + 3) if is_lanthanide else (atomic_number - 89 + 3)
             )
         elif group < 3:
             element_category = 0  # Alkali / Alkaline Earth
@@ -197,17 +194,12 @@ class IsotopesGUI:
 
         # --- Calculate Window Size ---
         window_width = (
-            self.border
-            + 18 * self.x_spacing
-            + 2 * self.class_spacing
-            + self.border
+            self.border + 18 * self.x_spacing + 2 * self.class_spacing + self.border
         )
         window_width += 20  # Buffer for controls fit
 
         periodic_table_height = self.border + 7 * self.y_spacing
-        lan_act_block_height = (
-            self.border + 2 * self.y_spacing + self.class_spacing
-        )
+        lan_act_block_height = self.border + 2 * self.y_spacing + self.class_spacing
         gap_above_table = self.label_height / 2
         table_section_height = self.table_height_pixels
         controls_section_height = self.bottom_height + self.border * 2
@@ -263,7 +255,7 @@ class IsotopesGUI:
         for path in possible_paths:
             if os.path.exists(path):
                 data_file = path
-                found_path = path # Keep track of the found path for error message
+                found_path = path  # Keep track of the found path for error message
                 break
 
         if data_file is None:
@@ -275,12 +267,19 @@ class IsotopesGUI:
             print(f"Error: {error_msg}")
             raise FileNotFoundError(error_msg)
 
-        print(f"Loading data from: {found_path}") # Info message
+        print(f"Loading data from: {found_path}")  # Info message
 
         try:
             col_names = [
-                "Z", "N", "radioactive", "element", "name",
-                "spin", "gn", "abundance", "qm",
+                "Z",
+                "N",
+                "radioactive",
+                "element",
+                "name",
+                "spin",
+                "gn",
+                "abundance",
+                "qm",
             ]
             # Use sep='\s+' for whitespace delimiter
             data = pd.read_csv(
@@ -314,16 +313,14 @@ class IsotopesGUI:
                     data[col] = data[col].astype(str).fillna("")
 
             # Calculate gamma/(2pi) [MHz/T]
-            if "gn" in data.columns and pd.api.types.is_numeric_dtype(
-                data["gn"]
-            ):
+            if "gn" in data.columns and pd.api.types.is_numeric_dtype(data["gn"]):
                 data["gamma"] = data["gn"].apply(
-                    lambda gn_val: (gn_val * NMAGN / PLANCK / 1e6)
-                    if pd.notna(gn_val)
-                    else pd.NA
+                    lambda gn_val: (
+                        (gn_val * NMAGN / PLANCK / 1e6) if pd.notna(gn_val) else pd.NA
+                    )
                 )
             else:
-                data["gamma"] = pd.NA # Ensure column exists even if gn doesn't
+                data["gamma"] = pd.NA  # Ensure column exists even if gn doesn't
 
             # Assemble isotope symbols (e.g., 1H, 14C*, 235U)
             isotopes = []
@@ -343,9 +340,10 @@ class IsotopesGUI:
                         isotopes.append(pd.NA)
             else:
                 # Handle case where required columns might be missing in the input file
-                 print("Warning: Missing required columns (N, Z, element, radioactive) for isotope symbol generation.")
-                 data["isotope"] = pd.NA # Assign NA if cannot generate
-
+                print(
+                    "Warning: Missing required columns (N, Z, element, radioactive) for isotope symbol generation."
+                )
+                data["isotope"] = pd.NA  # Assign NA if cannot generate
 
             data["isotope"] = isotopes
             # Convert to string *after* potential NA assignments
@@ -356,8 +354,7 @@ class IsotopesGUI:
             data["abundance"] = data["abundance"].fillna(0.0)
             data["qm"] = data["qm"].fillna(0.0)
             data["gn"] = data["gn"].fillna(0.0)
-            data["gamma"] = data["gamma"].fillna(0.0) # Fill calculated gamma NaNs
-
+            data["gamma"] = data["gamma"].fillna(0.0)  # Fill calculated gamma NaNs
 
             # Data subset for placing elements on the periodic table
             self.element_layout_data = data.drop_duplicates(
@@ -380,9 +377,9 @@ class IsotopesGUI:
         button_font = ("Arial", self.button_font_size - 2)
         is_macos = platform.system() == "Darwin"
 
-        if not hasattr(self, 'element_layout_data') or self.element_layout_data.empty:
-             print("Warning: No element layout data available to create periodic table.")
-             return # Cannot proceed without layout data
+        if not hasattr(self, "element_layout_data") or self.element_layout_data.empty:
+            print("Warning: No element layout data available to create periodic table.")
+            return  # Cannot proceed without layout data
 
         for _, element_data in self.element_layout_data.iterrows():
             # Ensure Z is valid before proceeding
@@ -425,9 +422,7 @@ class IsotopesGUI:
             # --- Determine background color based on element class ---
             bg_col_hex = "#D9D9D9"  # Default grey
             if element_category == 0:  # Main Group
-                bg_col_rgb = (
-                    [99, 154, 255] if group < 3 else [255, 207, 0]
-                )
+                bg_col_rgb = [99, 154, 255] if group < 3 else [255, 207, 0]
                 bg_col_hex = rgb_to_hex(bg_col_rgb)
             elif element_category == 1:  # Transition Metal
                 bg_col_rgb = [255, 154, 156]
@@ -442,17 +437,21 @@ class IsotopesGUI:
                 if self.full_data is not None and not self.full_data.empty:
                     element_isotopes = self.full_data[self.full_data["Z"] == ord_number]
                     if not element_isotopes.empty:
-                         # Check if *any* isotope for this Z has a valid N > 0
-                         has_isotopes = (element_isotopes['N'].notna() & (element_isotopes['N'] > 0)).any()
+                        # Check if *any* isotope for this Z has a valid N > 0
+                        has_isotopes = (
+                            element_isotopes["N"].notna() & (element_isotopes["N"] > 0)
+                        ).any()
                     else:
-                         has_isotopes = False
+                        has_isotopes = False
                 else:
-                    has_isotopes = False # No data to check against
-            except Exception as e: # Catch potential errors during lookup
+                    has_isotopes = False  # No data to check against
+            except Exception as e:  # Catch potential errors during lookup
                 print(f"Warning: Error checking isotopes for Z={ord_number}: {e}")
                 has_isotopes = False
 
-            final_color = bg_col_hex if has_isotopes else "#E0E0E0" # Grey out if no N>0 isotopes listed
+            final_color = (
+                bg_col_hex if has_isotopes else "#E0E0E0"
+            )  # Grey out if no N>0 isotopes listed
 
             # --- Create Button with Platform-Specific Coloring ---
             button_config = {
@@ -461,21 +460,30 @@ class IsotopesGUI:
                 "relief": "raised",
                 "borderwidth": 1,
                 "command": lambda sym=element_symbol: self._element_button_pushed(sym),
-                "fg": "black", # Ensure text is visible
-                "state": "normal" if has_isotopes else "disabled" # Disable button if no usable isotopes
+                "fg": "black",  # Ensure text is visible
+                "state": (
+                    "normal" if has_isotopes else "disabled"
+                ),  # Disable button if no usable isotopes
             }
 
             # Use appropriate coloring method based on OS
             if is_macos:  # Use highlightbackground on macOS
                 button_config["highlightbackground"] = final_color
-                button_config["highlightthickness"] = 1 # Make border visible
+                button_config["highlightthickness"] = 1  # Make border visible
                 # Set active background for visual feedback on click
-                button_config["activebackground"] = rgb_to_hex([c * 0.9 for c in bg_col_rgb]) if has_isotopes else final_color
+                button_config["activebackground"] = (
+                    rgb_to_hex([c * 0.9 for c in bg_col_rgb])
+                    if has_isotopes
+                    else final_color
+                )
             else:  # Use 'bg' on other platforms (Windows, Linux)
                 button_config["bg"] = final_color
                 # Set active background for visual feedback on click
-                button_config["activebackground"] = rgb_to_hex([c * 0.9 for c in bg_col_rgb]) if has_isotopes else final_color
-
+                button_config["activebackground"] = (
+                    rgb_to_hex([c * 0.9 for c in bg_col_rgb])
+                    if has_isotopes
+                    else final_color
+                )
 
             button = tk.Button(self.root, **button_config)
             button.place(
@@ -484,8 +492,8 @@ class IsotopesGUI:
                 width=self.element_width,
                 height=self.element_height,
             )
-            if has_isotopes: # Only add tooltip to active elements
-                 ToolTip(button, text=f" {element_name} ")
+            if has_isotopes:  # Only add tooltip to active elements
+                ToolTip(button, text=f" {element_name} ")
 
         # --- Add "all" button ---
         all_x = x_offset + 16 * self.x_spacing + 2 * self.class_spacing
@@ -504,7 +512,9 @@ class IsotopesGUI:
         # Define the light grey color for the 'all' button
         all_button_bg_rgb = [230, 230, 230]
         all_button_bg_hex = rgb_to_hex(all_button_bg_rgb)
-        all_button_active_bg_hex = rgb_to_hex([c * 0.9 for c in all_button_bg_rgb]) # Slightly darker when active
+        all_button_active_bg_hex = rgb_to_hex(
+            [c * 0.9 for c in all_button_bg_rgb]
+        )  # Slightly darker when active
 
         all_button_config = {
             "text": "all",
@@ -512,16 +522,16 @@ class IsotopesGUI:
             "relief": "raised",
             "borderwidth": 1,
             "command": lambda: self._element_button_pushed("all"),
-            "fg": "black", # Ensure text is visible
+            "fg": "black",  # Ensure text is visible
         }
 
         if is_macos:
-             all_button_config["highlightbackground"] = all_button_bg_hex
-             all_button_config["highlightthickness"] = 1
-             all_button_config["activebackground"] = all_button_active_bg_hex
+            all_button_config["highlightbackground"] = all_button_bg_hex
+            all_button_config["highlightthickness"] = 1
+            all_button_config["activebackground"] = all_button_active_bg_hex
         else:
-             all_button_config["bg"] = all_button_bg_hex
-             all_button_config["activebackground"] = all_button_active_bg_hex
+            all_button_config["bg"] = all_button_bg_hex
+            all_button_config["activebackground"] = all_button_active_bg_hex
 
         all_button = tk.Button(self.root, **all_button_config)
 
@@ -548,29 +558,49 @@ class IsotopesGUI:
         )
 
         cols = (
-            "isotope", "abundance", "spin", "gn",
-            "gamma", "qm", "nmrfreq",
+            "isotope",
+            "abundance",
+            "spin",
+            "gn",
+            "gamma",
+            "qm",
+            "nmrfreq",
         )
         col_names = {
-            "isotope": "Isotope", "abundance": "Abundance (%)", "spin": "Spin",
-            "gn": "gn value", "gamma": "γ/2π (MHz/T)", "qm": "Q (barn)",
+            "isotope": "Isotope",
+            "abundance": "Abundance (%)",
+            "spin": "Spin",
+            "gn": "gn value",
+            "gamma": "γ/2π (MHz/T)",
+            "qm": "Q (barn)",
             "nmrfreq": "Frequency (MHz)",
         }
         col_widths = {  # Adjusted column widths
-            "isotope": 80, "abundance": 110, "spin": 60, "gn": 95,
-            "gamma": 115, "qm": 85, "nmrfreq": 120,
+            "isotope": 80,
+            "abundance": 110,
+            "spin": 60,
+            "gn": 95,
+            "gamma": 115,
+            "qm": 85,
+            "nmrfreq": 120,
         }
         col_anchors = {  # Alignment within columns
-            "isotope": "w", "abundance": "e", "spin": "e", "gn": "e",
-            "gamma": "e", "qm": "e", "nmrfreq": "e",
+            "isotope": "w",
+            "abundance": "e",
+            "spin": "e",
+            "gn": "e",
+            "gamma": "e",
+            "qm": "e",
+            "nmrfreq": "e",
         }
 
         self.table = ttk.Treeview(table_frame, columns=cols, show="headings")
         style = ttk.Style()
         # Configure Treeview style for row height and potentially heading font
-        style.configure("Treeview", rowheight=25, font=('Arial', 10)) # Example font
-        style.configure("Treeview.Heading", font=('Arial', 10, 'bold')) # Example heading font
-
+        style.configure("Treeview", rowheight=25, font=("Arial", 10))  # Example font
+        style.configure(
+            "Treeview.Heading", font=("Arial", 10, "bold")
+        )  # Example heading font
 
         for col_id in cols:
             self.table.heading(
@@ -612,14 +642,17 @@ class IsotopesGUI:
 
     def _create_controls(self):
         """Creates checkboxes, field entry, and band buttons."""
-        controls_frame = ttk.Frame(self.root) # Use a frame for better layout control
-        controls_frame.place(x=self.border, y=int(self.controls_y_start),
-                             width=self.calculated_window_width - 2*self.border,
-                             height=self.bottom_height + self.border) # Adjusted height
+        controls_frame = ttk.Frame(self.root)  # Use a frame for better layout control
+        controls_frame.place(
+            x=self.border,
+            y=int(self.controls_y_start),
+            width=self.calculated_window_width - 2 * self.border,
+            height=self.bottom_height + self.border,
+        )  # Adjusted height
 
-        current_x = 0 # Relative x within the frame
-        control_height = 25 # Slightly increased height for better spacing/visuals
-        control_pady = (self.border // 2) # Vertical padding
+        current_x = 0  # Relative x within the frame
+        control_height = 25  # Slightly increased height for better spacing/visuals
+        control_pady = self.border // 2  # Vertical padding
 
         # Checkboxes
         self.unstable_var = tk.IntVar(value=0)
@@ -632,7 +665,6 @@ class IsotopesGUI:
         # Use pack or grid within the frame for flexibility
         unstable_check.pack(side=tk.LEFT, padx=5, pady=control_pady)
 
-
         self.nonmagnetic_var = tk.IntVar(value=1)
         nonmagnetic_check = ttk.Checkbutton(
             controls_frame,
@@ -642,121 +674,137 @@ class IsotopesGUI:
         )
         nonmagnetic_check.pack(side=tk.LEFT, padx=5, pady=control_pady)
 
-
         # Spacer or flexible element might be needed here if using pack
         # For simplicity, using pack with careful padding
 
         # Band Buttons (Placed before field entry for visual grouping)
-        band_button_frame = ttk.Frame(controls_frame) # Sub-frame for band buttons
+        band_button_frame = ttk.Frame(controls_frame)  # Sub-frame for band buttons
         band_button_frame.pack(side=tk.RIGHT, padx=10, pady=control_pady)
 
-        button_width = 3 # ttk button width is in text units, not pixels
+        button_width = 3  # ttk button width is in text units, not pixels
         style = ttk.Style()
-        style.configure("Band.TButton", padding=(5, 2)) # Add some padding inside buttons
+        style.configure(
+            "Band.TButton", padding=(5, 2)
+        )  # Add some padding inside buttons
 
         x_button = ttk.Button(
-             band_button_frame, text="X", width=button_width, command=self._set_field_X, style="Band.TButton"
+            band_button_frame,
+            text="X",
+            width=button_width,
+            command=self._set_field_X,
+            style="Band.TButton",
         )
         x_button.pack(side=tk.LEFT, padx=2)
         ToolTip(x_button, text="Set field to X-band (340 mT)")
 
         q_button = ttk.Button(
-             band_button_frame, text="Q", width=button_width, command=self._set_field_Q, style="Band.TButton"
+            band_button_frame,
+            text="Q",
+            width=button_width,
+            command=self._set_field_Q,
+            style="Band.TButton",
         )
         q_button.pack(side=tk.LEFT, padx=2)
         ToolTip(q_button, text="Set field to Q-band (1200 mT)")
 
         w_button = ttk.Button(
-             band_button_frame, text="W", width=button_width, command=self._set_field_W, style="Band.TButton"
+            band_button_frame,
+            text="W",
+            width=button_width,
+            command=self._set_field_W,
+            style="Band.TButton",
         )
         w_button.pack(side=tk.LEFT, padx=2)
         ToolTip(w_button, text="Set field to W-band (3400 mT)")
-
 
         # Magnetic Field Input (Packed to the right, before band buttons)
         self.field_var = tk.DoubleVar(value=self.default_field)
         self.field_entry = ttk.Entry(
             controls_frame,
             textvariable=self.field_var,
-            width=10, # Adjusted width
+            width=10,  # Adjusted width
             justify="right",
         )
         self.field_entry.bind("<Return>", lambda event: self._update_table())
         self.field_entry.bind("<FocusOut>", lambda event: self._update_table())
         style.map("TEntry", fieldbackground=[("!disabled", "white")])
-        self.field_entry.pack(side=tk.RIGHT, padx=(0, 5), pady=control_pady) # Pad right only
+        self.field_entry.pack(
+            side=tk.RIGHT, padx=(0, 5), pady=control_pady
+        )  # Pad right only
         ToolTip(self.field_entry, text="Enter magnetic field strength and press Enter")
 
-
         field_label = ttk.Label(controls_frame, text="Field (mT):")
-        field_label.pack(side=tk.RIGHT, padx=(10, 2), pady=control_pady) # Pad left only
-
+        field_label.pack(
+            side=tk.RIGHT, padx=(10, 2), pady=control_pady
+        )  # Pad left only
 
     # --- Callback Functions ---
     def _element_button_pushed(self, element_symbol):
         """Handles clicks on element buttons."""
         new_element = "" if element_symbol == "all" else element_symbol
-        if new_element != self.current_element: # Update only if changed
-             self.current_element = new_element
-             self._update_table()
+        if new_element != self.current_element:  # Update only if changed
+            self.current_element = new_element
+            self._update_table()
 
     def _set_field_X(self):
         """Sets magnetic field to X-band value (340 mT)."""
         if self.field_var.get() != 340.0:
-             self.field_var.set(340.0)
-             self._update_table()
+            self.field_var.set(340.0)
+            self._update_table()
 
     def _set_field_Q(self):
         """Sets magnetic field to Q-band value (1200 mT)."""
         if self.field_var.get() != 1200.0:
-             self.field_var.set(1200.0)
-             self._update_table()
+            self.field_var.set(1200.0)
+            self._update_table()
 
     def _set_field_W(self):
         """Sets magnetic field to W-band value (3400 mT)."""
         if self.field_var.get() != 3400.0:
-             self.field_var.set(3400.0)
-             self._update_table()
+            self.field_var.set(3400.0)
+            self._update_table()
 
     def _validate_field(self):
         """Validates the magnetic field entry, resets if invalid."""
         try:
             val = self.field_var.get()
-            if val < 0: # Optional: Disallow negative field
-                 messagebox.showwarning("Input Warning", "Magnetic field cannot be negative. Resetting to default.")
-                 self.field_var.set(self.default_field)
-            return True # Valid number obtained
+            if val < 0:  # Optional: Disallow negative field
+                messagebox.showwarning(
+                    "Input Warning",
+                    "Magnetic field cannot be negative. Resetting to default.",
+                )
+                self.field_var.set(self.default_field)
+            return True  # Valid number obtained
         except tk.TclError:
             messagebox.showerror(
                 "Input Error", "Invalid magnetic field value. Please enter a number."
             )
-            self.field_var.set(self.default_field) # Reset to default
-            return False # Invalid input
-
+            self.field_var.set(self.default_field)  # Reset to default
+            return False  # Invalid input
 
     def _update_table(self):
         """Filters data based on settings and updates the table display."""
         if not self._validate_field():
-             # If field validation failed and reset the value,
-             # _validate_field already showed an error.
-             # We still need the B0 value for calculation, so get it again.
-             B0 = self.field_var.get() # Get the potentially reset value
+            # If field validation failed and reset the value,
+            # _validate_field already showed an error.
+            # We still need the B0 value for calculation, so get it again.
+            B0 = self.field_var.get()  # Get the potentially reset value
         else:
-            B0 = self.field_var.get() # Get the validated value
+            B0 = self.field_var.get()  # Get the validated value
 
         try:
             show_unstable = self.unstable_var.get()
             show_nonmagnetic = self.nonmagnetic_var.get()
         except tk.TclError as e:
-             # Should not happen with IntVars, but good practice
-             print(f"Error getting checkbox values: {e}")
-             return
+            # Should not happen with IntVars, but good practice
+            print(f"Error getting checkbox values: {e}")
+            return
 
         if self.full_data is None or self.full_data.empty:
-             # Clear table if no data is loaded
-             for item in self.table.get_children():
-                 self.table.delete(item)
-             return
+            # Clear table if no data is loaded
+            for item in self.table.get_children():
+                self.table.delete(item)
+            return
 
         # Filter data based on selected element
         if not self.current_element:
@@ -775,112 +823,135 @@ class IsotopesGUI:
             else:
                 print("Warning: 'radioactive' column not found for filtering.")
 
-
         if not show_nonmagnetic:
             # Check if 'spin' column exists before filtering
             if "spin" in filtered_df.columns:
                 # Keep only isotopes with non-zero spin (using tolerance)
                 # Also ensure spin is not the placeholder -1.0
-                filtered_df = filtered_df[(abs(filtered_df["spin"] - 0.0) > 1e-9) & (filtered_df["spin"] >= 0.0)]
+                filtered_df = filtered_df[
+                    (abs(filtered_df["spin"] - 0.0) > 1e-9)
+                    & (filtered_df["spin"] >= 0.0)
+                ]
             else:
                 print("Warning: 'spin' column not found for filtering.")
         else:
             # If showing non-magnetic, still exclude placeholders
-             if "spin" in filtered_df.columns:
-                 filtered_df = filtered_df[filtered_df["spin"] >= 0.0]
-
+            if "spin" in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df["spin"] >= 0.0]
 
         # Exclude placeholder entries explicitly (redundant if handled above, but safe)
         # This step is crucial if the previous filters didn't catch the -1.0 placeholder
         # if "spin" in filtered_df.columns:
         #     filtered_df = filtered_df[filtered_df["spin"] >= 0.0]
 
-
         # Calculate NMR frequency (MHz) for the filtered isotopes
         # Ensure 'gamma' exists and B0 is valid
-        if "gamma" in filtered_df.columns and pd.api.types.is_numeric_dtype(
-            filtered_df["gamma"]
-        ) and B0 is not None:
+        if (
+            "gamma" in filtered_df.columns
+            and pd.api.types.is_numeric_dtype(filtered_df["gamma"])
+            and B0 is not None
+        ):
             # Freq[MHz] = gamma[MHz/T] * B0[mT] * 1e-3 [T/mT]
             # Ensure gamma is positive for frequency calculation if needed, or handle 0 gamma
             # Apply calculation only where gamma is not NA
             valid_gamma_mask = filtered_df["gamma"].notna()
-            filtered_df.loc[valid_gamma_mask, "NMRfreq"] = filtered_df.loc[valid_gamma_mask, "gamma"] * B0 * 1e-3
+            filtered_df.loc[valid_gamma_mask, "NMRfreq"] = (
+                filtered_df.loc[valid_gamma_mask, "gamma"] * B0 * 1e-3
+            )
             # Fill remaining NMRfreq with NaN or 0 where gamma was NA or calculation not applicable
-            filtered_df["NMRfreq"] = filtered_df["NMRfreq"].fillna(pd.NA) # Use pd.NA for consistency
+            filtered_df["NMRfreq"] = filtered_df["NMRfreq"].fillna(
+                pd.NA
+            )  # Use pd.NA for consistency
         else:
             # Ensure NMRfreq column exists even if calculation fails or isn't applicable
             filtered_df["NMRfreq"] = pd.NA
-
 
         # --- Update Treeview Table Display ---
         # Clear previous entries efficiently
         self.table.delete(*self.table.get_children())
 
-
         if not filtered_df.empty:
             # Select only the columns intended for display in the correct order
             display_cols_ordered = [
-                "isotope", "abundance", "spin", "gn",
-                "gamma", "qm", "NMRfreq", # Match the order defined in _create_table
+                "isotope",
+                "abundance",
+                "spin",
+                "gn",
+                "gamma",
+                "qm",
+                "NMRfreq",  # Match the order defined in _create_table
             ]
             # Ensure all display columns exist in the filtered_df before selecting
-            cols_to_display = [col for col in display_cols_ordered if col in filtered_df.columns]
+            cols_to_display = [
+                col for col in display_cols_ordered if col in filtered_df.columns
+            ]
             display_df = filtered_df[cols_to_display]
-
 
             # Iterate and format values for display
             table_values = []
             for _, row in display_df.iterrows():
                 # Format numeric values, handling potential NA/None
                 abundance_str = (
-                    f"{row['abundance']:.4f}" if pd.notna(row["abundance"]) and "abundance" in cols_to_display else ""
+                    f"{row['abundance']:.4f}"
+                    if pd.notna(row["abundance"]) and "abundance" in cols_to_display
+                    else ""
                 )
-                gn_str = f"{row['gn']:.4f}" if pd.notna(row["gn"]) and "gn" in cols_to_display else ""
+                gn_str = (
+                    f"{row['gn']:.4f}"
+                    if pd.notna(row["gn"]) and "gn" in cols_to_display
+                    else ""
+                )
                 gamma_str = (
-                    f"{row['gamma']:.4f}" if pd.notna(row["gamma"]) and "gamma" in cols_to_display else ""
+                    f"{row['gamma']:.4f}"
+                    if pd.notna(row["gamma"]) and "gamma" in cols_to_display
+                    else ""
                 )
-                qm_val = row.get("qm", pd.NA) # Safely get qm value
+                qm_val = row.get("qm", pd.NA)  # Safely get qm value
                 qm_str = (
-                    f"{qm_val:.4f}"
-                    if pd.notna(qm_val) and abs(qm_val) > 1e-9
+                    f"{qm_val:.4f}" if pd.notna(qm_val) and abs(qm_val) > 1e-9 else ""
+                )
+
+                nmrfreq_val = row.get("NMRfreq", pd.NA)  # Safely get NMRfreq
+                nmrfreq_str = (
+                    # Show frequency only if it's positive (or non-zero if preferred)
+                    f"{nmrfreq_val:.4f}"
+                    if pd.notna(nmrfreq_val) and nmrfreq_val > 1e-9
                     else ""
                 )
 
-                nmrfreq_val = row.get("NMRfreq", pd.NA) # Safely get NMRfreq
-                nmrfreq_str = (
-                     # Show frequency only if it's positive (or non-zero if preferred)
-                    f"{nmrfreq_val:.4f}" if pd.notna(nmrfreq_val) and nmrfreq_val > 1e-9 else ""
-                )
-
-
                 # Special formatting for spin (int, .5, or float), handling placeholder
-                spin_val = row.get("spin", -1.0) # Default to placeholder if missing
+                spin_val = row.get("spin", -1.0)  # Default to placeholder if missing
                 spin_str = ""
-                if pd.notna(spin_val) and spin_val >= 0.0: # Check it's valid and not placeholder
+                if (
+                    pd.notna(spin_val) and spin_val >= 0.0
+                ):  # Check it's valid and not placeholder
                     if spin_val == int(spin_val):
                         spin_str = str(int(spin_val))
                     # Check if it's a half-integer like 1.5, 2.5 etc.
-                    elif abs(spin_val * 2 - int(spin_val * 2)) < 1e-9 : # Ends in .5 (within tolerance)
-                         spin_str = f"{spin_val:.1f}" # Format as x.5
-                    else: # Otherwise, format as float
+                    elif (
+                        abs(spin_val * 2 - int(spin_val * 2)) < 1e-9
+                    ):  # Ends in .5 (within tolerance)
+                        spin_str = f"{spin_val:.1f}"  # Format as x.5
+                    else:  # Otherwise, format as float
                         spin_str = f"{spin_val:.4f}"
                 # else: spin_str remains "" if spin is placeholder or NA
-
 
                 # Assemble the list of values in the correct column order
                 # Use .get() with default for safety if a column was missing from display_df
                 values = [
-                    row.get("isotope", ""), abundance_str, spin_str, gn_str,
-                    gamma_str, qm_str, nmrfreq_str,
+                    row.get("isotope", ""),
+                    abundance_str,
+                    spin_str,
+                    gn_str,
+                    gamma_str,
+                    qm_str,
+                    nmrfreq_str,
                 ]
                 table_values.append(values)
 
-
             # Insert all rows at once (potentially faster for large datasets, though tkinter might not optimize this much)
             for values in table_values:
-                 self.table.insert("", tk.END, values=values)
-
+                self.table.insert("", tk.END, values=values)
 
     def _sort_table(self, col_id, reverse):
         """Sorts the table view by the selected column."""
@@ -889,17 +960,16 @@ class IsotopesGUI:
         data_list = []
         for item_id in self.table.get_children(""):
             try:
-                 value = self.table.set(item_id, col_id)
-                 data_list.append((value, item_id))
+                value = self.table.set(item_id, col_id)
+                data_list.append((value, item_id))
             except tk.TclError:
-                 print(f"Warning: Could not get value for item {item_id}, column {col_id}. Skipping.")
-                 continue # Skip item if value cannot be retrieved
-
+                print(
+                    f"Warning: Could not get value for item {item_id}, column {col_id}. Skipping."
+                )
+                continue  # Skip item if value cannot be retrieved
 
         # Define columns to attempt numeric sort
-        numeric_cols_for_sort = [
-            "abundance", "spin", "gn", "gamma", "qm", "nmrfreq"
-        ]
+        numeric_cols_for_sort = ["abundance", "spin", "gn", "gamma", "qm", "nmrfreq"]
 
         # Sorting logic
         try:
@@ -910,46 +980,50 @@ class IsotopesGUI:
                     try:
                         # Attempt to convert non-empty string to float
                         if value_str and isinstance(value_str, str):
-                             return float(value_str)
-                        elif isinstance(value_str, (int, float)): # Already numeric
-                             return float(value_str)
-                        else: # Empty string or other non-convertible type treated as lowest/highest
-                             return -float("inf") if not reverse else float("inf")
+                            return float(value_str)
+                        elif isinstance(value_str, (int, float)):  # Already numeric
+                            return float(value_str)
+                        else:  # Empty string or other non-convertible type treated as lowest/highest
+                            return -float("inf") if not reverse else float("inf")
                     except (ValueError, TypeError):
                         # Handle cases like "1/2" if they weren't formatted numerically, treat as lowest/highest
                         return -float("inf") if not reverse else float("inf")
+
                 data_list.sort(key=sort_key_numeric, reverse=reverse)
             else:  # Default to case-insensitive string sort for non-numeric columns
-                data_list.sort(key=lambda t: str(t[0]).lower() if t[0] else "", reverse=reverse)
+                data_list.sort(
+                    key=lambda t: str(t[0]).lower() if t[0] else "", reverse=reverse
+                )
 
         except Exception as e:
             print(f"Error during sorting column '{col_id}': {e}")
             traceback.print_exc()
             # Fallback to basic string sort if complex sort fails entirely
             try:
-                 data_list.sort(key=lambda t: str(t[0]), reverse=reverse)
+                data_list.sort(key=lambda t: str(t[0]), reverse=reverse)
             except Exception as fallback_e:
-                 print(f"Fallback sort also failed: {fallback_e}")
-                 # If even basic sort fails, just leave the order as is.
+                print(f"Fallback sort also failed: {fallback_e}")
+                # If even basic sort fails, just leave the order as is.
 
         # Rearrange items in the Treeview
         for index, (_, item_id) in enumerate(data_list):
-             try:
-                 self.table.move(item_id, "", index)
-             except tk.TclError:
-                 print(f"Warning: Could not move item {item_id} during sort.")
-                 continue # Skip if item cannot be moved
-
+            try:
+                self.table.move(item_id, "", index)
+            except tk.TclError:
+                print(f"Warning: Could not move item {item_id} during sort.")
+                continue  # Skip if item cannot be moved
 
         # Update heading command for next sort direction
         # Ensure lambda captures the current state of 'reverse' correctly
         self.table.heading(
-            col_id, text=self.table.heading(col_id)["text"], # Keep original text
-            command=lambda c=col_id, r=reverse: self._sort_table(c, not r)
+            col_id,
+            text=self.table.heading(col_id)["text"],  # Keep original text
+            command=lambda c=col_id, r=reverse: self._sort_table(c, not r),
         )
 
 
 # --- Module Execution / Entry Point ---
+
 
 def run_gui():
     """Creates the main Tkinter window and runs the IsotopesGUI application."""
@@ -965,14 +1039,14 @@ def run_gui():
             "Fatal Error - Data File Not Found",
             f"Could not initialize application.\n{e}\n\nPlease ensure the 'sub' directory containing 'isotopedata.txt' is accessible.",
         )
-        root.destroy() # Close the (likely empty) root window
+        root.destroy()  # Close the (likely empty) root window
     except Exception as e:
         # Catch any other unexpected errors during initialization
         messagebox.showerror(
             "Fatal Error - Initialization Failed",
             f"An unexpected error occurred during application startup:\n\n{e}\n\n{traceback.format_exc()}",
         )
-        root.destroy() # Close the root window
+        root.destroy()  # Close the root window
 
 
 if __name__ == "__main__":

@@ -1,12 +1,14 @@
 # sub/utils.py
-import sys
 import re
-import numpy as np
+import sys
 import warnings
 from pathlib import Path
 
+import numpy as np
+
 # Regular expression to check if a string can be converted to a number
 _NUMBER_RE = re.compile(r"^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$")
+
 
 def read_par_file(par_file_path: Path) -> dict:
     """Reads a Bruker ESP/WinEPR .par file (key-value pairs)."""
@@ -15,7 +17,7 @@ def read_par_file(par_file_path: Path) -> dict:
         raise FileNotFoundError(f"Cannot find the parameter file {par_file_path}")
 
     try:
-        with open(par_file_path, 'r', encoding='latin-1') as f:
+        with open(par_file_path, "r", encoding="latin-1") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -44,16 +46,20 @@ def read_par_file(par_file_path: Path) -> dict:
                 parameters[key] = value
     except Exception as e:
         raise IOError(f"Error reading PAR file {par_file_path}: {e}") from e
-        
-    if parameters.get('JEX'): parameters['XAXIS_NAME'] = parameters['JEX']
-    if parameters.get('JUN'): parameters['XAXIS_UNIT'] = parameters['JUN']
-    if parameters.get('XXUN'): parameters['XAXIS_UNIT'] = parameters['XXUN']
-    if parameters.get('JEY'): parameters['YAXIS_NAME'] = parameters['JEY']
-    if parameters.get('XYUN'): parameters['YAXIS_UNIT'] = parameters['XYUN']
-    
-   
+
+    if parameters.get("JEX"):
+        parameters["XAXIS_NAME"] = parameters["JEX"]
+    if parameters.get("JUN"):
+        parameters["XAXIS_UNIT"] = parameters["JUN"]
+    if parameters.get("XXUN"):
+        parameters["XAXIS_UNIT"] = parameters["XXUN"]
+    if parameters.get("JEY"):
+        parameters["YAXIS_NAME"] = parameters["JEY"]
+    if parameters.get("XYUN"):
+        parameters["YAXIS_UNIT"] = parameters["XYUN"]
 
     return parameters
+
 
 def read_dsc_file(dsc_file_path: Path) -> dict:
     """Reads a Bruker BES3T .DSC file (key-value pairs, handles line continuation)."""
@@ -63,7 +69,7 @@ def read_dsc_file(dsc_file_path: Path) -> dict:
 
     lines = []
     try:
-        with open(dsc_file_path, 'r', encoding='latin-1') as f:
+        with open(dsc_file_path, "r", encoding="latin-1") as f:
             lines = f.readlines()
     except Exception as e:
         raise IOError(f"Error reading DSC file {dsc_file_path}: {e}") from e
@@ -73,13 +79,13 @@ def read_dsc_file(dsc_file_path: Path) -> dict:
     while i < len(lines):
         line = lines[i].strip()
         # Handle line continuation characters '\'
-        while line.endswith('\\'):
+        while line.endswith("\\"):
             i += 1
             if i < len(lines):
                 line = line[:-1] + lines[i].strip()
             else:
-                line = line[:-1] # Remove trailing '\' even if it's the last line
-        processed_lines.append(line.replace('\\n', '\n')) # Replace escaped newlines
+                line = line[:-1]  # Remove trailing '\' even if it's the last line
+        processed_lines.append(line.replace("\\n", "\n"))  # Replace escaped newlines
         i += 1
 
     for line in processed_lines:
@@ -92,7 +98,7 @@ def read_dsc_file(dsc_file_path: Path) -> dict:
 
         key = parts[0]
         # Stop if Manipulation History Layer is reached
-        if key.upper() == '#MHL':
+        if key.upper() == "#MHL":
             break
         # Skip lines not starting with a letter (comments, etc.)
         if not key[0].isalpha():
@@ -109,14 +115,13 @@ def read_dsc_file(dsc_file_path: Path) -> dict:
         #     key = re.sub(r'\W|^(?=\d)', '_', key)
 
         parameters[key] = value
-    if parameters.get('XNAM'):
-        parameters['XAXIS_NAME'] = parameters['XNAM']
-        parameters['XAXIS_UNIT'] = parameters['XUNI']
-    if parameters.get('YNAM'):
-        parameters['YAXIS_NAME'] = parameters['YNAM']
-        parameters['YAXIS_UNIT'] = parameters['YUNI']
+    if parameters.get("XNAM"):
+        parameters["XAXIS_NAME"] = parameters["XNAM"]
+        parameters["XAXIS_UNIT"] = parameters["XUNI"]
+    if parameters.get("YNAM"):
+        parameters["YAXIS_NAME"] = parameters["YNAM"]
+        parameters["YAXIS_UNIT"] = parameters["YUNI"]
 
-        
     return parameters
 
 
@@ -138,13 +143,13 @@ def parse_field_params(parameters: dict) -> dict:
                 # Use regex for more robust float check if needed,
                 # but direct conversion attempt is usually fine
                 if _NUMBER_RE.match(value):
-                     parsed_params[key] = float(value)
+                    parsed_params[key] = float(value)
                 else:
-                    parsed_params[key] = value # Keep as string if not number-like
+                    parsed_params[key] = value  # Keep as string if not number-like
             except ValueError:
-                parsed_params[key] = value # Keep original string if conversion fails
+                parsed_params[key] = value  # Keep original string if conversion fails
         else:
-            parsed_params[key] = value # Keep non-string values as they are
+            parsed_params[key] = value  # Keep non-string values as they are
     return parsed_params
 
 
@@ -153,7 +158,7 @@ def get_matrix(
     dimensions: list[int],
     number_format_code: str,
     byte_order: str,
-    is_complex: bool | np.ndarray
+    is_complex: bool | np.ndarray,
 ) -> np.ndarray:
     """
     Reads binary data from a file into a NumPy array.
@@ -172,14 +177,14 @@ def get_matrix(
         raise FileNotFoundError(f"Data file not found: {data_file_path}")
 
     # Determine numpy dtype and endianness
-    dt_char = '>' if byte_order == 'ieee-be' else '<'
+    dt_char = ">" if byte_order == "ieee-be" else "<"
     try:
         # Construct dtype using standard codes (e.g., '>f8', '<i4')
         dtype = np.dtype(f"{dt_char}{number_format_code}")
-    except TypeError as e: # Catch potential error during dtype creation
-         # Add original exception context using 'from e'
-         raise ValueError(f"Unsupported number format code: {number_format_code}") from e
-         
+    except TypeError as e:  # Catch potential error during dtype creation
+        # Add original exception context using 'from e'
+        raise ValueError(f"Unsupported number format code: {number_format_code}") from e
+
     # Calculate expected number of elements
     n_points_total = int(np.prod(dimensions))
     if n_points_total == 0:
@@ -188,18 +193,22 @@ def get_matrix(
     # Handle potentially complex data reading
     # For now, assume is_complex is a single boolean
     # A more complex implementation could handle mixed real/complex channels
-    is_complex_flag = np.any(is_complex) if isinstance(is_complex, (list, np.ndarray)) else is_complex
+    is_complex_flag = (
+        np.any(is_complex) if isinstance(is_complex, (list, np.ndarray)) else is_complex
+    )
 
     if is_complex_flag:
         n_values_to_read = n_points_total * 2
-        actual_dtype = dtype.base # Read underlying real type
+        actual_dtype = dtype.base  # Read underlying real type
     else:
         n_values_to_read = n_points_total
         actual_dtype = dtype
 
     # Read raw data from file
     try:
-        raw_data = np.fromfile(data_file_path, dtype=actual_dtype, count=n_values_to_read)
+        raw_data = np.fromfile(
+            data_file_path, dtype=actual_dtype, count=n_values_to_read
+        )
     except Exception as e:
         raise IOError(f"Error reading data file {data_file_path}: {e}") from e
 
@@ -210,17 +219,16 @@ def get_matrix(
             f"Expected {n_values_to_read}, got {raw_data.size}."
         )
     elif raw_data.size > n_values_to_read:
-         warnings.warn(
-             f"Read more data points ({raw_data.size}) than expected ({n_values_to_read}) "
-             f"from {data_file_path}. Truncating."
-         )
-         raw_data = raw_data[:n_values_to_read]
-
+        warnings.warn(
+            f"Read more data points ({raw_data.size}) than expected ({n_values_to_read}) "
+            f"from {data_file_path}. Truncating."
+        )
+        raw_data = raw_data[:n_values_to_read]
 
     # Combine real and imaginary parts if complex
     if is_complex_flag:
         if raw_data.size % 2 != 0:
-             raise ValueError("Read odd number of values for complex data.")
+            raise ValueError("Read odd number of values for complex data.")
         data = raw_data[::2] + 1j * raw_data[1::2]
     else:
         data = raw_data
@@ -229,8 +237,10 @@ def get_matrix(
     # MATLAB uses Fortran order (first index fastest)
     # BES3T/ESP files are typically C-ordered (X varies fastest)
     # Reshape to (nz, ny, nx) if 3D, (ny, nx) if 2D, (nx,) if 1D
-    shape_numpy_order = [d for d in dimensions[::-1] if d > 1] # Reverse and remove dims of size 1
-    if not shape_numpy_order: # If all dims are 1 or empty
+    shape_numpy_order = [
+        d for d in dimensions[::-1] if d > 1
+    ]  # Reverse and remove dims of size 1
+    if not shape_numpy_order:  # If all dims are 1 or empty
         shape_numpy_order = (n_points_total,)
 
     try:
@@ -246,6 +256,7 @@ def get_matrix(
         ) from e
 
     return data
+
 
 def BrukerListFiles(path, recursive=False):
     """
@@ -264,7 +275,7 @@ def BrukerListFiles(path, recursive=False):
         raise NotADirectoryError(f"{path} is not a valid directory.")
 
     if recursive:
-        files = [p for p in path.rglob('*') if p.suffix in exts and p.is_file()]
+        files = [p for p in path.rglob("*") if p.suffix in exts and p.is_file()]
     else:
         files = [p for p in path.iterdir() if p.suffix in exts and p.is_file()]
 
