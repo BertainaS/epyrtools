@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>epyr.sub.processing2 &mdash; EPyR Tools v0.1.0 Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="epyr.sub.utils" href="epyr.sub.utils.html" />
+    <link rel="prev" title="epyr.sub.loadESP" href="epyr.sub.loadESP.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            EPyR Tools
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../epyr.html">EPyR Tools API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../modules.html">Complete Module Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="epyr.html">epyr</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="epyr.baseline.html">epyr.baseline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epyr.constants.html">epyr.constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epyr.eprload.html">epyr.eprload</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epyr.fair.html">epyr.fair</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epyr.fair_original_backup.html">epyr.fair_original_backup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epyr.isotope_gui.html">epyr.isotope_gui</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epyr.plot.html">epyr.plot</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="epyr.sub.html">epyr.sub</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="epyr.sub.baseline2.html">epyr.sub.baseline2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="epyr.sub.loadBES3T.html">epyr.sub.loadBES3T</a></li>
+<li class="toctree-l4"><a class="reference internal" href="epyr.sub.loadESP.html">epyr.sub.loadESP</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">epyr.sub.processing2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="epyr.sub.utils.html">epyr.sub.utils</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../modules.html#module-epyr">Main Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules.html#module-tree">Module Tree</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">EPyR Tools</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../modules.html">Complete Module Reference</a></li>
+          <li class="breadcrumb-item"><a href="epyr.html">epyr</a></li>
+          <li class="breadcrumb-item"><a href="epyr.sub.html">epyr.sub</a></li>
+      <li class="breadcrumb-item active">epyr.sub.processing2</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/generated/epyr.sub.processing2.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-epyr.sub.processing2">
+<span id="epyr-sub-processing2"></span><h1>epyr.sub.processing2<a class="headerlink" href="#module-epyr.sub.processing2" title="Link to this heading"></a></h1>
+<p>Created on Tue May  6 15:57:27 2025</p>
+<p>&#64;author: sylvainbertaina</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.sub.processing2.baseline_constant_offset" title="epyr.sub.processing2.baseline_constant_offset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">baseline_constant_offset</span></code></a>(y_data[, ...])</p></td>
+<td><p>Performs baseline correction by subtracting a constant offset.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.sub.processing2.baseline_mono_exponential" title="epyr.sub.processing2.baseline_mono_exponential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">baseline_mono_exponential</span></code></a>(y_data, x_data[, ...])</p></td>
+<td><p>Performs baseline correction by fitting and subtracting a mono-exponential decay.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.sub.processing2.baseline_polynomial" title="epyr.sub.processing2.baseline_polynomial"><code class="xref py py-obj docutils literal notranslate"><span class="pre">baseline_polynomial</span></code></a>(y_data[, x_data, ...])</p></td>
+<td><p>Performs baseline correction on 1D data by subtracting a polynomial fit.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.sub.processing2.baseline_stretched_exponential" title="epyr.sub.processing2.baseline_stretched_exponential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">baseline_stretched_exponential</span></code></a>(y_data, x_data)</p></td>
+<td><p>Performs baseline correction by fitting and subtracting a stretched exponential decay.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.sub.processing2.mono_exponential_decay" title="epyr.sub.processing2.mono_exponential_decay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mono_exponential_decay</span></code></a>(t, y0, amplitude, tau)</p></td>
+<td><p>Mono-exponential decay function.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.sub.processing2.stretched_exponential_decay" title="epyr.sub.processing2.stretched_exponential_decay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stretched_exponential_decay</span></code></a>(t, y0, ...)</p></td>
+<td><p>Stretched exponential decay function (Kohlrausch–Williams–Watts type).</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="epyr.sub.processing2.baseline_polynomial">
+<span class="sig-prename descclassname"><span class="pre">epyr.sub.processing2.</span></span><span class="sig-name descname"><span class="pre">baseline_polynomial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poly_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_regions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/epyr/sub/processing2.html#baseline_polynomial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epyr.sub.processing2.baseline_polynomial" title="Link to this definition"></a></dt>
+<dd><p>Performs baseline correction on 1D data by subtracting a polynomial fit.</p>
+<p>The polynomial is fitted to regions of the data presumed to be baseline.
+These regions can be specified by either defining an overall region of
+interest (ROI) for fitting, or by excluding signal regions from a
+broader fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_data</strong> (<em>np.ndarray</em>) – The 1D spectral data array.</p></li>
+<li><p><strong>x_data</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – The x-axis data corresponding to y_data.
+If provided, <cite>exclude_regions</cite> and <cite>roi</cite> are interpreted in
+the units of <cite>x_data</cite>. If None, indices are used. Defaults to None.</p></li>
+<li><p><strong>poly_order</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Order of the polynomial to fit to the baseline.
+Defaults to 1 (linear).</p></li>
+<li><p><strong>exclude_regions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em> of </em><em>tuples</em><em>, </em><em>optional</em>) – A list of (start, end) tuples
+specifying regions to <em>exclude</em> from the baseline fitting.
+Interpreted in <cite>x_data</cite> units if <cite>x_data</cite> is provided, otherwise as indices.
+Example: <cite>[(x1, x2), (x3, x4)]</cite>. Defaults to None (no regions explicitly excluded).</p></li>
+<li><p><strong>roi</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>, </em><em>optional</em>) – A single (start, end) tuple specifying the region of
+interest (ROI) where the baseline fitting should <em>occur</em>. Data outside
+this ROI (and within any <cite>exclude_regions</cite> that might overlap) will not
+be used for the fit. Interpreted in <cite>x_data</cite> units if <cite>x_data</cite> is provided,
+otherwise as indices. Example: <cite>(x_start_baseline, x_end_baseline)</cite>.
+If None, the entire dataset (minus <cite>exclude_regions</cite>) is considered.
+Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>y_corrected (np.ndarray): The baseline-corrected y_data.</p></li>
+<li><p>baseline (np.ndarray): The calculated polynomial baseline.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)">tuple</a>[np.ndarray, np.ndarray]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If y_data is not 1D or if x_data and y_data lengths mismatch.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epyr.sub.processing2.baseline_constant_offset">
+<span class="sig-prename descclassname"><span class="pre">epyr.sub.processing2.</span></span><span class="sig-name descname"><span class="pre">baseline_constant_offset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset_region_indices</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/epyr/sub/processing2.html#baseline_constant_offset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epyr.sub.processing2.baseline_constant_offset" title="Link to this definition"></a></dt>
+<dd><p>Performs baseline correction by subtracting a constant offset.</p>
+<p>The offset is calculated from a specified region of y_data (using indices)
+via its mean or median.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_data</strong> (<em>np.ndarray</em>) – The 1D spectral data array.</p></li>
+<li><p><strong>offset_region_indices</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>, </em><em>optional</em>) – A (start_index, end_index) tuple
+specifying the slice of y_data (exclusive of end_index, like Python slicing)
+to calculate the offset from. If None, the entire array is used,
+which is generally not recommended for data with signals.
+Defaults to None.</p></li>
+<li><p><strong>method</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Method to calculate the offset within the region.
+Options are ‘mean’ or ‘median’. Defaults to ‘mean’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>y_corrected (np.ndarray): The baseline-corrected y_data.</p></li>
+<li><dl class="simple">
+<dt>baseline (np.ndarray): The calculated constant baseline (an array</dt><dd><p>filled with the calculated offset value).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)">tuple</a>[np.ndarray, np.ndarray]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If y_data is not 1D or if the method is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epyr.sub.processing2.stretched_exponential_decay">
+<span class="sig-prename descclassname"><span class="pre">epyr.sub.processing2.</span></span><span class="sig-name descname"><span class="pre">stretched_exponential_decay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/epyr/sub/processing2.html#stretched_exponential_decay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epyr.sub.processing2.stretched_exponential_decay" title="Link to this definition"></a></dt>
+<dd><p>Stretched exponential decay function (Kohlrausch–Williams–Watts type).
+f(t) = y0 + amplitude * exp(-(t / tau)**beta)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epyr.sub.processing2.baseline_stretched_exponential">
+<span class="sig-prename descclassname"><span class="pre">epyr.sub.processing2.</span></span><span class="sig-name descname"><span class="pre">baseline_stretched_exponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_regions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/epyr/sub/processing2.html#baseline_stretched_exponential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epyr.sub.processing2.baseline_stretched_exponential" title="Link to this definition"></a></dt>
+<dd><p>Performs baseline correction by fitting and subtracting a stretched exponential decay.</p>
+<p>The function y(x) = y0 + A * exp(-((x - x_offset) / τ)**β) is fitted.
+This version assumes x_data is provided and that the decay starts effectively
+at or after x_data.min().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_data</strong> (<em>np.ndarray</em>) – The 1D spectral data array.</p></li>
+<li><p><strong>x_data</strong> (<em>np.ndarray</em>) – The x-axis data corresponding to y_data. Must be provided
+and should represent the variable against which the decay occurs
+(e.g., time, field).</p></li>
+<li><p><strong>initial_guess</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>, </em><em>optional</em>) – Initial guess for the parameters [y0, A, τ, β].
+- y0: baseline offset at infinity
+- A: amplitude of decay (can be negative if it’s an increasing baseline)
+- τ: characteristic time
+- β: stretching exponent (0 &lt; β &lt;= 1)
+If None, some heuristics will be used to estimate, but providing
+good initial guesses is highly recommended for robust fitting.</p></li>
+<li><p><strong>bounds</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>, </em><em>optional</em>) – <dl class="simple">
+<dt>Bounds for the parameters ([y0_min, A_min, τ_min, β_min],</dt><dd><p>[y0_max, A_max, τ_max, β_max]).</p>
+</dd>
+</dl>
+<p>Example: <cite>bounds=([0, -np.inf, 1e-9, 0.01], [np.inf, np.inf, np.inf, 1.0])</cite>
+Defaults to <cite>(-np.inf, np.inf)</cite>.</p>
+</p></li>
+<li><p><strong>fit_region</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>, </em><em>optional</em>) – A (start_x, end_x) tuple specifying the
+region of x_data to use for fitting the decay. If None, the entire
+dataset (respecting exclude_regions) is used. Defaults to None.</p></li>
+<li><p><strong>exclude_regions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em> of </em><em>tuples</em><em>, </em><em>optional</em>) – List of (start_x, end_x) tuples
+to exclude from fitting (e.g., signal peaks on top of the decay).
+Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>y_corrected (np.ndarray): Baseline-corrected y_data.</p></li>
+<li><p>baseline (np.ndarray): The calculated stretched exponential baseline.</p></li>
+<li><dl class="simple">
+<dt>fit_params (dict): Dictionary of the fitted parameters (y0, A, τ, β)</dt><dd><p>and their standard deviations (if calculable).
+Returns None for params if fit fails.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)">tuple</a>[np.ndarray, np.ndarray, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a>]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If y_data is not 1D or x_data is not provided or lengths mismatch.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epyr.sub.processing2.mono_exponential_decay">
+<span class="sig-prename descclassname"><span class="pre">epyr.sub.processing2.</span></span><span class="sig-name descname"><span class="pre">mono_exponential_decay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/epyr/sub/processing2.html#mono_exponential_decay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epyr.sub.processing2.mono_exponential_decay" title="Link to this definition"></a></dt>
+<dd><p>Mono-exponential decay function.
+f(t) = y0 + amplitude * exp(-t / tau)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epyr.sub.processing2.baseline_mono_exponential">
+<span class="sig-prename descclassname"><span class="pre">epyr.sub.processing2.</span></span><span class="sig-name descname"><span class="pre">baseline_mono_exponential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_regions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.3)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/epyr/sub/processing2.html#baseline_mono_exponential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epyr.sub.processing2.baseline_mono_exponential" title="Link to this definition"></a></dt>
+<dd><p>Performs baseline correction by fitting and subtracting a mono-exponential decay.</p>
+<p>The function y(x) = y0 + A * exp(-(x - x_offset) / τ) is fitted.
+This version assumes x_data is provided and that the decay starts effectively
+at or after x_data.min().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_data</strong> (<em>np.ndarray</em>) – The 1D spectral data array.</p></li>
+<li><p><strong>x_data</strong> (<em>np.ndarray</em>) – The x-axis data corresponding to y_data. Must be provided.</p></li>
+<li><p><strong>initial_guess</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>, </em><em>optional</em>) – Initial guess for parameters [y0, A, τ].
+- y0: baseline offset at infinity
+- A: amplitude of decay
+- τ: characteristic time
+If None, heuristics are used (providing good guesses is recommended).</p></li>
+<li><p><strong>bounds</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>, </em><em>optional</em>) – <dl class="simple">
+<dt>Bounds for parameters ([y0_min, A_min, τ_min],</dt><dd><p>[y0_max, A_max, τ_max]).</p>
+</dd>
+</dl>
+<p>Example: <cite>bounds=([0, -np.inf, 1e-9], [np.inf, np.inf, np.inf])</cite>
+Defaults to <cite>(-np.inf, np.inf)</cite>.</p>
+</p></li>
+<li><p><strong>fit_region</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><em>tuple</em></a><em>, </em><em>optional</em>) – (start_x, end_x) tuple specifying the x_data
+region for fitting. If None, the entire dataset (respecting
+exclude_regions) is used. Defaults to None.</p></li>
+<li><p><strong>exclude_regions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em> of </em><em>tuples</em><em>, </em><em>optional</em>) – List of (start_x, end_x) tuples
+to exclude from fitting (e.g., signal peaks). Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>y_corrected (np.ndarray): Baseline-corrected y_data.</p></li>
+<li><p>baseline (np.ndarray): The calculated mono-exponential baseline.</p></li>
+<li><dl class="simple">
+<dt>fit_params (dict): Dictionary of fitted parameters (y0, A, τ) and</dt><dd><p>their standard deviations. None if fit fails.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)">tuple</a>[np.ndarray, np.ndarray, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)">dict</a>]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If inputs are invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="epyr.sub.loadESP.html" class="btn btn-neutral float-left" title="epyr.sub.loadESP" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="epyr.sub.utils.html" class="btn btn-neutral float-right" title="epyr.sub.utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Sylvain Bertaina.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

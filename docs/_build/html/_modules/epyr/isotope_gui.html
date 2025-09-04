@@ -1,0 +1,1185 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>epyr.isotope_gui &mdash; EPyR Tools v0.1.0 Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            EPyR Tools
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/epyr.html">EPyR Tools API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">Complete Module Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">EPyR Tools</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">epyr.isotope_gui</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for epyr.isotope_gui</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A Tkinter GUI module for displaying nuclear isotope data from a file.</span>
+
+<span class="sd">Provides the IsotopesGUI class and a run_gui() function to launch the application.</span>
+<span class="sd">Expects isotope data in &#39;sub/isotopedata.txt&#39; relative to this script&#39;s location</span>
+<span class="sd">or the current working directory.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tkinter</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tk</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tkinter</span><span class="w"> </span><span class="kn">import</span> <span class="n">messagebox</span><span class="p">,</span> <span class="n">ttk</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># --- Constants ---</span>
+<span class="n">PLANCK</span> <span class="o">=</span> <span class="mf">6.62607015e-34</span>  <span class="c1"># J⋅s (CODATA 2018)</span>
+<span class="n">NMAGN</span> <span class="o">=</span> <span class="mf">5.0507837461e-27</span>  <span class="c1"># J⋅T⁻¹ (Nuclear magneton, CODATA 2018)</span>
+
+
+<span class="c1"># --- Helper Functions ---</span>
+<div class="viewcode-block" id="rgb_to_hex">
+<a class="viewcode-back" href="../../api/generated/epyr.isotope_gui.html#epyr.isotope_gui.rgb_to_hex">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rgb_to_hex</span><span class="p">(</span><span class="n">rgb_tuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts an RGB tuple (values 0-255) to a Tkinter hex color string.&quot;&quot;&quot;</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">rgb_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">rgb_tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">rgb_tuple</span><span class="p">[</span><span class="mi">2</span><span class="p">])))</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;#</span><span class="si">{</span><span class="n">r</span><span class="si">:</span><span class="s2">02x</span><span class="si">}{</span><span class="n">g</span><span class="si">:</span><span class="s2">02x</span><span class="si">}{</span><span class="n">b</span><span class="si">:</span><span class="s2">02x</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="element_class">
+<a class="viewcode-back" href="../../api/generated/epyr.isotope_gui.html#epyr.isotope_gui.element_class">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">element_class</span><span class="p">(</span><span class="n">atomic_number</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determines the period, group, and class of an element.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        atomic_number (int): The atomic number (Z) of the element.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: (period, group, element_category)</span>
+<span class="sd">               element_category: 0=main, 1=transition, 2=rare earth</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">period_limits</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="mi">54</span><span class="p">,</span> <span class="mi">86</span><span class="p">,</span> <span class="mi">118</span><span class="p">]</span>  <span class="c1"># Max Z for each period start</span>
+
+    <span class="c1"># Determine period</span>
+    <span class="n">period</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">period_limits</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">atomic_number</span> <span class="o">&lt;=</span> <span class="n">period_limits</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="n">period</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="k">break</span>
+    <span class="k">if</span> <span class="n">period</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">atomic_number</span> <span class="o">&gt;</span> <span class="mi">118</span><span class="p">:</span>  <span class="c1"># Handle elements beyond current limits</span>
+        <span class="n">period</span> <span class="o">=</span> <span class="mi">8</span>
+
+    <span class="n">group</span> <span class="o">=</span> <span class="n">atomic_number</span> <span class="o">-</span> <span class="n">period_limits</span><span class="p">[</span><span class="n">period</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">element_category</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Default: Main Group</span>
+
+    <span class="c1"># Determine Group and Category based on period</span>
+    <span class="k">if</span> <span class="n">period</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">group</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="mi">18</span>  <span class="c1"># Group 1 (H) or Group 18 (He)</span>
+    <span class="k">elif</span> <span class="n">period</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">group</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">+=</span> <span class="mi">10</span>  <span class="c1"># Shift p-block (Groups 3-8 -&gt; 13-18)</span>
+    <span class="k">elif</span> <span class="n">period</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="mi">3</span> <span class="o">&lt;=</span> <span class="n">group</span> <span class="o">&lt;=</span> <span class="mi">12</span><span class="p">:</span>
+            <span class="n">element_category</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Transition Metal</span>
+    <span class="k">elif</span> <span class="n">period</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">]:</span>
+        <span class="c1"># Lanthanides (57-71) and Actinides (89-103)</span>
+        <span class="n">is_lanthanide</span> <span class="o">=</span> <span class="n">period</span> <span class="o">==</span> <span class="mi">6</span> <span class="ow">and</span> <span class="mi">57</span> <span class="o">&lt;=</span> <span class="n">atomic_number</span> <span class="o">&lt;=</span> <span class="mi">71</span>
+        <span class="n">is_actinide</span> <span class="o">=</span> <span class="n">period</span> <span class="o">==</span> <span class="mi">7</span> <span class="ow">and</span> <span class="mi">89</span> <span class="o">&lt;=</span> <span class="n">atomic_number</span> <span class="o">&lt;=</span> <span class="mi">103</span>
+        <span class="k">if</span> <span class="n">is_lanthanide</span> <span class="ow">or</span> <span class="n">is_actinide</span><span class="p">:</span>
+            <span class="n">element_category</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># Rare Earth</span>
+            <span class="c1"># Group for positioning Ln/Ac block (visual column index 3-17)</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">atomic_number</span> <span class="o">-</span> <span class="mi">57</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_lanthanide</span> <span class="k">else</span> <span class="p">(</span><span class="n">atomic_number</span> <span class="o">-</span> <span class="mi">89</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">group</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">element_category</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Alkali / Alkaline Earth</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Post-Ln/Ac transition metals or main group p-block</span>
+            <span class="n">effective_group</span> <span class="o">=</span> <span class="n">atomic_number</span> <span class="o">-</span> <span class="n">period_limits</span><span class="p">[</span><span class="n">period</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">14</span>
+            <span class="k">if</span> <span class="mi">3</span> <span class="o">&lt;=</span> <span class="n">effective_group</span> <span class="o">&lt;=</span> <span class="mi">12</span><span class="p">:</span>
+                <span class="n">element_category</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Transition Metal</span>
+                <span class="n">group</span> <span class="o">=</span> <span class="n">effective_group</span>
+            <span class="k">elif</span> <span class="n">effective_group</span> <span class="o">&gt;</span> <span class="mi">12</span><span class="p">:</span>
+                <span class="n">element_category</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Main Group (p-block)</span>
+                <span class="n">group</span> <span class="o">=</span> <span class="n">effective_group</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># Should not happen if logic is correct</span>
+                <span class="n">element_category</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Fallback classification</span>
+                <span class="n">group</span> <span class="o">=</span> <span class="n">effective_group</span>
+
+    <span class="k">return</span> <span class="n">period</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">element_category</span></div>
+
+
+
+<span class="c1"># --- Tooltip Class ---</span>
+<div class="viewcode-block" id="ToolTip">
+<a class="viewcode-back" href="../../api/generated/epyr.isotope_gui.html#epyr.isotope_gui.ToolTip">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ToolTip</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple tooltip implementation for Tkinter widgets.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ToolTip.__init__">
+<a class="viewcode-back" href="../../api/generated/epyr.isotope_gui.html#epyr.isotope_gui.ToolTip.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">widget</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;widget info&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">widget</span> <span class="o">=</span> <span class="n">widget</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">text</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_window</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Enter&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">enter</span><span class="p">)</span>  <span class="c1"># Show on mouse enter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Leave&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">leave</span><span class="p">)</span>  <span class="c1"># Hide on mouse leave</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;ButtonPress&gt;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">leave</span><span class="p">)</span>  <span class="c1"># Hide on click</span></div>
+
+
+<div class="viewcode-block" id="ToolTip.enter">
+<a class="viewcode-back" href="../../api/generated/epyr.isotope_gui.html#epyr.isotope_gui.ToolTip.enter">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">enter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Display the tooltip window.&quot;&quot;&quot;</span>
+        <span class="n">x_rel</span><span class="p">,</span> <span class="n">y_rel</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">bbox</span><span class="p">(</span>
+            <span class="s2">&quot;insert&quot;</span>
+        <span class="p">)</span>  <span class="c1"># Get widget bounds relative to its parent</span>
+        <span class="k">if</span> <span class="n">x_rel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Handle cases where bbox might not be available yet</span>
+            <span class="n">x_rel</span><span class="p">,</span> <span class="n">y_rel</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+
+        <span class="c1"># Calculate absolute screen coordinates for the tooltip popup</span>
+        <span class="n">x_abs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">winfo_rootx</span><span class="p">()</span> <span class="o">+</span> <span class="n">x_rel</span> <span class="o">+</span> <span class="mi">25</span>  <span class="c1"># Offset from mouse</span>
+        <span class="n">y_abs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">widget</span><span class="o">.</span><span class="n">winfo_rooty</span><span class="p">()</span> <span class="o">+</span> <span class="n">y_rel</span> <span class="o">+</span> <span class="mi">20</span>
+
+        <span class="c1"># Create a toplevel window for the tooltip</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_window</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Toplevel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">widget</span><span class="p">)</span>
+        <span class="c1"># Remove window decorations (border, title bar)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_window</span><span class="o">.</span><span class="n">wm_overrideredirect</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_window</span><span class="o">.</span><span class="n">wm_geometry</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;+</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">x_abs</span><span class="p">)</span><span class="si">}</span><span class="s2">+</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">y_abs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Add label with tooltip text</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_window</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+            <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span>
+            <span class="n">background</span><span class="o">=</span><span class="s2">&quot;#ffffe0&quot;</span><span class="p">,</span>
+            <span class="n">relief</span><span class="o">=</span><span class="s2">&quot;solid&quot;</span><span class="p">,</span>
+            <span class="n">borderwidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">font</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;tahoma&quot;</span><span class="p">,</span> <span class="s2">&quot;8&quot;</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">ipadx</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ToolTip.leave">
+<a class="viewcode-back" href="../../api/generated/epyr.isotope_gui.html#epyr.isotope_gui.ToolTip.leave">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">leave</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Destroy the tooltip window.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_window</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_window</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_window</span> <span class="o">=</span> <span class="kc">None</span></div>
+</div>
+
+
+
+<span class="c1"># --- Main GUI Class ---</span>
+<div class="viewcode-block" id="IsotopesGUI">
+<a class="viewcode-back" href="../../api/generated/epyr.isotope_gui.html#epyr.isotope_gui.IsotopesGUI">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IsotopesGUI</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;GUI application to display nuclear isotope data.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="IsotopesGUI.__init__">
+<a class="viewcode-back" href="../../api/generated/epyr.isotope_gui.html#epyr.isotope_gui.IsotopesGUI.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the Isotopes GUI.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            root: The root Tkinter window (tk.Tk).</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            FileNotFoundError: If the isotope data file cannot be found.</span>
+<span class="sd">            Exception: If there&#39;s an error reading or processing the data file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">root</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Nuclear Isotopes&quot;</span><span class="p">)</span>
+
+        <span class="c1"># --- GUI Settings ---</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_field</span> <span class="o">=</span> <span class="mf">340.0</span>  <span class="c1"># mT</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">button_font_size</span> <span class="o">=</span> <span class="mi">14</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">element_width</span> <span class="o">=</span> <span class="mi">36</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">element_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">element_width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">border</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_spacing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">element_width</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_spacing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">element_height</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">class_spacing</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_height</span> <span class="o">=</span> <span class="mi">15</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table_height_pixels</span> <span class="o">=</span> <span class="mi">200</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottom_height</span> <span class="o">=</span> <span class="mi">30</span>
+
+        <span class="c1"># --- Load Data ---</span>
+        <span class="c1"># This will raise an exception if the file is not found or parsing fails</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">full_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_isotope_data_file</span><span class="p">()</span>
+        <span class="c1"># No need for explicit check/return here, exception handles failure</span>
+
+        <span class="c1"># --- Prepare Data Structures ---</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table_display_data_cols</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;isotope&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;abundance&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;spin&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gn&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gamma&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;qm&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="c1"># Create a working copy for display data, add NMR frequency column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">table_display_data_cols</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table_data</span><span class="p">[</span><span class="s2">&quot;NMRfreq&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_element</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># Selected element symbol (&#39;&#39;: all)</span>
+
+        <span class="c1"># --- Calculate Window Size ---</span>
+        <span class="n">window_width</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">border</span> <span class="o">+</span> <span class="mi">18</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_spacing</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_spacing</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span>
+        <span class="p">)</span>
+        <span class="n">window_width</span> <span class="o">+=</span> <span class="mi">20</span>  <span class="c1"># Buffer for controls fit</span>
+
+        <span class="n">periodic_table_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span> <span class="o">+</span> <span class="mi">7</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_spacing</span>
+        <span class="n">lan_act_block_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_spacing</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_spacing</span>
+        <span class="n">gap_above_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_height</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">table_section_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_height_pixels</span>
+        <span class="n">controls_section_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottom_height</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span> <span class="o">*</span> <span class="mi">2</span>
+
+        <span class="n">window_height</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">periodic_table_height</span>
+            <span class="o">+</span> <span class="n">lan_act_block_height</span>
+            <span class="o">+</span> <span class="n">gap_above_table</span>
+            <span class="o">+</span> <span class="n">table_section_height</span>
+            <span class="o">+</span> <span class="n">controls_section_height</span>
+        <span class="p">)</span>
+
+        <span class="c1"># --- Center and Set Window Geometry ---</span>
+        <span class="n">screen_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">winfo_screenwidth</span><span class="p">()</span>
+        <span class="n">screen_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">winfo_screenheight</span><span class="p">()</span>
+        <span class="n">x_pos</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">screen_width</span> <span class="o">-</span> <span class="n">window_width</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">y_pos</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">screen_height</span> <span class="o">-</span> <span class="n">window_height</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calculated_window_width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">window_width</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">calculated_window_width</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">window_height</span><span class="p">)</span><span class="si">}</span><span class="s2">+</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">x_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">+</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">y_pos</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">resizable</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># --- Create Widgets ---</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_periodic_table</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_table</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_controls</span><span class="p">()</span>
+
+        <span class="c1"># --- Initialize Table Display ---</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_table</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_isotope_data_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads isotope data from &#39;sub/isotopedata.txt&#39;.</span>
+
+<span class="sd">        Searches in the current working directory and the script&#39;s directory.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pandas.DataFrame: The loaded and processed isotope data.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            FileNotFoundError: If &#39;sub/isotopedata.txt&#39; cannot be found.</span>
+<span class="sd">            Exception: If there is an error reading or processing the file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">script_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+        <span class="n">possible_paths</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">&quot;sub&quot;</span><span class="p">,</span> <span class="s2">&quot;isotopedata.txt&quot;</span><span class="p">),</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">script_dir</span><span class="p">,</span> <span class="s2">&quot;sub&quot;</span><span class="p">,</span> <span class="s2">&quot;isotopedata.txt&quot;</span><span class="p">),</span>
+            <span class="c1"># You could add more search paths here if needed</span>
+        <span class="p">]</span>
+        <span class="n">data_file</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">found_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">possible_paths</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="n">data_file</span> <span class="o">=</span> <span class="n">path</span>
+                <span class="n">found_path</span> <span class="o">=</span> <span class="n">path</span>  <span class="c1"># Keep track of the found path for error message</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">data_file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">error_msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Could not find &#39;sub/isotopedata.txt&#39;. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Checked paths:</span><span class="se">\n</span><span class="s2">- </span><span class="si">{</span><span class="n">possible_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">- </span><span class="si">{</span><span class="n">possible_paths</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="c1"># Add others if you expanded possible_paths</span>
+            <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">error_msg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading data from: </span><span class="si">{</span><span class="n">found_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Info message</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">col_names</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;Z&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;N&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;radioactive&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;element&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;spin&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;gn&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;abundance&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;qm&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+            <span class="c1"># Use sep=&#39;\s+&#39; for whitespace delimiter</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+                <span class="n">data_file</span><span class="p">,</span>
+                <span class="n">comment</span><span class="o">=</span><span class="s2">&quot;%&quot;</span><span class="p">,</span>
+                <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span>  <span class="c1"># Regex for one or more whitespace</span>
+                <span class="n">names</span><span class="o">=</span><span class="n">col_names</span><span class="p">,</span>
+                <span class="n">na_values</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;-&quot;</span><span class="p">],</span>
+                <span class="n">skipinitialspace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Convert types after reading, coercing errors</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;coerce&quot;</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;N&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;N&quot;</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;coerce&quot;</span><span class="p">)</span>
+            <span class="n">numeric_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;spin&quot;</span><span class="p">,</span> <span class="s2">&quot;gn&quot;</span><span class="p">,</span> <span class="s2">&quot;abundance&quot;</span><span class="p">,</span> <span class="s2">&quot;qm&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">numeric_cols</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;coerce&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Remove rows missing critical Z or N</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">,</span> <span class="s2">&quot;N&quot;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># Convert Z/N to integer *after* cleaning NaNs</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;N&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;N&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+            <span class="c1"># Ensure string columns are strings and fill NaNs</span>
+            <span class="n">str_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;radioactive&quot;</span><span class="p">,</span> <span class="s2">&quot;element&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">str_cols</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Calculate gamma/(2pi) [MHz/T]</span>
+            <span class="k">if</span> <span class="s2">&quot;gn&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;gn&quot;</span><span class="p">]):</span>
+                <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gn&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">gn_val</span><span class="p">:</span> <span class="p">(</span>
+                        <span class="p">(</span><span class="n">gn_val</span> <span class="o">*</span> <span class="n">NMAGN</span> <span class="o">/</span> <span class="n">PLANCK</span> <span class="o">/</span> <span class="mf">1e6</span><span class="p">)</span> <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">notna</span><span class="p">(</span><span class="n">gn_val</span><span class="p">)</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">NA</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">NA</span>  <span class="c1"># Ensure column exists even if gn doesn&#39;t</span>
+
+            <span class="c1"># Assemble isotope symbols (e.g., 1H, 14C*, 235U)</span>
+            <span class="n">isotopes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">required_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;N&quot;</span><span class="p">,</span> <span class="s2">&quot;Z&quot;</span><span class="p">,</span> <span class="s2">&quot;element&quot;</span><span class="p">,</span> <span class="s2">&quot;radioactive&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">col</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">required_cols</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                    <span class="c1"># Check for NaN in Z/N specifically for this calculation</span>
+                    <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">notna</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;N&quot;</span><span class="p">])</span> <span class="ow">and</span> <span class="n">pd</span><span class="o">.</span><span class="n">notna</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">]):</span>
+                        <span class="n">mass_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;N&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">])</span>  <span class="c1"># A = N + Z</span>
+                        <span class="n">iso_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mass_number</span><span class="si">}{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;element&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;radioactive&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;*&quot;</span><span class="p">:</span>
+                            <span class="n">isotopes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iso_str</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">isotopes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iso_str</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># This case should ideally not happen after dropna above, but safer</span>
+                        <span class="n">isotopes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">NA</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Handle case where required columns might be missing in the input file</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;Warning: Missing required columns (N, Z, element, radioactive) for isotope symbol generation.&quot;</span>
+                <span class="p">)</span>
+                <span class="n">data</span><span class="p">[</span><span class="s2">&quot;isotope&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">NA</span>  <span class="c1"># Assign NA if cannot generate</span>
+
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;isotope&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">isotopes</span>
+            <span class="c1"># Convert to string *after* potential NA assignments</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;isotope&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;isotope&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+            <span class="c1"># Fill remaining NaNs in numeric columns used for display AFTER calculations</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;spin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;spin&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># Marker for missing</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;abundance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;abundance&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;qm&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;qm&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gn&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gn&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>  <span class="c1"># Fill calculated gamma NaNs</span>
+
+            <span class="c1"># Data subset for placing elements on the periodic table</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">element_layout_data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span>
+                <span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">],</span> <span class="n">keep</span><span class="o">=</span><span class="s2">&quot;first&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">data</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading or processing data file &#39;</span><span class="si">{</span><span class="n">data_file</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="c1"># Re-raise the exception to be caught by the caller (__init__ -&gt; run_gui)</span>
+            <span class="k">raise</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_periodic_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates the element buttons in a periodic table layout.&quot;&quot;&quot;</span>
+        <span class="n">x_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span>
+        <span class="n">y_start_periodic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span>
+        <span class="n">processed_Z</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">button_font</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Arial&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">button_font_size</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">is_macos</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Darwin&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;element_layout_data&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">element_layout_data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: No element layout data available to create periodic table.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>  <span class="c1"># Cannot proceed without layout data</span>
+
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">element_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">element_layout_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+            <span class="c1"># Ensure Z is valid before proceeding</span>
+            <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">element_data</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">]):</span>
+                <span class="k">continue</span>
+            <span class="n">ord_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">element_data</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">ord_number</span> <span class="ow">in</span> <span class="n">processed_Z</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">processed_Z</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ord_number</span><span class="p">)</span>
+
+            <span class="n">element_symbol</span> <span class="o">=</span> <span class="n">element_data</span><span class="p">[</span><span class="s2">&quot;element&quot;</span><span class="p">]</span>
+            <span class="n">element_name</span> <span class="o">=</span> <span class="n">element_data</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="n">period</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">element_category</span> <span class="o">=</span> <span class="n">element_class</span><span class="p">(</span><span class="n">ord_number</span><span class="p">)</span>
+
+            <span class="c1"># --- Calculate element button position (x, y) ---</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">element_category</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># Ln/Ac row positioning</span>
+                <span class="n">main_table_rows</span> <span class="o">=</span> <span class="mi">7</span>
+                <span class="n">ln_row_y</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">y_start_periodic</span>
+                    <span class="o">+</span> <span class="n">main_table_rows</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_spacing</span>
+                    <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_spacing</span>
+                <span class="p">)</span>
+                <span class="n">ac_row_y</span> <span class="o">=</span> <span class="n">ln_row_y</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_spacing</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">ln_row_y</span> <span class="k">if</span> <span class="n">period</span> <span class="o">==</span> <span class="mi">6</span> <span class="k">else</span> <span class="n">ac_row_y</span>
+                <span class="c1"># Position based on calculated &#39;group&#39; (visual column 3-17)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x_offset</span> <span class="o">+</span> <span class="p">(</span><span class="n">group</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_spacing</span>
+                <span class="n">x</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_spacing</span>  <span class="c1"># Align block start</span>
+
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># Main Group or Transition Metal positioning</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y_start_periodic</span> <span class="o">+</span> <span class="p">(</span><span class="n">period</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_spacing</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">x_offset</span> <span class="o">+</span> <span class="p">(</span><span class="n">group</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_spacing</span>
+                <span class="k">if</span> <span class="n">group</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">x</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_spacing</span>
+                <span class="k">if</span> <span class="n">group</span> <span class="o">&gt;</span> <span class="mi">12</span><span class="p">:</span>
+                    <span class="n">x</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_spacing</span>
+
+            <span class="c1"># --- Determine background color based on element class ---</span>
+            <span class="n">bg_col_hex</span> <span class="o">=</span> <span class="s2">&quot;#D9D9D9&quot;</span>  <span class="c1"># Default grey</span>
+            <span class="k">if</span> <span class="n">element_category</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Main Group</span>
+                <span class="n">bg_col_rgb</span> <span class="o">=</span> <span class="p">[</span><span class="mi">99</span><span class="p">,</span> <span class="mi">154</span><span class="p">,</span> <span class="mi">255</span><span class="p">]</span> <span class="k">if</span> <span class="n">group</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="k">else</span> <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">207</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="n">bg_col_hex</span> <span class="o">=</span> <span class="n">rgb_to_hex</span><span class="p">(</span><span class="n">bg_col_rgb</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">element_category</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Transition Metal</span>
+                <span class="n">bg_col_rgb</span> <span class="o">=</span> <span class="p">[</span><span class="mi">255</span><span class="p">,</span> <span class="mi">154</span><span class="p">,</span> <span class="mi">156</span><span class="p">]</span>
+                <span class="n">bg_col_hex</span> <span class="o">=</span> <span class="n">rgb_to_hex</span><span class="p">(</span><span class="n">bg_col_rgb</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">element_category</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># Lanthanide / Actinide</span>
+                <span class="n">bg_col_rgb</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">207</span><span class="p">,</span> <span class="mi">49</span><span class="p">]</span>
+                <span class="n">bg_col_hex</span> <span class="o">=</span> <span class="n">rgb_to_hex</span><span class="p">(</span><span class="n">bg_col_rgb</span><span class="p">)</span>
+
+            <span class="c1"># --- Check if element has isotopes with N &gt; 0 listed ---</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Ensure full_data is available</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                    <span class="n">element_isotopes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">full_data</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">ord_number</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">element_isotopes</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                        <span class="c1"># Check if *any* isotope for this Z has a valid N &gt; 0</span>
+                        <span class="n">has_isotopes</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">element_isotopes</span><span class="p">[</span><span class="s2">&quot;N&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">element_isotopes</span><span class="p">[</span><span class="s2">&quot;N&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">has_isotopes</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">has_isotopes</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># No data to check against</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># Catch potential errors during lookup</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Error checking isotopes for Z=</span><span class="si">{</span><span class="n">ord_number</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">has_isotopes</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="n">final_color</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">bg_col_hex</span> <span class="k">if</span> <span class="n">has_isotopes</span> <span class="k">else</span> <span class="s2">&quot;#E0E0E0&quot;</span>
+            <span class="p">)</span>  <span class="c1"># Grey out if no N&gt;0 isotopes listed</span>
+
+            <span class="c1"># --- Create Button with Platform-Specific Coloring ---</span>
+            <span class="n">button_config</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">element_symbol</span><span class="p">,</span>
+                <span class="s2">&quot;font&quot;</span><span class="p">:</span> <span class="n">button_font</span><span class="p">,</span>
+                <span class="s2">&quot;relief&quot;</span><span class="p">:</span> <span class="s2">&quot;raised&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;borderwidth&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;command&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">sym</span><span class="o">=</span><span class="n">element_symbol</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_element_button_pushed</span><span class="p">(</span><span class="n">sym</span><span class="p">),</span>
+                <span class="s2">&quot;fg&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span>  <span class="c1"># Ensure text is visible</span>
+                <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;normal&quot;</span> <span class="k">if</span> <span class="n">has_isotopes</span> <span class="k">else</span> <span class="s2">&quot;disabled&quot;</span>
+                <span class="p">),</span>  <span class="c1"># Disable button if no usable isotopes</span>
+            <span class="p">}</span>
+
+            <span class="c1"># Use appropriate coloring method based on OS</span>
+            <span class="k">if</span> <span class="n">is_macos</span><span class="p">:</span>  <span class="c1"># Use highlightbackground on macOS</span>
+                <span class="n">button_config</span><span class="p">[</span><span class="s2">&quot;highlightbackground&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_color</span>
+                <span class="n">button_config</span><span class="p">[</span><span class="s2">&quot;highlightthickness&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Make border visible</span>
+                <span class="c1"># Set active background for visual feedback on click</span>
+                <span class="n">button_config</span><span class="p">[</span><span class="s2">&quot;activebackground&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">rgb_to_hex</span><span class="p">([</span><span class="n">c</span> <span class="o">*</span> <span class="mf">0.9</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">bg_col_rgb</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">has_isotopes</span>
+                    <span class="k">else</span> <span class="n">final_color</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># Use &#39;bg&#39; on other platforms (Windows, Linux)</span>
+                <span class="n">button_config</span><span class="p">[</span><span class="s2">&quot;bg&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_color</span>
+                <span class="c1"># Set active background for visual feedback on click</span>
+                <span class="n">button_config</span><span class="p">[</span><span class="s2">&quot;activebackground&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">rgb_to_hex</span><span class="p">([</span><span class="n">c</span> <span class="o">*</span> <span class="mf">0.9</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">bg_col_rgb</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">has_isotopes</span>
+                    <span class="k">else</span> <span class="n">final_color</span>
+                <span class="p">)</span>
+
+            <span class="n">button</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">button_config</span><span class="p">)</span>
+            <span class="n">button</span><span class="o">.</span><span class="n">place</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+                <span class="n">y</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">),</span>
+                <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">element_width</span><span class="p">,</span>
+                <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">element_height</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">has_isotopes</span><span class="p">:</span>  <span class="c1"># Only add tooltip to active elements</span>
+                <span class="n">ToolTip</span><span class="p">(</span><span class="n">button</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">element_name</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">)</span>
+
+        <span class="c1"># --- Add &quot;all&quot; button ---</span>
+        <span class="n">all_x</span> <span class="o">=</span> <span class="n">x_offset</span> <span class="o">+</span> <span class="mi">16</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_spacing</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_spacing</span>
+        <span class="n">main_table_rows</span> <span class="o">=</span> <span class="mi">7</span>
+        <span class="n">ln_ac_rows</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">all_y</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">y_start_periodic</span>
+            <span class="o">+</span> <span class="n">main_table_rows</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_spacing</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_spacing</span>
+            <span class="o">+</span> <span class="n">ln_ac_rows</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_spacing</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">spacing</span>
+        <span class="p">)</span>
+        <span class="n">all_button_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">element_width</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_spacing</span>
+        <span class="n">all_button_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">element_height</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_spacing</span>
+
+        <span class="c1"># Define the light grey color for the &#39;all&#39; button</span>
+        <span class="n">all_button_bg_rgb</span> <span class="o">=</span> <span class="p">[</span><span class="mi">230</span><span class="p">,</span> <span class="mi">230</span><span class="p">,</span> <span class="mi">230</span><span class="p">]</span>
+        <span class="n">all_button_bg_hex</span> <span class="o">=</span> <span class="n">rgb_to_hex</span><span class="p">(</span><span class="n">all_button_bg_rgb</span><span class="p">)</span>
+        <span class="n">all_button_active_bg_hex</span> <span class="o">=</span> <span class="n">rgb_to_hex</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">c</span> <span class="o">*</span> <span class="mf">0.9</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_button_bg_rgb</span><span class="p">]</span>
+        <span class="p">)</span>  <span class="c1"># Slightly darker when active</span>
+
+        <span class="n">all_button_config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;font&quot;</span><span class="p">:</span> <span class="n">button_font</span><span class="p">,</span>
+            <span class="s2">&quot;relief&quot;</span><span class="p">:</span> <span class="s2">&quot;raised&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;borderwidth&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;command&quot;</span><span class="p">:</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_element_button_pushed</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;fg&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span>  <span class="c1"># Ensure text is visible</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">is_macos</span><span class="p">:</span>
+            <span class="n">all_button_config</span><span class="p">[</span><span class="s2">&quot;highlightbackground&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_button_bg_hex</span>
+            <span class="n">all_button_config</span><span class="p">[</span><span class="s2">&quot;highlightthickness&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">all_button_config</span><span class="p">[</span><span class="s2">&quot;activebackground&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_button_active_bg_hex</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">all_button_config</span><span class="p">[</span><span class="s2">&quot;bg&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_button_bg_hex</span>
+            <span class="n">all_button_config</span><span class="p">[</span><span class="s2">&quot;activebackground&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_button_active_bg_hex</span>
+
+        <span class="n">all_button</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="o">**</span><span class="n">all_button_config</span><span class="p">)</span>
+
+        <span class="n">all_button</span><span class="o">.</span><span class="n">place</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">all_x</span><span class="p">),</span>
+            <span class="n">y</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">all_y</span><span class="p">),</span>
+            <span class="n">width</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">all_button_width</span><span class="p">),</span>
+            <span class="n">height</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">all_button_height</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">ToolTip</span><span class="p">(</span><span class="n">all_button</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Show all elements&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Y position below periodic table for the isotope table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table_y_start</span> <span class="o">=</span> <span class="n">all_y</span> <span class="o">+</span> <span class="n">all_button_height</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_height</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates the isotope data table (Treeview).&quot;&quot;&quot;</span>
+        <span class="n">table_frame</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">)</span>
+        <span class="n">table_frame_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculated_window_width</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span>
+        <span class="n">table_frame</span><span class="o">.</span><span class="n">place</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">border</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table_y_start</span><span class="p">),</span>
+            <span class="n">width</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">table_frame_width</span><span class="p">),</span>
+            <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">table_height_pixels</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">cols</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;isotope&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;abundance&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;spin&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gn&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gamma&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;qm&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nmrfreq&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">col_names</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;isotope&quot;</span><span class="p">:</span> <span class="s2">&quot;Isotope&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;abundance&quot;</span><span class="p">:</span> <span class="s2">&quot;Abundance (%)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;spin&quot;</span><span class="p">:</span> <span class="s2">&quot;Spin&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gn&quot;</span><span class="p">:</span> <span class="s2">&quot;gn value&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="s2">&quot;γ/2π (MHz/T)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;qm&quot;</span><span class="p">:</span> <span class="s2">&quot;Q (barn)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nmrfreq&quot;</span><span class="p">:</span> <span class="s2">&quot;Frequency (MHz)&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">col_widths</span> <span class="o">=</span> <span class="p">{</span>  <span class="c1"># Adjusted column widths</span>
+            <span class="s2">&quot;isotope&quot;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span>
+            <span class="s2">&quot;abundance&quot;</span><span class="p">:</span> <span class="mi">110</span><span class="p">,</span>
+            <span class="s2">&quot;spin&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
+            <span class="s2">&quot;gn&quot;</span><span class="p">:</span> <span class="mi">95</span><span class="p">,</span>
+            <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="mi">115</span><span class="p">,</span>
+            <span class="s2">&quot;qm&quot;</span><span class="p">:</span> <span class="mi">85</span><span class="p">,</span>
+            <span class="s2">&quot;nmrfreq&quot;</span><span class="p">:</span> <span class="mi">120</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">col_anchors</span> <span class="o">=</span> <span class="p">{</span>  <span class="c1"># Alignment within columns</span>
+            <span class="s2">&quot;isotope&quot;</span><span class="p">:</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;abundance&quot;</span><span class="p">:</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;spin&quot;</span><span class="p">:</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gn&quot;</span><span class="p">:</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;qm&quot;</span><span class="p">:</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;nmrfreq&quot;</span><span class="p">:</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Treeview</span><span class="p">(</span><span class="n">table_frame</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">cols</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="s2">&quot;headings&quot;</span><span class="p">)</span>
+        <span class="n">style</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Style</span><span class="p">()</span>
+        <span class="c1"># Configure Treeview style for row height and potentially heading font</span>
+        <span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">&quot;Treeview&quot;</span><span class="p">,</span> <span class="n">rowheight</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Arial&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>  <span class="c1"># Example font</span>
+        <span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span>
+            <span class="s2">&quot;Treeview.Heading&quot;</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Arial&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;bold&quot;</span><span class="p">)</span>
+        <span class="p">)</span>  <span class="c1"># Example heading font</span>
+
+        <span class="k">for</span> <span class="n">col_id</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">heading</span><span class="p">(</span>
+                <span class="n">col_id</span><span class="p">,</span>
+                <span class="n">text</span><span class="o">=</span><span class="n">col_names</span><span class="p">[</span><span class="n">col_id</span><span class="p">],</span>
+                <span class="n">anchor</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="n">command</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="o">=</span><span class="n">col_id</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_table</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">column</span><span class="p">(</span>
+                <span class="n">col_id</span><span class="p">,</span>
+                <span class="n">width</span><span class="o">=</span><span class="n">col_widths</span><span class="p">[</span><span class="n">col_id</span><span class="p">],</span>
+                <span class="n">anchor</span><span class="o">=</span><span class="n">col_anchors</span><span class="p">[</span><span class="n">col_id</span><span class="p">],</span>
+                <span class="n">stretch</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">NO</span><span class="p">,</span>  <span class="c1"># Fixed width columns</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Scrollbars</span>
+        <span class="n">vertical_scrollbar</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Scrollbar</span><span class="p">(</span>
+            <span class="n">table_frame</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;vertical&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">yview</span>
+        <span class="p">)</span>
+        <span class="n">horizontal_scrollbar</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Scrollbar</span><span class="p">(</span>
+            <span class="n">table_frame</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;horizontal&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">xview</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span>
+            <span class="n">yscrollcommand</span><span class="o">=</span><span class="n">vertical_scrollbar</span><span class="o">.</span><span class="n">set</span><span class="p">,</span>
+            <span class="n">xscrollcommand</span><span class="o">=</span><span class="n">horizontal_scrollbar</span><span class="o">.</span><span class="n">set</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Layout table and scrollbars using grid</span>
+        <span class="n">table_frame</span><span class="o">.</span><span class="n">grid_rowconfigure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">table_frame</span><span class="o">.</span><span class="n">grid_columnconfigure</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">&quot;nsew&quot;</span><span class="p">)</span>
+        <span class="n">vertical_scrollbar</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">&quot;ns&quot;</span><span class="p">)</span>
+        <span class="n">horizontal_scrollbar</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">&quot;ew&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Y position below table for controls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">controls_y_start</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">table_y_start</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_height_pixels</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_controls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates checkboxes, field entry, and band buttons.&quot;&quot;&quot;</span>
+        <span class="n">controls_frame</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">)</span>  <span class="c1"># Use a frame for better layout control</span>
+        <span class="n">controls_frame</span><span class="o">.</span><span class="n">place</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">border</span><span class="p">,</span>
+            <span class="n">y</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">controls_y_start</span><span class="p">),</span>
+            <span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">calculated_window_width</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bottom_height</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># Adjusted height</span>
+
+        <span class="n">current_x</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Relative x within the frame</span>
+        <span class="n">control_height</span> <span class="o">=</span> <span class="mi">25</span>  <span class="c1"># Slightly increased height for better spacing/visuals</span>
+        <span class="n">control_pady</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">border</span> <span class="o">//</span> <span class="mi">2</span>  <span class="c1"># Vertical padding</span>
+
+        <span class="c1"># Checkboxes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unstable_var</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">IntVar</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">unstable_check</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Checkbutton</span><span class="p">(</span>
+            <span class="n">controls_frame</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Show unstable isotopes (*)&quot;</span><span class="p">,</span>
+            <span class="n">variable</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">unstable_var</span><span class="p">,</span>
+            <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_table</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># Use pack or grid within the frame for flexibility</span>
+        <span class="n">unstable_check</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="n">control_pady</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nonmagnetic_var</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">IntVar</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">nonmagnetic_check</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Checkbutton</span><span class="p">(</span>
+            <span class="n">controls_frame</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Show non-magnetic isotopes (Spin=0)&quot;</span><span class="p">,</span>
+            <span class="n">variable</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nonmagnetic_var</span><span class="p">,</span>
+            <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_update_table</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">nonmagnetic_check</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="n">control_pady</span><span class="p">)</span>
+
+        <span class="c1"># Spacer or flexible element might be needed here if using pack</span>
+        <span class="c1"># For simplicity, using pack with careful padding</span>
+
+        <span class="c1"># Band Buttons (Placed before field entry for visual grouping)</span>
+        <span class="n">band_button_frame</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Frame</span><span class="p">(</span><span class="n">controls_frame</span><span class="p">)</span>  <span class="c1"># Sub-frame for band buttons</span>
+        <span class="n">band_button_frame</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">RIGHT</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="n">control_pady</span><span class="p">)</span>
+
+        <span class="n">button_width</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># ttk button width is in text units, not pixels</span>
+        <span class="n">style</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Style</span><span class="p">()</span>
+        <span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span>
+            <span class="s2">&quot;Band.TButton&quot;</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="p">)</span>  <span class="c1"># Add some padding inside buttons</span>
+
+        <span class="n">x_button</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span>
+            <span class="n">band_button_frame</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="s2">&quot;X&quot;</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">button_width</span><span class="p">,</span>
+            <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_field_X</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="s2">&quot;Band.TButton&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">x_button</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">ToolTip</span><span class="p">(</span><span class="n">x_button</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Set field to X-band (340 mT)&quot;</span><span class="p">)</span>
+
+        <span class="n">q_button</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span>
+            <span class="n">band_button_frame</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Q&quot;</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">button_width</span><span class="p">,</span>
+            <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_field_Q</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="s2">&quot;Band.TButton&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">q_button</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">ToolTip</span><span class="p">(</span><span class="n">q_button</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Set field to Q-band (1200 mT)&quot;</span><span class="p">)</span>
+
+        <span class="n">w_button</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span>
+            <span class="n">band_button_frame</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="s2">&quot;W&quot;</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">button_width</span><span class="p">,</span>
+            <span class="n">command</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_field_W</span><span class="p">,</span>
+            <span class="n">style</span><span class="o">=</span><span class="s2">&quot;Band.TButton&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">w_button</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">ToolTip</span><span class="p">(</span><span class="n">w_button</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Set field to W-band (3400 mT)&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Magnetic Field Input (Packed to the right, before band buttons)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_var</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">DoubleVar</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">default_field</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_entry</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span>
+            <span class="n">controls_frame</span><span class="p">,</span>
+            <span class="n">textvariable</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">field_var</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>  <span class="c1"># Adjusted width</span>
+            <span class="n">justify</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_entry</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Return&gt;&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">event</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_table</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_entry</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;FocusOut&gt;&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">event</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_table</span><span class="p">())</span>
+        <span class="n">style</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="s2">&quot;TEntry&quot;</span><span class="p">,</span> <span class="n">fieldbackground</span><span class="o">=</span><span class="p">[(</span><span class="s2">&quot;!disabled&quot;</span><span class="p">,</span> <span class="s2">&quot;white&quot;</span><span class="p">)])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">field_entry</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span>
+            <span class="n">side</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">RIGHT</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="n">pady</span><span class="o">=</span><span class="n">control_pady</span>
+        <span class="p">)</span>  <span class="c1"># Pad right only</span>
+        <span class="n">ToolTip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">field_entry</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Enter magnetic field strength and press Enter&quot;</span><span class="p">)</span>
+
+        <span class="n">field_label</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">controls_frame</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Field (mT):&quot;</span><span class="p">)</span>
+        <span class="n">field_label</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span>
+            <span class="n">side</span><span class="o">=</span><span class="n">tk</span><span class="o">.</span><span class="n">RIGHT</span><span class="p">,</span> <span class="n">padx</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">pady</span><span class="o">=</span><span class="n">control_pady</span>
+        <span class="p">)</span>  <span class="c1"># Pad left only</span>
+
+    <span class="c1"># --- Callback Functions ---</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_element_button_pushed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element_symbol</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handles clicks on element buttons.&quot;&quot;&quot;</span>
+        <span class="n">new_element</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">element_symbol</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="k">else</span> <span class="n">element_symbol</span>
+        <span class="k">if</span> <span class="n">new_element</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_element</span><span class="p">:</span>  <span class="c1"># Update only if changed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_element</span> <span class="o">=</span> <span class="n">new_element</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_table</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_field_X</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets magnetic field to X-band value (340 mT).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">!=</span> <span class="mf">340.0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field_var</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mf">340.0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_table</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_field_Q</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets magnetic field to Q-band value (1200 mT).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">!=</span> <span class="mf">1200.0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field_var</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mf">1200.0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_table</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_field_W</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sets magnetic field to W-band value (3400 mT).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="o">!=</span> <span class="mf">3400.0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field_var</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mf">3400.0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_table</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validates the magnetic field entry, resets if invalid.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">val</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Optional: Disallow negative field</span>
+                <span class="n">messagebox</span><span class="o">.</span><span class="n">showwarning</span><span class="p">(</span>
+                    <span class="s2">&quot;Input Warning&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Magnetic field cannot be negative. Resetting to default.&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">field_var</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_field</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># Valid number obtained</span>
+        <span class="k">except</span> <span class="n">tk</span><span class="o">.</span><span class="n">TclError</span><span class="p">:</span>
+            <span class="n">messagebox</span><span class="o">.</span><span class="n">showerror</span><span class="p">(</span>
+                <span class="s2">&quot;Input Error&quot;</span><span class="p">,</span> <span class="s2">&quot;Invalid magnetic field value. Please enter a number.&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">field_var</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_field</span><span class="p">)</span>  <span class="c1"># Reset to default</span>
+            <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Invalid input</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Filters data based on settings and updates the table display.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_field</span><span class="p">():</span>
+            <span class="c1"># If field validation failed and reset the value,</span>
+            <span class="c1"># _validate_field already showed an error.</span>
+            <span class="c1"># We still need the B0 value for calculation, so get it again.</span>
+            <span class="n">B0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>  <span class="c1"># Get the potentially reset value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">B0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">field_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>  <span class="c1"># Get the validated value</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">show_unstable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unstable_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+            <span class="n">show_nonmagnetic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonmagnetic_var</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">tk</span><span class="o">.</span><span class="n">TclError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># Should not happen with IntVars, but good practice</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error getting checkbox values: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_data</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="c1"># Clear table if no data is loaded</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">get_children</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Filter data based on selected element</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_element</span><span class="p">:</span>
+            <span class="c1"># Make sure to copy to avoid modifying the original full_data</span>
+            <span class="n">filtered_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">filtered_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_data</span><span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">full_data</span><span class="p">[</span><span class="s2">&quot;element&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_element</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Filter based on checkbox states</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">show_unstable</span><span class="p">:</span>
+            <span class="c1"># Check if &#39;radioactive&#39; column exists before filtering</span>
+            <span class="k">if</span> <span class="s2">&quot;radioactive&quot;</span> <span class="ow">in</span> <span class="n">filtered_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">filtered_df</span> <span class="o">=</span> <span class="n">filtered_df</span><span class="p">[</span><span class="n">filtered_df</span><span class="p">[</span><span class="s2">&quot;radioactive&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;*&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: &#39;radioactive&#39; column not found for filtering.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">show_nonmagnetic</span><span class="p">:</span>
+            <span class="c1"># Check if &#39;spin&#39; column exists before filtering</span>
+            <span class="k">if</span> <span class="s2">&quot;spin&quot;</span> <span class="ow">in</span> <span class="n">filtered_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="c1"># Keep only isotopes with non-zero spin (using tolerance)</span>
+                <span class="c1"># Also ensure spin is not the placeholder -1.0</span>
+                <span class="n">filtered_df</span> <span class="o">=</span> <span class="n">filtered_df</span><span class="p">[</span>
+                    <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">filtered_df</span><span class="p">[</span><span class="s2">&quot;spin&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-9</span><span class="p">)</span>
+                    <span class="o">&amp;</span> <span class="p">(</span><span class="n">filtered_df</span><span class="p">[</span><span class="s2">&quot;spin&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: &#39;spin&#39; column not found for filtering.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If showing non-magnetic, still exclude placeholders</span>
+            <span class="k">if</span> <span class="s2">&quot;spin&quot;</span> <span class="ow">in</span> <span class="n">filtered_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">filtered_df</span> <span class="o">=</span> <span class="n">filtered_df</span><span class="p">[</span><span class="n">filtered_df</span><span class="p">[</span><span class="s2">&quot;spin&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">]</span>
+
+        <span class="c1"># Exclude placeholder entries explicitly (redundant if handled above, but safe)</span>
+        <span class="c1"># This step is crucial if the previous filters didn&#39;t catch the -1.0 placeholder</span>
+        <span class="c1"># if &quot;spin&quot; in filtered_df.columns:</span>
+        <span class="c1">#     filtered_df = filtered_df[filtered_df[&quot;spin&quot;] &gt;= 0.0]</span>
+
+        <span class="c1"># Calculate NMR frequency (MHz) for the filtered isotopes</span>
+        <span class="c1"># Ensure &#39;gamma&#39; exists and B0 is valid</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;gamma&quot;</span> <span class="ow">in</span> <span class="n">filtered_df</span><span class="o">.</span><span class="n">columns</span>
+            <span class="ow">and</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">filtered_df</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">])</span>
+            <span class="ow">and</span> <span class="n">B0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="c1"># Freq[MHz] = gamma[MHz/T] * B0[mT] * 1e-3 [T/mT]</span>
+            <span class="c1"># Ensure gamma is positive for frequency calculation if needed, or handle 0 gamma</span>
+            <span class="c1"># Apply calculation only where gamma is not NA</span>
+            <span class="n">valid_gamma_mask</span> <span class="o">=</span> <span class="n">filtered_df</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span>
+            <span class="n">filtered_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">valid_gamma_mask</span><span class="p">,</span> <span class="s2">&quot;NMRfreq&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">filtered_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">valid_gamma_mask</span><span class="p">,</span> <span class="s2">&quot;gamma&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">B0</span> <span class="o">*</span> <span class="mf">1e-3</span>
+            <span class="p">)</span>
+            <span class="c1"># Fill remaining NMRfreq with NaN or 0 where gamma was NA or calculation not applicable</span>
+            <span class="n">filtered_df</span><span class="p">[</span><span class="s2">&quot;NMRfreq&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filtered_df</span><span class="p">[</span><span class="s2">&quot;NMRfreq&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span>
+                <span class="n">pd</span><span class="o">.</span><span class="n">NA</span>
+            <span class="p">)</span>  <span class="c1"># Use pd.NA for consistency</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Ensure NMRfreq column exists even if calculation fails or isn&#39;t applicable</span>
+            <span class="n">filtered_df</span><span class="p">[</span><span class="s2">&quot;NMRfreq&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">NA</span>
+
+        <span class="c1"># --- Update Treeview Table Display ---</span>
+        <span class="c1"># Clear previous entries efficiently</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">get_children</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filtered_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="c1"># Select only the columns intended for display in the correct order</span>
+            <span class="n">display_cols_ordered</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;isotope&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;abundance&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;spin&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;gn&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;gamma&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;qm&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;NMRfreq&quot;</span><span class="p">,</span>  <span class="c1"># Match the order defined in _create_table</span>
+            <span class="p">]</span>
+            <span class="c1"># Ensure all display columns exist in the filtered_df before selecting</span>
+            <span class="n">cols_to_display</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">display_cols_ordered</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">filtered_df</span><span class="o">.</span><span class="n">columns</span>
+            <span class="p">]</span>
+            <span class="n">display_df</span> <span class="o">=</span> <span class="n">filtered_df</span><span class="p">[</span><span class="n">cols_to_display</span><span class="p">]</span>
+
+            <span class="c1"># Iterate and format values for display</span>
+            <span class="n">table_values</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">display_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="c1"># Format numeric values, handling potential NA/None</span>
+                <span class="n">abundance_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;abundance&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">notna</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;abundance&quot;</span><span class="p">])</span> <span class="ow">and</span> <span class="s2">&quot;abundance&quot;</span> <span class="ow">in</span> <span class="n">cols_to_display</span>
+                    <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                <span class="p">)</span>
+                <span class="n">gn_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;gn&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">notna</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;gn&quot;</span><span class="p">])</span> <span class="ow">and</span> <span class="s2">&quot;gn&quot;</span> <span class="ow">in</span> <span class="n">cols_to_display</span>
+                    <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                <span class="p">)</span>
+                <span class="n">gamma_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">notna</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">])</span> <span class="ow">and</span> <span class="s2">&quot;gamma&quot;</span> <span class="ow">in</span> <span class="n">cols_to_display</span>
+                    <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                <span class="p">)</span>
+                <span class="n">qm_val</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;qm&quot;</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">NA</span><span class="p">)</span>  <span class="c1"># Safely get qm value</span>
+                <span class="n">qm_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">qm_val</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">notna</span><span class="p">(</span><span class="n">qm_val</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">qm_val</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-9</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                <span class="p">)</span>
+
+                <span class="n">nmrfreq_val</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NMRfreq&quot;</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">NA</span><span class="p">)</span>  <span class="c1"># Safely get NMRfreq</span>
+                <span class="n">nmrfreq_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="c1"># Show frequency only if it&#39;s positive (or non-zero if preferred)</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">nmrfreq_val</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">notna</span><span class="p">(</span><span class="n">nmrfreq_val</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nmrfreq_val</span> <span class="o">&gt;</span> <span class="mf">1e-9</span>
+                    <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Special formatting for spin (int, .5, or float), handling placeholder</span>
+                <span class="n">spin_val</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;spin&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># Default to placeholder if missing</span>
+                <span class="n">spin_str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">pd</span><span class="o">.</span><span class="n">notna</span><span class="p">(</span><span class="n">spin_val</span><span class="p">)</span> <span class="ow">and</span> <span class="n">spin_val</span> <span class="o">&gt;=</span> <span class="mf">0.0</span>
+                <span class="p">):</span>  <span class="c1"># Check it&#39;s valid and not placeholder</span>
+                    <span class="k">if</span> <span class="n">spin_val</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">spin_val</span><span class="p">):</span>
+                        <span class="n">spin_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">spin_val</span><span class="p">))</span>
+                    <span class="c1"># Check if it&#39;s a half-integer like 1.5, 2.5 etc.</span>
+                    <span class="k">elif</span> <span class="p">(</span>
+                        <span class="nb">abs</span><span class="p">(</span><span class="n">spin_val</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">spin_val</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">1e-9</span>
+                    <span class="p">):</span>  <span class="c1"># Ends in .5 (within tolerance)</span>
+                        <span class="n">spin_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">spin_val</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># Format as x.5</span>
+                    <span class="k">else</span><span class="p">:</span>  <span class="c1"># Otherwise, format as float</span>
+                        <span class="n">spin_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">spin_val</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="c1"># else: spin_str remains &quot;&quot; if spin is placeholder or NA</span>
+
+                <span class="c1"># Assemble the list of values in the correct column order</span>
+                <span class="c1"># Use .get() with default for safety if a column was missing from display_df</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;isotope&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+                    <span class="n">abundance_str</span><span class="p">,</span>
+                    <span class="n">spin_str</span><span class="p">,</span>
+                    <span class="n">gn_str</span><span class="p">,</span>
+                    <span class="n">gamma_str</span><span class="p">,</span>
+                    <span class="n">qm_str</span><span class="p">,</span>
+                    <span class="n">nmrfreq_str</span><span class="p">,</span>
+                <span class="p">]</span>
+                <span class="n">table_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+            <span class="c1"># Insert all rows at once (potentially faster for large datasets, though tkinter might not optimize this much)</span>
+            <span class="k">for</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">table_values</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">tk</span><span class="o">.</span><span class="n">END</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sort_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col_id</span><span class="p">,</span> <span class="n">reverse</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sorts the table view by the selected column.&quot;&quot;&quot;</span>
+        <span class="c1"># Extract data with item IDs</span>
+        <span class="c1"># Use get() to handle potential errors if item_id is somehow invalid</span>
+        <span class="n">data_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">item_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">get_children</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">item_id</span><span class="p">,</span> <span class="n">col_id</span><span class="p">)</span>
+                <span class="n">data_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">value</span><span class="p">,</span> <span class="n">item_id</span><span class="p">))</span>
+            <span class="k">except</span> <span class="n">tk</span><span class="o">.</span><span class="n">TclError</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Warning: Could not get value for item </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">, column </span><span class="si">{</span><span class="n">col_id</span><span class="si">}</span><span class="s2">. Skipping.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>  <span class="c1"># Skip item if value cannot be retrieved</span>
+
+        <span class="c1"># Define columns to attempt numeric sort</span>
+        <span class="n">numeric_cols_for_sort</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;abundance&quot;</span><span class="p">,</span> <span class="s2">&quot;spin&quot;</span><span class="p">,</span> <span class="s2">&quot;gn&quot;</span><span class="p">,</span> <span class="s2">&quot;gamma&quot;</span><span class="p">,</span> <span class="s2">&quot;qm&quot;</span><span class="p">,</span> <span class="s2">&quot;nmrfreq&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Sorting logic</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">col_id</span> <span class="ow">in</span> <span class="n">numeric_cols_for_sort</span><span class="p">:</span>
+                <span class="c1"># Key function for robust numeric sort (handles errors, empty strings)</span>
+                <span class="k">def</span><span class="w"> </span><span class="nf">sort_key_numeric</span><span class="p">(</span><span class="n">item_tuple</span><span class="p">):</span>
+                    <span class="n">value_str</span> <span class="o">=</span> <span class="n">item_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c1"># Attempt to convert non-empty string to float</span>
+                        <span class="k">if</span> <span class="n">value_str</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value_str</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value_str</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value_str</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>  <span class="c1"># Already numeric</span>
+                            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value_str</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Empty string or other non-convertible type treated as lowest/highest</span>
+                            <span class="k">return</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">reverse</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                        <span class="c1"># Handle cases like &quot;1/2&quot; if they weren&#39;t formatted numerically, treat as lowest/highest</span>
+                        <span class="k">return</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">reverse</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+
+                <span class="n">data_list</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">sort_key_numeric</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># Default to case-insensitive string sort for non-numeric columns</span>
+                <span class="n">data_list</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
+                    <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span>
+                <span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error during sorting column &#39;</span><span class="si">{</span><span class="n">col_id</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="c1"># Fallback to basic string sort if complex sort fails entirely</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data_list</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">fallback_e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fallback sort also failed: </span><span class="si">{</span><span class="n">fallback_e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="c1"># If even basic sort fails, just leave the order as is.</span>
+
+        <span class="c1"># Rearrange items in the Treeview</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">item_id</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data_list</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">item_id</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">tk</span><span class="o">.</span><span class="n">TclError</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: Could not move item </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2"> during sort.&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>  <span class="c1"># Skip if item cannot be moved</span>
+
+        <span class="c1"># Update heading command for next sort direction</span>
+        <span class="c1"># Ensure lambda captures the current state of &#39;reverse&#39; correctly</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">heading</span><span class="p">(</span>
+            <span class="n">col_id</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">heading</span><span class="p">(</span><span class="n">col_id</span><span class="p">)[</span><span class="s2">&quot;text&quot;</span><span class="p">],</span>  <span class="c1"># Keep original text</span>
+            <span class="n">command</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="o">=</span><span class="n">col_id</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">reverse</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_table</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="ow">not</span> <span class="n">r</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="c1"># --- Module Execution / Entry Point ---</span>
+
+
+<div class="viewcode-block" id="run_gui">
+<a class="viewcode-back" href="../../api/generated/epyr.isotope_gui.html#epyr.isotope_gui.run_gui">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_gui</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates the main Tkinter window and runs the IsotopesGUI application.&quot;&quot;&quot;</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Tk</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Pass the root window to the application class</span>
+        <span class="n">app</span> <span class="o">=</span> <span class="n">IsotopesGUI</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+        <span class="c1"># Start the Tkinter event loop</span>
+        <span class="n">root</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Handle the specific case where the data file wasn&#39;t found during init</span>
+        <span class="n">messagebox</span><span class="o">.</span><span class="n">showerror</span><span class="p">(</span>
+            <span class="s2">&quot;Fatal Error - Data File Not Found&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;Could not initialize application.</span><span class="se">\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">Please ensure the &#39;sub&#39; directory containing &#39;isotopedata.txt&#39; is accessible.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">root</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>  <span class="c1"># Close the (likely empty) root window</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Catch any other unexpected errors during initialization</span>
+        <span class="n">messagebox</span><span class="o">.</span><span class="n">showerror</span><span class="p">(</span>
+            <span class="s2">&quot;Fatal Error - Initialization Failed&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;An unexpected error occurred during application startup:</span><span class="se">\n\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="se">\n\n</span><span class="si">{</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">root</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>  <span class="c1"># Close the root window</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># This block only runs when the script is executed directly</span>
+    <span class="c1"># (e.g., python isotopes_gui.py)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running Isotopes GUI as main script...&quot;</span><span class="p">)</span>
+    <span class="n">run_gui</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Sylvain Bertaina.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

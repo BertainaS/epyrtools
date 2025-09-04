@@ -1,0 +1,417 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>epyr.constants &mdash; EPyR Tools v0.1.0 Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="epyr.isotope_gui" href="epyr.isotope_gui.html" />
+    <link rel="prev" title="epyr.plot" href="epyr.plot.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            EPyR Tools
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../epyr.html">EPyR Tools API Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../modules.html">Complete Module Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="epyr.html">epyr</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="epyr.baseline.html">epyr.baseline</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">epyr.constants</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.SPEED_OF_LIGHT_SI"><code class="docutils literal notranslate"><span class="pre">SPEED_OF_LIGHT_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.VACUUM_PERMEABILITY_SI"><code class="docutils literal notranslate"><span class="pre">VACUUM_PERMEABILITY_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.VACUUM_PERMITTIVITY_SI"><code class="docutils literal notranslate"><span class="pre">VACUUM_PERMITTIVITY_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.PLANCK_CONSTANT_SI"><code class="docutils literal notranslate"><span class="pre">PLANCK_CONSTANT_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.REDUCED_PLANCK_CONSTANT_SI"><code class="docutils literal notranslate"><span class="pre">REDUCED_PLANCK_CONSTANT_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.ELEMENTARY_CHARGE_SI"><code class="docutils literal notranslate"><span class="pre">ELEMENTARY_CHARGE_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.ELECTRON_MASS_SI"><code class="docutils literal notranslate"><span class="pre">ELECTRON_MASS_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.PROTON_MASS_SI"><code class="docutils literal notranslate"><span class="pre">PROTON_MASS_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.FINE_STRUCTURE_CONSTANT"><code class="docutils literal notranslate"><span class="pre">FINE_STRUCTURE_CONSTANT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.BOHR_MAGNETON_SI"><code class="docutils literal notranslate"><span class="pre">BOHR_MAGNETON_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.NUCLEAR_MAGNETON_SI"><code class="docutils literal notranslate"><span class="pre">NUCLEAR_MAGNETON_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.ELECTRON_G_FACTOR"><code class="docutils literal notranslate"><span class="pre">ELECTRON_G_FACTOR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.PROTON_G_FACTOR"><code class="docutils literal notranslate"><span class="pre">PROTON_G_FACTOR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_SI"><code class="docutils literal notranslate"><span class="pre">ELECTRON_GYROMAGNETIC_RATIO_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_MHZ_T_SI"><code class="docutils literal notranslate"><span class="pre">ELECTRON_GYROMAGNETIC_RATIO_MHZ_T_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.PROTON_GYROMAGNETIC_RATIO_SI"><code class="docutils literal notranslate"><span class="pre">PROTON_GYROMAGNETIC_RATIO_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.PROTON_GYROMAGNETIC_RATIO_MHZ_T_SI"><code class="docutils literal notranslate"><span class="pre">PROTON_GYROMAGNETIC_RATIO_MHZ_T_SI</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.SPEED_OF_LIGHT_CGS"><code class="docutils literal notranslate"><span class="pre">SPEED_OF_LIGHT_CGS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.PLANCK_CONSTANT_CGS"><code class="docutils literal notranslate"><span class="pre">PLANCK_CONSTANT_CGS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.REDUCED_PLANCK_CONSTANT_CGS"><code class="docutils literal notranslate"><span class="pre">REDUCED_PLANCK_CONSTANT_CGS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.ELEMENTARY_CHARGE_CGS"><code class="docutils literal notranslate"><span class="pre">ELEMENTARY_CHARGE_CGS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.ELECTRON_MASS_CGS"><code class="docutils literal notranslate"><span class="pre">ELECTRON_MASS_CGS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.PROTON_MASS_CGS"><code class="docutils literal notranslate"><span class="pre">PROTON_MASS_CGS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.BOHR_MAGNETON_CGS"><code class="docutils literal notranslate"><span class="pre">BOHR_MAGNETON_CGS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.NUCLEAR_MAGNETON_CGS"><code class="docutils literal notranslate"><span class="pre">NUCLEAR_MAGNETON_CGS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_CGS"><code class="docutils literal notranslate"><span class="pre">ELECTRON_GYROMAGNETIC_RATIO_CGS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#epyr.constants.PROTON_GYROMAGNETIC_RATIO_CGS"><code class="docutils literal notranslate"><span class="pre">PROTON_GYROMAGNETIC_RATIO_CGS</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="epyr.eprload.html">epyr.eprload</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epyr.fair.html">epyr.fair</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epyr.fair_original_backup.html">epyr.fair_original_backup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epyr.isotope_gui.html">epyr.isotope_gui</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epyr.plot.html">epyr.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="epyr.sub.html">epyr.sub</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../modules.html#module-epyr">Main Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules.html#module-tree">Module Tree</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">EPyR Tools</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../epyr.html">EPyR Tools API Reference</a></li>
+      <li class="breadcrumb-item active">epyr.constants</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/api/generated/epyr.constants.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-epyr.constants">
+<span id="epyr-constants"></span><h1>epyr.constants<a class="headerlink" href="#module-epyr.constants" title="Link to this heading"></a></h1>
+<p>Created on Tue May  6 09:52:16 2025</p>
+<p>&#64;author: sylvainbertaina</p>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.SPEED_OF_LIGHT_SI" title="epyr.constants.SPEED_OF_LIGHT_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SPEED_OF_LIGHT_SI</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.VACUUM_PERMEABILITY_SI" title="epyr.constants.VACUUM_PERMEABILITY_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VACUUM_PERMEABILITY_SI</span></code></a></p></td>
+<td><p>(μ₀) Magnetic constant / Vacuum permeability (SI).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.VACUUM_PERMITTIVITY_SI" title="epyr.constants.VACUUM_PERMITTIVITY_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VACUUM_PERMITTIVITY_SI</span></code></a></p></td>
+<td><p>(ε₀) Electric constant / Vacuum permittivity (SI).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.PLANCK_CONSTANT_SI" title="epyr.constants.PLANCK_CONSTANT_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PLANCK_CONSTANT_SI</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.REDUCED_PLANCK_CONSTANT_SI" title="epyr.constants.REDUCED_PLANCK_CONSTANT_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REDUCED_PLANCK_CONSTANT_SI</span></code></a></p></td>
+<td><p>(ħ) Reduced Planck constant (h-bar = h/2π) (SI).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.ELEMENTARY_CHARGE_SI" title="epyr.constants.ELEMENTARY_CHARGE_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ELEMENTARY_CHARGE_SI</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.ELECTRON_MASS_SI" title="epyr.constants.ELECTRON_MASS_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ELECTRON_MASS_SI</span></code></a></p></td>
+<td><p>(mₑ) Electron mass (SI).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.PROTON_MASS_SI" title="epyr.constants.PROTON_MASS_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PROTON_MASS_SI</span></code></a></p></td>
+<td><p>(mₚ) Proton mass (SI).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.FINE_STRUCTURE_CONSTANT" title="epyr.constants.FINE_STRUCTURE_CONSTANT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FINE_STRUCTURE_CONSTANT</span></code></a></p></td>
+<td><p>(α) Fine-structure constant (dimensionless).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.SPEED_OF_LIGHT_CGS" title="epyr.constants.SPEED_OF_LIGHT_CGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SPEED_OF_LIGHT_CGS</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.PLANCK_CONSTANT_CGS" title="epyr.constants.PLANCK_CONSTANT_CGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PLANCK_CONSTANT_CGS</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.REDUCED_PLANCK_CONSTANT_CGS" title="epyr.constants.REDUCED_PLANCK_CONSTANT_CGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REDUCED_PLANCK_CONSTANT_CGS</span></code></a></p></td>
+<td><p>(ħ) Reduced Planck constant (h-bar) (CGS).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.ELEMENTARY_CHARGE_CGS" title="epyr.constants.ELEMENTARY_CHARGE_CGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ELEMENTARY_CHARGE_CGS</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.ELECTRON_MASS_CGS" title="epyr.constants.ELECTRON_MASS_CGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ELECTRON_MASS_CGS</span></code></a></p></td>
+<td><p>(mₑ) Electron mass (CGS).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.PROTON_MASS_CGS" title="epyr.constants.PROTON_MASS_CGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PROTON_MASS_CGS</span></code></a></p></td>
+<td><p>(mₚ) Proton mass (CGS).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.BOHR_MAGNETON_SI" title="epyr.constants.BOHR_MAGNETON_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BOHR_MAGNETON_SI</span></code></a></p></td>
+<td><p>(μ&lt;0xE2&gt;&lt;0x82&gt;&lt;0x8B&gt;) Bohr magneton (SI).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.BOHR_MAGNETON_CGS" title="epyr.constants.BOHR_MAGNETON_CGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BOHR_MAGNETON_CGS</span></code></a></p></td>
+<td><p>(μ&lt;0xE2&gt;&lt;0x82&gt;&lt;0x8B&gt;) Bohr magneton (CGS).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.NUCLEAR_MAGNETON_SI" title="epyr.constants.NUCLEAR_MAGNETON_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NUCLEAR_MAGNETON_SI</span></code></a></p></td>
+<td><p>(μ&lt;0xE2&gt;&lt;0x82&gt;&lt;0x99&gt;) Nuclear magneton (SI).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.NUCLEAR_MAGNETON_CGS" title="epyr.constants.NUCLEAR_MAGNETON_CGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NUCLEAR_MAGNETON_CGS</span></code></a></p></td>
+<td><p>(μ&lt;0xE2&gt;&lt;0x82&gt;&lt;0x99&gt;) Nuclear magneton (CGS).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.ELECTRON_G_FACTOR" title="epyr.constants.ELECTRON_G_FACTOR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ELECTRON_G_FACTOR</span></code></a></p></td>
+<td><p>(gₑ) Electron g-factor (free electron) (Dimensionless).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.PROTON_G_FACTOR" title="epyr.constants.PROTON_G_FACTOR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PROTON_G_FACTOR</span></code></a></p></td>
+<td><p>(gₚ) Proton g-factor (Dimensionless).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_SI" title="epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ELECTRON_GYROMAGNETIC_RATIO_SI</span></code></a></p></td>
+<td><p>(γₑ) Electron gyromagnetic ratio (SI).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_MHZ_T_SI" title="epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_MHZ_T_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ELECTRON_GYROMAGNETIC_RATIO_MHZ_T_SI</span></code></a></p></td>
+<td><p>(<a href="#id1"><span class="problematic" id="id2">|γₑ|</span></a>/2π) Electron gyromagnetic ratio magnitude in MHz/T (SI).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_CGS" title="epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_CGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ELECTRON_GYROMAGNETIC_RATIO_CGS</span></code></a></p></td>
+<td><p>(γₑ) Electron gyromagnetic ratio (CGS).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.PROTON_GYROMAGNETIC_RATIO_SI" title="epyr.constants.PROTON_GYROMAGNETIC_RATIO_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PROTON_GYROMAGNETIC_RATIO_SI</span></code></a></p></td>
+<td><p>(γₚ) Proton gyromagnetic ratio (SI).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#epyr.constants.PROTON_GYROMAGNETIC_RATIO_MHZ_T_SI" title="epyr.constants.PROTON_GYROMAGNETIC_RATIO_MHZ_T_SI"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PROTON_GYROMAGNETIC_RATIO_MHZ_T_SI</span></code></a></p></td>
+<td><p>(<a href="#id3"><span class="problematic" id="id4">|γₚ|</span></a>/2π) Proton gyromagnetic ratio magnitude in MHz/T (SI).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#epyr.constants.PROTON_GYROMAGNETIC_RATIO_CGS" title="epyr.constants.PROTON_GYROMAGNETIC_RATIO_CGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PROTON_GYROMAGNETIC_RATIO_CGS</span></code></a></p></td>
+<td><p>(γₚ) Proton gyromagnetic ratio (CGS).</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.SPEED_OF_LIGHT_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">SPEED_OF_LIGHT_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">299792458.0</span></em><a class="headerlink" href="#epyr.constants.SPEED_OF_LIGHT_SI" title="Link to this definition"></a></dt>
+<dd><ol class="loweralpha simple" start="3">
+<li><p>Speed of light in vacuum (SI). Exact.</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.VACUUM_PERMEABILITY_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">VACUUM_PERMEABILITY_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.25663706212e-06</span></em><a class="headerlink" href="#epyr.constants.VACUUM_PERMEABILITY_SI" title="Link to this definition"></a></dt>
+<dd><p>(μ₀) Magnetic constant / Vacuum permeability (SI). CODATA 2018.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.VACUUM_PERMITTIVITY_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">VACUUM_PERMITTIVITY_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8.8541878128e-12</span></em><a class="headerlink" href="#epyr.constants.VACUUM_PERMITTIVITY_SI" title="Link to this definition"></a></dt>
+<dd><p>(ε₀) Electric constant / Vacuum permittivity (SI). CODATA 2018. Calculated from μ₀ and c.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.PLANCK_CONSTANT_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">PLANCK_CONSTANT_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6.62607015e-34</span></em><a class="headerlink" href="#epyr.constants.PLANCK_CONSTANT_SI" title="Link to this definition"></a></dt>
+<dd><ol class="loweralpha simple" start="8">
+<li><p>Planck constant (SI). Exact.</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.REDUCED_PLANCK_CONSTANT_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">REDUCED_PLANCK_CONSTANT_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0545718176461565e-34</span></em><a class="headerlink" href="#epyr.constants.REDUCED_PLANCK_CONSTANT_SI" title="Link to this definition"></a></dt>
+<dd><p>(ħ) Reduced Planck constant (h-bar = h/2π) (SI).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.ELEMENTARY_CHARGE_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">ELEMENTARY_CHARGE_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.602176634e-19</span></em><a class="headerlink" href="#epyr.constants.ELEMENTARY_CHARGE_SI" title="Link to this definition"></a></dt>
+<dd><ol class="loweralpha simple" start="5">
+<li><p>Elementary charge (magnitude) (SI). Exact.</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.ELECTRON_MASS_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">ELECTRON_MASS_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9.1093837015e-31</span></em><a class="headerlink" href="#epyr.constants.ELECTRON_MASS_SI" title="Link to this definition"></a></dt>
+<dd><p>(mₑ) Electron mass (SI). CODATA 2018.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.PROTON_MASS_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">PROTON_MASS_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.67262192369e-27</span></em><a class="headerlink" href="#epyr.constants.PROTON_MASS_SI" title="Link to this definition"></a></dt>
+<dd><p>(mₚ) Proton mass (SI). CODATA 2018.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.FINE_STRUCTURE_CONSTANT">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">FINE_STRUCTURE_CONSTANT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0072973525693</span></em><a class="headerlink" href="#epyr.constants.FINE_STRUCTURE_CONSTANT" title="Link to this definition"></a></dt>
+<dd><p>(α) Fine-structure constant (dimensionless). CODATA 2018. Same in SI &amp; CGS.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.BOHR_MAGNETON_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">BOHR_MAGNETON_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9.2740100783e-24</span></em><a class="headerlink" href="#epyr.constants.BOHR_MAGNETON_SI" title="Link to this definition"></a></dt>
+<dd><p>(μ&lt;0xE2&gt;&lt;0x82&gt;&lt;0x8B&gt;) Bohr magneton (SI). μ&lt;0xE2&gt;&lt;0x82&gt;&lt;0x8B&gt; = eħ / (2mₑ).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.NUCLEAR_MAGNETON_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">NUCLEAR_MAGNETON_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5.0507837461e-27</span></em><a class="headerlink" href="#epyr.constants.NUCLEAR_MAGNETON_SI" title="Link to this definition"></a></dt>
+<dd><p>(μ&lt;0xE2&gt;&lt;0x82&gt;&lt;0x99&gt;) Nuclear magneton (SI). μ&lt;0xE2&gt;&lt;0x82&gt;&lt;0x99&gt; = eħ / (2mₚ).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.ELECTRON_G_FACTOR">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">ELECTRON_G_FACTOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-2.00231930436256</span></em><a class="headerlink" href="#epyr.constants.ELECTRON_G_FACTOR" title="Link to this definition"></a></dt>
+<dd><p>(gₑ) Electron g-factor (free electron) (Dimensionless). CODATA 2018. Negative sign indicates moment opposes spin angular momentum.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.PROTON_G_FACTOR">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">PROTON_G_FACTOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5.5856946893</span></em><a class="headerlink" href="#epyr.constants.PROTON_G_FACTOR" title="Link to this definition"></a></dt>
+<dd><p>(gₚ) Proton g-factor (Dimensionless). CODATA 2018.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">ELECTRON_GYROMAGNETIC_RATIO_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-176085963022.23312</span></em><a class="headerlink" href="#epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_SI" title="Link to this definition"></a></dt>
+<dd><p>(γₑ) Electron gyromagnetic ratio (SI). γₑ = gₑ μ&lt;0xE2&gt;&lt;0x82&gt;&lt;0x8B&gt; / ħ. Approx -1.7608 × 10¹¹ rad⋅s⁻¹⋅T⁻¹.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_MHZ_T_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">ELECTRON_GYROMAGNETIC_RATIO_MHZ_T_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">28024.951424085102</span></em><a class="headerlink" href="#epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_MHZ_T_SI" title="Link to this definition"></a></dt>
+<dd><p>(<a href="#id5"><span class="problematic" id="id6">|γₑ|</span></a>/2π) Electron gyromagnetic ratio magnitude in MHz/T (SI). Approx 28024.95 MHz/T.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.PROTON_GYROMAGNETIC_RATIO_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">PROTON_GYROMAGNETIC_RATIO_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">267522187.44441766</span></em><a class="headerlink" href="#epyr.constants.PROTON_GYROMAGNETIC_RATIO_SI" title="Link to this definition"></a></dt>
+<dd><p>(γₚ) Proton gyromagnetic ratio (SI). γₚ = gₚ μ&lt;0xE2&gt;&lt;0x82&gt;&lt;0x99&gt; / ħ. Approx 2.6752 × 10⁸ rad⋅s⁻¹⋅T⁻¹.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.PROTON_GYROMAGNETIC_RATIO_MHZ_T_SI">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">PROTON_GYROMAGNETIC_RATIO_MHZ_T_SI</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">42.57747851853565</span></em><a class="headerlink" href="#epyr.constants.PROTON_GYROMAGNETIC_RATIO_MHZ_T_SI" title="Link to this definition"></a></dt>
+<dd><p>(<a href="#id7"><span class="problematic" id="id8">|γₚ|</span></a>/2π) Proton gyromagnetic ratio magnitude in MHz/T (SI). Approx 42.577 MHz/T.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.SPEED_OF_LIGHT_CGS">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">SPEED_OF_LIGHT_CGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">29979245800.0</span></em><a class="headerlink" href="#epyr.constants.SPEED_OF_LIGHT_CGS" title="Link to this definition"></a></dt>
+<dd><ol class="loweralpha simple" start="3">
+<li><p>Speed of light in vacuum (CGS).</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.PLANCK_CONSTANT_CGS">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">PLANCK_CONSTANT_CGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6.62607015e-27</span></em><a class="headerlink" href="#epyr.constants.PLANCK_CONSTANT_CGS" title="Link to this definition"></a></dt>
+<dd><ol class="loweralpha simple" start="8">
+<li><p>Planck constant (CGS).</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.REDUCED_PLANCK_CONSTANT_CGS">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">REDUCED_PLANCK_CONSTANT_CGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0545718176461565e-27</span></em><a class="headerlink" href="#epyr.constants.REDUCED_PLANCK_CONSTANT_CGS" title="Link to this definition"></a></dt>
+<dd><p>(ħ) Reduced Planck constant (h-bar) (CGS).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.ELEMENTARY_CHARGE_CGS">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">ELEMENTARY_CHARGE_CGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4.803204712570263e-10</span></em><a class="headerlink" href="#epyr.constants.ELEMENTARY_CHARGE_CGS" title="Link to this definition"></a></dt>
+<dd><ol class="loweralpha simple" start="5">
+<li><p>Elementary charge (magnitude) (CGS).</p></li>
+</ol>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.ELECTRON_MASS_CGS">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">ELECTRON_MASS_CGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9.1093837015e-28</span></em><a class="headerlink" href="#epyr.constants.ELECTRON_MASS_CGS" title="Link to this definition"></a></dt>
+<dd><p>(mₑ) Electron mass (CGS).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.PROTON_MASS_CGS">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">PROTON_MASS_CGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.67262192369e-24</span></em><a class="headerlink" href="#epyr.constants.PROTON_MASS_CGS" title="Link to this definition"></a></dt>
+<dd><p>(mₚ) Proton mass (CGS).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.BOHR_MAGNETON_CGS">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">BOHR_MAGNETON_CGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">9.2740100783e-21</span></em><a class="headerlink" href="#epyr.constants.BOHR_MAGNETON_CGS" title="Link to this definition"></a></dt>
+<dd><p>(μ&lt;0xE2&gt;&lt;0x82&gt;&lt;0x8B&gt;) Bohr magneton (CGS).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.NUCLEAR_MAGNETON_CGS">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">NUCLEAR_MAGNETON_CGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5.0507837461000006e-24</span></em><a class="headerlink" href="#epyr.constants.NUCLEAR_MAGNETON_CGS" title="Link to this definition"></a></dt>
+<dd><p>(μ&lt;0xE2&gt;&lt;0x82&gt;&lt;0x99&gt;) Nuclear magneton (CGS).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_CGS">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">ELECTRON_GYROMAGNETIC_RATIO_CGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1760859630222331.2</span></em><a class="headerlink" href="#epyr.constants.ELECTRON_GYROMAGNETIC_RATIO_CGS" title="Link to this definition"></a></dt>
+<dd><p>(γₑ) Electron gyromagnetic ratio (CGS). Approx -1.7608 × 10⁷ rad⋅s⁻¹⋅G⁻¹.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="epyr.constants.PROTON_GYROMAGNETIC_RATIO_CGS">
+<span class="sig-prename descclassname"><span class="pre">epyr.constants.</span></span><span class="sig-name descname"><span class="pre">PROTON_GYROMAGNETIC_RATIO_CGS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2675221874444.177</span></em><a class="headerlink" href="#epyr.constants.PROTON_GYROMAGNETIC_RATIO_CGS" title="Link to this definition"></a></dt>
+<dd><p>(γₚ) Proton gyromagnetic ratio (CGS). Approx 2.6752 × 10⁴ rad⋅s⁻¹⋅G⁻¹.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="epyr.plot.html" class="btn btn-neutral float-left" title="epyr.plot" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="epyr.isotope_gui.html" class="btn btn-neutral float-right" title="epyr.isotope_gui" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Sylvain Bertaina.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

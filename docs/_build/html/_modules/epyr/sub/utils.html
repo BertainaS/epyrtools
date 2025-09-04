@@ -1,0 +1,399 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>epyr.sub.utils &mdash; EPyR Tools v0.1.0 Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            EPyR Tools
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/epyr.html">EPyR Tools API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">Complete Module Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">EPyR Tools</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">epyr.sub.utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for epyr.sub.utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># sub/utils.py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Regular expression to check if a string can be converted to a number</span>
+<span class="n">_NUMBER_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="read_par_file">
+<a class="viewcode-back" href="../../../api/generated/epyr.sub.utils.html#epyr.sub.utils.read_par_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_par_file</span><span class="p">(</span><span class="n">par_file_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reads a Bruker ESP/WinEPR .par file (key-value pairs).&quot;&quot;&quot;</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">par_file_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot find the parameter file </span><span class="si">{</span><span class="n">par_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">par_file_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;latin-1&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">key</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="c1"># Check if key starts with a letter (basic validation)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isalpha</span><span class="p">():</span>
+                    <span class="k">continue</span>
+
+                <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+
+                <span class="c1"># Remove surrounding single quotes if present</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+                <span class="c1"># Basic cleaning of key for dictionary access if needed</span>
+                <span class="c1"># Note: Bruker keys are typically valid identifiers</span>
+                <span class="c1"># if not key.isidentifier():</span>
+                <span class="c1">#    key = re.sub(r&#39;\W|^(?=\d)&#39;, &#39;_&#39;, key) # Simple sanitization</span>
+
+                <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading PAR file </span><span class="si">{</span><span class="n">par_file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;JEX&quot;</span><span class="p">):</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;XAXIS_NAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;JEX&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;JUN&quot;</span><span class="p">):</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;XAXIS_UNIT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;JUN&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;XXUN&quot;</span><span class="p">):</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;XAXIS_UNIT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;XXUN&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;JEY&quot;</span><span class="p">):</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;YAXIS_NAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;JEY&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;XYUN&quot;</span><span class="p">):</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;YAXIS_UNIT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;XYUN&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">parameters</span></div>
+
+
+
+<div class="viewcode-block" id="read_dsc_file">
+<a class="viewcode-back" href="../../../api/generated/epyr.sub.utils.html#epyr.sub.utils.read_dsc_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_dsc_file</span><span class="p">(</span><span class="n">dsc_file_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reads a Bruker BES3T .DSC file (key-value pairs, handles line continuation).&quot;&quot;&quot;</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dsc_file_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot find the descriptor file </span><span class="si">{</span><span class="n">dsc_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dsc_file_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;latin-1&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading DSC file </span><span class="si">{</span><span class="n">dsc_file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="n">processed_lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="c1"># Handle line continuation characters &#39;\&#39;</span>
+        <span class="k">while</span> <span class="n">line</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Remove trailing &#39;\&#39; even if it&#39;s the last line</span>
+        <span class="n">processed_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">n&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>  <span class="c1"># Replace escaped newlines</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">processed_lines</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">key</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Stop if Manipulation History Layer is reached</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;#MHL&quot;</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="c1"># Skip lines not starting with a letter (comments, etc.)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isalpha</span><span class="p">():</span>
+            <span class="k">continue</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="c1"># Remove surrounding single quotes if present</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Basic cleaning of key if needed (Bruker keys usually okay)</span>
+        <span class="c1"># if not key.isidentifier():</span>
+        <span class="c1">#     key = re.sub(r&#39;\W|^(?=\d)&#39;, &#39;_&#39;, key)</span>
+
+        <span class="n">parameters</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;XNAM&quot;</span><span class="p">):</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;XAXIS_NAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;XNAM&quot;</span><span class="p">]</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;XAXIS_UNIT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;XUNI&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;YNAM&quot;</span><span class="p">):</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;YAXIS_NAME&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;YNAM&quot;</span><span class="p">]</span>
+        <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;YAXIS_UNIT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;YUNI&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">parameters</span></div>
+
+
+
+<div class="viewcode-block" id="parse_field_params">
+<a class="viewcode-back" href="../../../api/generated/epyr.sub.utils.html#epyr.sub.utils.parse_field_params">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_field_params</span><span class="p">(</span><span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attempts to convert string values in a dictionary to numbers (int or float).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parsed_params</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># Try converting to int</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">parsed_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="c1"># Try converting to float</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Use regex for more robust float check if needed,</span>
+                <span class="c1"># but direct conversion attempt is usually fine</span>
+                <span class="k">if</span> <span class="n">_NUMBER_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                    <span class="n">parsed_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">parsed_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># Keep as string if not number-like</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">parsed_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># Keep original string if conversion fails</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parsed_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># Keep non-string values as they are</span>
+    <span class="k">return</span> <span class="n">parsed_params</span></div>
+
+
+
+<div class="viewcode-block" id="get_matrix">
+<a class="viewcode-back" href="../../../api/generated/epyr.sub.utils.html#epyr.sub.utils.get_matrix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_matrix</span><span class="p">(</span>
+    <span class="n">data_file_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">dimensions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">number_format_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">byte_order</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">is_complex</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads binary data from a file into a NumPy array.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data_file_path: Path to the data file (.DTA, .spc).</span>
+<span class="sd">        dimensions: List of dimensions [nx, ny, nz].</span>
+<span class="sd">        number_format: String representing numpy dtype (&#39;int8&#39;, &#39;int16&#39;, etc.).</span>
+<span class="sd">        byte_order: &#39;ieee-be&#39; (big) or &#39;ieee-le&#39; (little).</span>
+<span class="sd">        is_complex: Boolean indicating if the data is complex. Can be array for multi-channel.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        NumPy array with the data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data_file_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data file not found: </span><span class="si">{</span><span class="n">data_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Determine numpy dtype and endianness</span>
+    <span class="n">dt_char</span> <span class="o">=</span> <span class="s2">&quot;&gt;&quot;</span> <span class="k">if</span> <span class="n">byte_order</span> <span class="o">==</span> <span class="s2">&quot;ieee-be&quot;</span> <span class="k">else</span> <span class="s2">&quot;&lt;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Construct dtype using standard codes (e.g., &#39;&gt;f8&#39;, &#39;&lt;i4&#39;)</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dt_char</span><span class="si">}{</span><span class="n">number_format_code</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># Catch potential error during dtype creation</span>
+        <span class="c1"># Add original exception context using &#39;from e&#39;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported number format code: </span><span class="si">{</span><span class="n">number_format_code</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="c1"># Calculate expected number of elements</span>
+    <span class="n">n_points_total</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">dimensions</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">n_points_total</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+
+    <span class="c1"># Handle potentially complex data reading</span>
+    <span class="c1"># For now, assume is_complex is a single boolean</span>
+    <span class="c1"># A more complex implementation could handle mixed real/complex channels</span>
+    <span class="n">is_complex_flag</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">is_complex</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">is_complex</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span> <span class="k">else</span> <span class="n">is_complex</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_complex_flag</span><span class="p">:</span>
+        <span class="n">n_values_to_read</span> <span class="o">=</span> <span class="n">n_points_total</span> <span class="o">*</span> <span class="mi">2</span>
+        <span class="n">actual_dtype</span> <span class="o">=</span> <span class="n">dtype</span><span class="o">.</span><span class="n">base</span>  <span class="c1"># Read underlying real type</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n_values_to_read</span> <span class="o">=</span> <span class="n">n_points_total</span>
+        <span class="n">actual_dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+
+    <span class="c1"># Read raw data from file</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">raw_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span>
+            <span class="n">data_file_path</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">actual_dtype</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">n_values_to_read</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading data file </span><span class="si">{</span><span class="n">data_file_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="c1"># Verify number of elements read</span>
+    <span class="k">if</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;</span> <span class="n">n_values_to_read</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Could not read expected number of data points from </span><span class="si">{</span><span class="n">data_file_path</span><span class="si">}</span><span class="s2">. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Expected </span><span class="si">{</span><span class="n">n_values_to_read</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">raw_data</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="n">n_values_to_read</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Read more data points (</span><span class="si">{</span><span class="n">raw_data</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">) than expected (</span><span class="si">{</span><span class="n">n_values_to_read</span><span class="si">}</span><span class="s2">) &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;from </span><span class="si">{</span><span class="n">data_file_path</span><span class="si">}</span><span class="s2">. Truncating.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">raw_data</span> <span class="o">=</span> <span class="n">raw_data</span><span class="p">[:</span><span class="n">n_values_to_read</span><span class="p">]</span>
+
+    <span class="c1"># Combine real and imaginary parts if complex</span>
+    <span class="k">if</span> <span class="n">is_complex_flag</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">size</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Read odd number of values for complex data.&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">raw_data</span><span class="p">[::</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">raw_data</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">raw_data</span>
+
+    <span class="c1"># Reshape the data - NumPy uses C order (last index fastest)</span>
+    <span class="c1"># MATLAB uses Fortran order (first index fastest)</span>
+    <span class="c1"># BES3T/ESP files are typically C-ordered (X varies fastest)</span>
+    <span class="c1"># Reshape to (nz, ny, nx) if 3D, (ny, nx) if 2D, (nx,) if 1D</span>
+    <span class="n">shape_numpy_order</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dimensions</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="p">]</span>  <span class="c1"># Reverse and remove dims of size 1</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">shape_numpy_order</span><span class="p">:</span>  <span class="c1"># If all dims are 1 or empty</span>
+        <span class="n">shape_numpy_order</span> <span class="o">=</span> <span class="p">(</span><span class="n">n_points_total</span><span class="p">,)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Use squeeze to remove dimensions of size 1, similar to MATLAB&#39;s behavior</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape_numpy_order</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="c1"># If the result is 0-dim after squeeze (single point), make it 1-dim</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Could not reshape data with </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> points into desired shape </span><span class="si">{</span><span class="n">shape_numpy_order</span><span class="si">}</span><span class="s2">. Original dims: </span><span class="si">{</span><span class="n">dimensions</span><span class="si">}</span><span class="s2">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+
+<div class="viewcode-block" id="BrukerListFiles">
+<a class="viewcode-back" href="../../../api/generated/epyr.sub.utils.html#epyr.sub.utils.BrukerListFiles">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">BrukerListFiles</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    List all Bruker EPR data files (.DTA, .dta, .SPC, .spc) in the given directory.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path (str or Path): Path to the folder containing Bruker files.</span>
+<span class="sd">        recursive (bool, optional): If True, search subfolders recursively. Defaults to False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list[Path]: Sorted list of Path objects for found files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exts</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;.dta&quot;</span><span class="p">,</span> <span class="s2">&quot;.DTA&quot;</span><span class="p">,</span> <span class="s2">&quot;.spc&quot;</span><span class="p">,</span> <span class="s2">&quot;.SPC&quot;</span><span class="p">}</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">NotADirectoryError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> is not a valid directory.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">recursive</span><span class="p">:</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="n">exts</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()]</span>
+
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">files</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Sylvain Bertaina.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

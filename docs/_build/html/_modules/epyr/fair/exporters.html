@@ -1,0 +1,529 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>epyr.fair.exporters &mdash; EPyR Tools v0.1.0 Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            EPyR Tools
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/epyr.html">EPyR Tools API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">Complete Module Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">EPyR Tools</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">epyr.fair.exporters</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for epyr.fair.exporters</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Format-specific export functions for FAIR data conversion.</span>
+
+<span class="sd">This module contains functions to export EPR data and metadata to various</span>
+<span class="sd">FAIR-compliant formats including CSV/JSON and HDF5.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">h5py</span>
+
+    <span class="n">HAS_H5PY</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">HAS_H5PY</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.data_processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">process_parameters</span>
+
+
+<div class="viewcode-block" id="save_to_csv_json">
+<a class="viewcode-back" href="../../../api/generated/epyr.fair.exporters.html#epyr.fair.exporters.save_to_csv_json">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_to_csv_json</span><span class="p">(</span>
+    <span class="n">output_basename</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">original_file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save data to CSV and structured metadata to JSON.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        output_basename: Base path for output files (without extension)</span>
+<span class="sd">        x: Abscissa data array(s) or None</span>
+<span class="sd">        y: Intensity data array</span>
+<span class="sd">        pars: Raw parameters dictionary</span>
+<span class="sd">        original_file_path: Path to original data file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_file</span> <span class="o">=</span> <span class="n">output_basename</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+    <span class="n">csv_file</span> <span class="o">=</span> <span class="n">output_basename</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
+
+    <span class="n">fair_meta</span><span class="p">,</span> <span class="n">unmapped_meta</span> <span class="o">=</span> <span class="n">process_parameters</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Saving structured metadata to: </span><span class="si">{</span><span class="n">json_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Save metadata to JSON</span>
+    <span class="n">metadata_to_save</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;original_file&quot;</span><span class="p">:</span> <span class="n">original_file_path</span><span class="p">,</span>
+        <span class="s2">&quot;fair_metadata&quot;</span><span class="p">:</span> <span class="n">fair_meta</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">unmapped_meta</span><span class="p">:</span>
+        <span class="n">metadata_to_save</span><span class="p">[</span><span class="s2">&quot;unmapped_parameters&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">unmapped_meta</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">metadata_to_save</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not write JSON file </span><span class="si">{</span><span class="n">json_file</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Error serializing metadata to JSON for </span><span class="si">{</span><span class="n">json_file</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Some parameters might not be saved correctly.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Saving data to: </span><span class="si">{</span><span class="n">csv_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Save data to CSV</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">csv_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="c1"># Write header</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s2">&quot;# EPR Data Export&quot;</span><span class="p">])</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s2">&quot;# Original File:&quot;</span><span class="p">,</span> <span class="n">original_file_path</span><span class="p">])</span>
+
+            <span class="c1"># Add key parameters from FAIR metadata</span>
+            <span class="n">mwfq_info</span> <span class="o">=</span> <span class="n">fair_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;microwave_frequency&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">field_info</span> <span class="o">=</span> <span class="n">fair_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;field_center&quot;</span><span class="p">,</span> <span class="n">fair_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;field_sweep_start&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="p">)</span>
+            <span class="n">sweep_info</span> <span class="o">=</span> <span class="n">fair_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;field_sweep_width&quot;</span><span class="p">,</span> <span class="n">fair_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;field_sweep_increment&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="p">)</span>
+
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="s2">&quot;# Microwave_Frequency:&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mwfq_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;N/A&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">mwfq_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;unit&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="s2">&quot;# Field_Center/Start:&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">field_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;N/A&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">field_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;unit&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="s2">&quot;# Field_Sweep/Increment:&quot;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sweep_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;N/A&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">sweep_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;unit&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s2">&quot;# Data_Shape:&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)])</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s2">&quot;# Data_Type:&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="p">)])</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s2">&quot;# ---&quot;</span><span class="p">])</span>
+
+            <span class="c1"># Prepare data columns</span>
+            <span class="n">header_row</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">data_columns</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">is_complex</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">is_2d</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span>
+
+            <span class="c1"># Get axis units from FAIR metadata</span>
+            <span class="n">x_unit_val</span> <span class="o">=</span> <span class="n">fair_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x_axis_unit&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;a.u.&quot;</span><span class="p">)</span>
+            <span class="n">y_unit_val</span> <span class="o">=</span> <span class="n">fair_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;y_axis_unit&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;a.u.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_unit_val</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;,&quot;</span> <span class="ow">in</span> <span class="n">y_unit_val</span><span class="p">:</span>
+                <span class="n">y_unit_val</span> <span class="o">=</span> <span class="n">y_unit_val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_2d</span><span class="p">:</span>  <span class="c1"># 1D Data</span>
+                <span class="n">n_pts</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="c1"># Abscissa column</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                    <span class="n">header_row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Abscissa (</span><span class="si">{</span><span class="n">x_unit_val</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+                    <span class="n">data_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">header_row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Index&quot;</span><span class="p">)</span>
+                    <span class="n">data_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_pts</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                            <span class="s2">&quot;Provided x-axis ignored for CSV (shape mismatch or not ndarray). Using index.&quot;</span>
+                        <span class="p">)</span>
+
+                <span class="c1"># Intensity columns</span>
+                <span class="k">if</span> <span class="n">is_complex</span><span class="p">:</span>
+                    <span class="n">header_row</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                        <span class="p">[</span><span class="s2">&quot;Intensity_Real (a.u.)&quot;</span><span class="p">,</span> <span class="s2">&quot;Intensity_Imag (a.u.)&quot;</span><span class="p">]</span>
+                    <span class="p">)</span>
+                    <span class="n">data_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+                    <span class="n">data_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">header_row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Intensity (a.u.)&quot;</span><span class="p">)</span>
+                    <span class="n">data_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># 2D Data - use &quot;long&quot; format (X, Y, Value(s))</span>
+                <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span>
+                <span class="n">x_coords_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nx</span><span class="p">)</span>
+                <span class="n">y_coords_flat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ny</span><span class="p">)</span>
+                <span class="n">header_row</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;X_Index (</span><span class="si">{</span><span class="n">nx</span><span class="si">}</span><span class="s2"> points)&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Y_Index (</span><span class="si">{</span><span class="n">ny</span><span class="si">}</span><span class="s2"> points)&quot;</span><span class="p">])</span>
+
+                <span class="c1"># Determine X and Y axes from input &#39;x&#39;</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">x_axis</span><span class="p">,</span> <span class="n">y_axis</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x_axis</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">nx</span><span class="p">:</span>
+                        <span class="n">x_coords_flat</span> <span class="o">=</span> <span class="n">x_axis</span>
+                        <span class="n">header_row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;X_Axis (</span><span class="si">{</span><span class="n">x_unit_val</span><span class="si">}</span><span class="s2">)&quot;</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_axis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">y_axis</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">ny</span><span class="p">:</span>
+                        <span class="n">y_coords_flat</span> <span class="o">=</span> <span class="n">y_axis</span>
+                        <span class="n">header_row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Y_Axis (</span><span class="si">{</span><span class="n">y_unit_val</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">nx</span><span class="p">:</span>
+                    <span class="n">x_coords_flat</span> <span class="o">=</span> <span class="n">x</span>
+                    <span class="n">header_row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;X_Axis (</span><span class="si">{</span><span class="n">x_unit_val</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+                <span class="c1"># Create grid and flatten</span>
+                <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">x_coords_flat</span><span class="p">,</span> <span class="n">y_coords_flat</span><span class="p">)</span>
+                <span class="n">data_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xx</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+                <span class="n">data_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">yy</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+
+                <span class="c1"># Intensity columns</span>
+                <span class="k">if</span> <span class="n">is_complex</span><span class="p">:</span>
+                    <span class="n">header_row</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                        <span class="p">[</span><span class="s2">&quot;Intensity_Real (a.u.)&quot;</span><span class="p">,</span> <span class="s2">&quot;Intensity_Imag (a.u.)&quot;</span><span class="p">]</span>
+                    <span class="p">)</span>
+                    <span class="n">data_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+                    <span class="n">data_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">header_row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Intensity (a.u.)&quot;</span><span class="p">)</span>
+                    <span class="n">data_columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+
+            <span class="c1"># Write data</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">header_row</span><span class="p">)</span>
+            <span class="n">rows_to_write</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">data_columns</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">rows_to_write</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not write CSV file </span><span class="si">{</span><span class="n">csv_file</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An unexpected error occurred while writing CSV </span><span class="si">{</span><span class="n">csv_file</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_try_set_h5_attr</span><span class="p">(</span><span class="n">h5_object</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper to safely set HDF5 attributes, converting to string on type error.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">h5_object</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;None&quot;</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">value</span>
+        <span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">h5_object</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">h5_object</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="n">h5_object</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+            <span class="n">h5_object</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h5_object</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Could not store attribute &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; (type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">) &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;directly in HDF5 attributes. Converting to string.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">h5_object</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unexpected error storing attribute &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. Skipping.&quot;</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="save_to_hdf5">
+<a class="viewcode-back" href="../../../api/generated/epyr.fair.exporters.html#epyr.fair.exporters.save_to_hdf5">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_to_hdf5</span><span class="p">(</span>
+    <span class="n">output_basename</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">original_file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save data and structured metadata to an HDF5 file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        output_basename: Base path for output files (without extension)</span>
+<span class="sd">        x: Abscissa data array(s) or None</span>
+<span class="sd">        y: Intensity data array</span>
+<span class="sd">        pars: Raw parameters dictionary</span>
+<span class="sd">        original_file_path: Path to original data file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">HAS_H5PY</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;h5py library not found. Skipping HDF5 output. Install with &#39;pip install h5py&#39;&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">h5_file</span> <span class="o">=</span> <span class="n">output_basename</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.h5&quot;</span><span class="p">)</span>
+    <span class="n">fair_meta</span><span class="p">,</span> <span class="n">unmapped_meta</span> <span class="o">=</span> <span class="n">process_parameters</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Saving structured data and metadata to: </span><span class="si">{</span><span class="n">h5_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">h5_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="c1"># Store global metadata</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;original_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">original_file_path</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span>
+                <span class="s2">&quot;description&quot;</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;FAIR representation of EPR data converted from Bruker format.&quot;</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;conversion_timestamp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;converter_script_version&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;epyr_fair_converter_v1.0&quot;</span>
+
+            <span class="c1"># Store structured FAIR metadata</span>
+            <span class="n">param_grp</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;metadata/parameters_fair&quot;</span><span class="p">)</span>
+            <span class="n">param_grp</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span>
+                <span class="s2">&quot;description&quot;</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Mapped parameters with units and descriptions.&quot;</span>
+
+            <span class="k">for</span> <span class="n">fair_key</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">fair_meta</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">item_grp</span> <span class="o">=</span> <span class="n">param_grp</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">fair_key</span><span class="p">)</span>
+                <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">item_grp</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
+                <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">item_grp</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">,</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
+                <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">item_grp</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">])</span>
+
+            <span class="c1"># Store unmapped parameters</span>
+            <span class="k">if</span> <span class="n">unmapped_meta</span><span class="p">:</span>
+                <span class="n">unmap_grp</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;metadata/parameters_original&quot;</span><span class="p">)</span>
+                <span class="n">unmap_grp</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span>
+                    <span class="s2">&quot;description&quot;</span>
+                <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Parameters from the original file not found in the FAIR mapping.&quot;</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">unmapped_meta</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">unmap_grp</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+            <span class="c1"># Store data</span>
+            <span class="n">data_grp</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">)</span>
+            <span class="n">ds_y</span> <span class="o">=</span> <span class="n">data_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;intensity&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">ds_y</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Experimental intensity data.&quot;</span>
+            <span class="n">ds_y</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;a.u.&quot;</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">iscomplexobj</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+                <span class="n">ds_y</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;signal_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;complex&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ds_y</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;signal_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;real&quot;</span>
+
+            <span class="c1"># Get axis units from FAIR metadata</span>
+            <span class="n">x_unit_val</span> <span class="o">=</span> <span class="n">fair_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x_axis_unit&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;a.u.&quot;</span><span class="p">)</span>
+            <span class="n">y_unit_val</span> <span class="o">=</span> <span class="n">fair_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;y_axis_unit&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;a.u.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_unit_val</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;,&quot;</span> <span class="ow">in</span> <span class="n">y_unit_val</span><span class="p">:</span>
+                <span class="n">y_unit_val</span> <span class="o">=</span> <span class="n">y_unit_val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">z_unit_val</span> <span class="o">=</span> <span class="n">fair_meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;z_axis_unit&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;a.u.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z_unit_val</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;,&quot;</span> <span class="ow">in</span> <span class="n">z_unit_val</span><span class="p">:</span>
+                <span class="n">z_unit_val</span> <span class="o">=</span> <span class="n">z_unit_val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+            <span class="c1"># Store abscissa data</span>
+            <span class="n">axis_datasets</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">nx</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">ds_x</span> <span class="o">=</span> <span class="n">data_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;abscissa_x&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nx</span><span class="p">))</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_x</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="s2">&quot;points&quot;</span><span class="p">)</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_x</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;X axis (index)&quot;</span><span class="p">)</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_x</span><span class="p">,</span> <span class="s2">&quot;axis_type&quot;</span><span class="p">,</span> <span class="s2">&quot;index&quot;</span><span class="p">)</span>
+                    <span class="n">axis_datasets</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds_x</span>
+                <span class="k">if</span> <span class="n">y</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">ny</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="n">ds_y_ax</span> <span class="o">=</span> <span class="n">data_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;abscissa_y&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ny</span><span class="p">))</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_y_ax</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="s2">&quot;points&quot;</span><span class="p">)</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_y_ax</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;Y axis (index)&quot;</span><span class="p">)</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_y_ax</span><span class="p">,</span> <span class="s2">&quot;axis_type&quot;</span><span class="p">,</span> <span class="s2">&quot;index&quot;</span><span class="p">)</span>
+                    <span class="n">axis_datasets</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds_y_ax</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>  <span class="c1"># 1D data</span>
+                <span class="n">ds_x</span> <span class="o">=</span> <span class="n">data_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;abscissa_x&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_x</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="n">x_unit_val</span><span class="p">)</span>
+                <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_x</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;X axis&quot;</span><span class="p">)</span>
+                <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_x</span><span class="p">,</span> <span class="s2">&quot;axis_type&quot;</span><span class="p">,</span> <span class="s2">&quot;independent_variable&quot;</span><span class="p">)</span>
+                <span class="n">axis_datasets</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds_x</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>  <span class="c1"># Multi-D data</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                    <span class="n">ds_x</span> <span class="o">=</span> <span class="n">data_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;abscissa_x&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_x</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="n">x_unit_val</span><span class="p">)</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_x</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;X axis&quot;</span><span class="p">)</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_x</span><span class="p">,</span> <span class="s2">&quot;axis_type&quot;</span><span class="p">,</span> <span class="s2">&quot;independent_variable_x&quot;</span><span class="p">)</span>
+                    <span class="n">axis_datasets</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds_x</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                    <span class="n">ds_y_ax</span> <span class="o">=</span> <span class="n">data_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;abscissa_y&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_y_ax</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="n">y_unit_val</span><span class="p">)</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_y_ax</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;Y axis&quot;</span><span class="p">)</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_y_ax</span><span class="p">,</span> <span class="s2">&quot;axis_type&quot;</span><span class="p">,</span> <span class="s2">&quot;independent_variable_y&quot;</span><span class="p">)</span>
+                    <span class="n">axis_datasets</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds_y_ax</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                    <span class="n">ds_z_ax</span> <span class="o">=</span> <span class="n">data_grp</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;abscissa_z&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_z_ax</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">,</span> <span class="n">z_unit_val</span><span class="p">)</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_z_ax</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">,</span> <span class="s2">&quot;Z axis&quot;</span><span class="p">)</span>
+                    <span class="n">_try_set_h5_attr</span><span class="p">(</span><span class="n">ds_z_ax</span><span class="p">,</span> <span class="s2">&quot;axis_type&quot;</span><span class="p">,</span> <span class="s2">&quot;independent_variable_z&quot;</span><span class="p">)</span>
+                    <span class="n">axis_datasets</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ds_z_ax</span>
+
+            <span class="c1"># Link axes to data dimensions using HDF5 Dimension Scales API</span>
+            <span class="k">if</span> <span class="s2">&quot;intensity&quot;</span> <span class="ow">in</span> <span class="n">data_grp</span><span class="p">:</span>
+                <span class="n">dims</span> <span class="o">=</span> <span class="n">ds_y</span><span class="o">.</span><span class="n">dims</span>
+                <span class="n">current_ndim</span> <span class="o">=</span> <span class="n">ds_y</span><span class="o">.</span><span class="n">ndim</span>
+
+                <span class="c1"># Link X dimension (last dimension)</span>
+                <span class="k">if</span> <span class="n">current_ndim</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s2">&quot;x&quot;</span> <span class="ow">in</span> <span class="n">axis_datasets</span><span class="p">:</span>
+                    <span class="n">x_dim_index</span> <span class="o">=</span> <span class="n">current_ndim</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">dims</span><span class="p">[</span><span class="n">x_dim_index</span><span class="p">]</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span>
+                        <span class="n">dims</span><span class="p">[</span><span class="n">x_dim_index</span><span class="p">]</span><span class="o">.</span><span class="n">attach_scale</span><span class="p">(</span><span class="n">axis_datasets</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">])</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Error linking X dimension scale: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+
+                <span class="c1"># Link Y dimension (second to last dimension)</span>
+                <span class="k">if</span> <span class="n">current_ndim</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="ow">and</span> <span class="s2">&quot;y&quot;</span> <span class="ow">in</span> <span class="n">axis_datasets</span><span class="p">:</span>
+                    <span class="n">y_dim_index</span> <span class="o">=</span> <span class="n">current_ndim</span> <span class="o">-</span> <span class="mi">2</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">dims</span><span class="p">[</span><span class="n">y_dim_index</span><span class="p">]</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;y&quot;</span>
+                        <span class="n">dims</span><span class="p">[</span><span class="n">y_dim_index</span><span class="p">]</span><span class="o">.</span><span class="n">attach_scale</span><span class="p">(</span><span class="n">axis_datasets</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Error linking Y dimension scale: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+
+                <span class="c1"># Link Z dimension (third to last dimension)</span>
+                <span class="k">if</span> <span class="n">current_ndim</span> <span class="o">&gt;=</span> <span class="mi">3</span> <span class="ow">and</span> <span class="s2">&quot;z&quot;</span> <span class="ow">in</span> <span class="n">axis_datasets</span><span class="p">:</span>
+                    <span class="n">z_dim_index</span> <span class="o">=</span> <span class="n">current_ndim</span> <span class="o">-</span> <span class="mi">3</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">dims</span><span class="p">[</span><span class="n">z_dim_index</span><span class="p">]</span><span class="o">.</span><span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;z&quot;</span>
+                        <span class="n">dims</span><span class="p">[</span><span class="n">z_dim_index</span><span class="p">]</span><span class="o">.</span><span class="n">attach_scale</span><span class="p">(</span><span class="n">axis_datasets</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">])</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Error linking Z dimension scale: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not write HDF5 file </span><span class="si">{</span><span class="n">h5_file</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;An unexpected error occurred while writing HDF5 file </span><span class="si">{</span><span class="n">h5_file</span><span class="si">}</span><span class="s2">: &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="save_fair">
+<a class="viewcode-back" href="../../../api/generated/epyr.fair.exporters.html#epyr.fair.exporters.save_fair">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_fair</span><span class="p">(</span>
+    <span class="n">output_basename</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">original_file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">formats</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;csv_json&quot;</span><span class="p">,</span> <span class="s2">&quot;hdf5&quot;</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save EPR data in specified FAIR formats.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        output_basename: Base path for output files (without extension)</span>
+<span class="sd">        x: Abscissa data array(s) or None</span>
+<span class="sd">        y: Intensity data array</span>
+<span class="sd">        pars: Raw parameters dictionary</span>
+<span class="sd">        original_file_path: Path to original data file</span>
+<span class="sd">        formats: List of output formats (&#39;csv_json&#39;, &#39;hdf5&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;csv_json&quot;</span> <span class="ow">in</span> <span class="n">formats</span><span class="p">:</span>
+        <span class="n">save_to_csv_json</span><span class="p">(</span><span class="n">output_basename</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">original_file_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;hdf5&quot;</span> <span class="ow">in</span> <span class="n">formats</span><span class="p">:</span>
+        <span class="n">save_to_hdf5</span><span class="p">(</span><span class="n">output_basename</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">original_file_path</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Sylvain Bertaina.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

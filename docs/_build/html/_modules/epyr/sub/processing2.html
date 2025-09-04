@@ -1,0 +1,781 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>epyr.sub.processing2 &mdash; EPyR Tools v0.1.0 Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            EPyR Tools
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/epyr.html">EPyR Tools API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">Complete Module Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">EPyR Tools</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">epyr.sub.processing2</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for epyr.sub.processing2</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue May  6 15:57:27 2025</span>
+
+<span class="sd">@author: sylvainbertaina</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># from scipy.signal import savgol_filter # If needed for other methods</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">curve_fit</span>  <span class="c1"># np.polyfit/polyval don&#39;t need this directly</span>
+
+<span class="c1"># --- Baseline Correction Functions ---</span>
+
+
+<div class="viewcode-block" id="baseline_polynomial">
+<a class="viewcode-back" href="../../../api/generated/epyr.sub.processing2.html#epyr.sub.processing2.baseline_polynomial">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">baseline_polynomial</span><span class="p">(</span>
+    <span class="n">y_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">x_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">poly_order</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">exclude_regions</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">roi</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs baseline correction on 1D data by subtracting a polynomial fit.</span>
+
+<span class="sd">    The polynomial is fitted to regions of the data presumed to be baseline.</span>
+<span class="sd">    These regions can be specified by either defining an overall region of</span>
+<span class="sd">    interest (ROI) for fitting, or by excluding signal regions from a</span>
+<span class="sd">    broader fit.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        y_data (np.ndarray): The 1D spectral data array.</span>
+<span class="sd">        x_data (np.ndarray, optional): The x-axis data corresponding to y_data.</span>
+<span class="sd">            If provided, `exclude_regions` and `roi` are interpreted in</span>
+<span class="sd">            the units of `x_data`. If None, indices are used. Defaults to None.</span>
+<span class="sd">        poly_order (int, optional): Order of the polynomial to fit to the baseline.</span>
+<span class="sd">            Defaults to 1 (linear).</span>
+<span class="sd">        exclude_regions (list of tuples, optional): A list of (start, end) tuples</span>
+<span class="sd">            specifying regions to *exclude* from the baseline fitting.</span>
+<span class="sd">            Interpreted in `x_data` units if `x_data` is provided, otherwise as indices.</span>
+<span class="sd">            Example: `[(x1, x2), (x3, x4)]`. Defaults to None (no regions explicitly excluded).</span>
+<span class="sd">        roi (tuple, optional): A single (start, end) tuple specifying the region of</span>
+<span class="sd">            interest (ROI) where the baseline fitting should *occur*. Data outside</span>
+<span class="sd">            this ROI (and within any `exclude_regions` that might overlap) will not</span>
+<span class="sd">            be used for the fit. Interpreted in `x_data` units if `x_data` is provided,</span>
+<span class="sd">            otherwise as indices. Example: `(x_start_baseline, x_end_baseline)`.</span>
+<span class="sd">            If None, the entire dataset (minus `exclude_regions`) is considered.</span>
+<span class="sd">            Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[np.ndarray, np.ndarray]:</span>
+<span class="sd">            - y_corrected (np.ndarray): The baseline-corrected y_data.</span>
+<span class="sd">            - baseline (np.ndarray): The calculated polynomial baseline.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If y_data is not 1D or if x_data and y_data lengths mismatch.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="n">y_data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;y_data must be a 1D NumPy array.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">x_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x_data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;x_data must be a 1D NumPy array if provided.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_data</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_data</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;x_data and y_data must have the same length.&quot;</span><span class="p">)</span>
+        <span class="n">x_axis_for_fitting</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">x_data</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x_axis_for_fitting</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_data</span><span class="p">))</span>  <span class="c1"># Use indices if x_data is None</span>
+
+    <span class="n">y_to_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">y_data</span><span class="p">)</span>
+
+    <span class="c1"># Create a mask for points to include in the baseline fit</span>
+    <span class="n">fit_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">y_to_fit</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;roi must be a tuple of (start, end).&quot;</span><span class="p">)</span>
+        <span class="n">roi_start</span><span class="p">,</span> <span class="n">roi_end</span> <span class="o">=</span> <span class="n">roi</span>
+        <span class="k">if</span> <span class="n">roi_start</span> <span class="o">&gt;=</span> <span class="n">roi_end</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;ROI start (</span><span class="si">{</span><span class="n">roi_start</span><span class="si">}</span><span class="s2">) is not less than ROI end (</span><span class="si">{</span><span class="n">roi_end</span><span class="si">}</span><span class="s2">). ROI ignored.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Initially, mask everything outside this ROI</span>
+            <span class="n">fit_mask</span><span class="p">[:]</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Mask all</span>
+            <span class="c1"># Unmask the ROI</span>
+            <span class="k">if</span> <span class="n">x_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># ROI is in x_data units</span>
+                <span class="n">roi_active_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_axis_for_fitting</span> <span class="o">&gt;=</span> <span class="n">roi_start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span>
+                    <span class="n">x_axis_for_fitting</span> <span class="o">&lt;=</span> <span class="n">roi_end</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># ROI is in index units</span>
+                <span class="n">roi_active_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_to_fit</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="n">roi_start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_to_fit</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="n">roi_end</span>
+                <span class="p">)</span>
+            <span class="n">fit_mask</span><span class="p">[</span><span class="n">roi_active_mask</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">exclude_regions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exclude_regions</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;exclude_regions must be a list of (start, end) tuples.&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">exclude_regions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">region</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Each item in exclude_regions must be a (start, end) tuple.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="n">region</span>
+            <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;=</span> <span class="n">end</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Exclusion region start (</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2">) is not less than end (</span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s2">). Region ignored.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">x_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Exclusion is in x_data units</span>
+                <span class="n">current_exclusion_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_axis_for_fitting</span> <span class="o">&gt;=</span> <span class="n">start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span>
+                    <span class="n">x_axis_for_fitting</span> <span class="o">&lt;=</span> <span class="n">end</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># Exclusion is in index units</span>
+                <span class="n">current_exclusion_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_to_fit</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="n">start</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_to_fit</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="n">end</span>
+                <span class="p">)</span>
+            <span class="n">fit_mask</span><span class="p">[</span><span class="n">current_exclusion_mask</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Exclude these points</span>
+
+    <span class="c1"># Ensure there are enough points left for fitting</span>
+    <span class="n">num_points_for_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">fit_mask</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_points_for_fit</span> <span class="o">&lt;=</span> <span class="n">poly_order</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Not enough points (</span><span class="si">{</span><span class="n">num_points_for_fit</span><span class="si">}</span><span class="s2">) for polynomial fit of order </span><span class="si">{</span><span class="n">poly_order</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="s2">&quot;after applying ROI/exclusions. Returning original data.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_data</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Fit polynomial using only the masked (True) points</span>
+        <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span>
+            <span class="n">x_axis_for_fitting</span><span class="p">[</span><span class="n">fit_mask</span><span class="p">],</span> <span class="n">y_to_fit</span><span class="p">[</span><span class="n">fit_mask</span><span class="p">],</span> <span class="n">poly_order</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Evaluate the polynomial over the entire original x_range (or indices)</span>
+        <span class="n">baseline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyval</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">x_axis_for_fitting</span><span class="p">)</span>
+
+        <span class="n">y_corrected</span> <span class="o">=</span> <span class="n">y_data</span> <span class="o">-</span> <span class="n">baseline</span>
+        <span class="k">return</span> <span class="n">y_corrected</span><span class="p">,</span> <span class="n">baseline</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Polynomial baseline fit failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. Returning original data.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_data</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="baseline_constant_offset">
+<a class="viewcode-back" href="../../../api/generated/epyr.sub.processing2.html#epyr.sub.processing2.baseline_constant_offset">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">baseline_constant_offset</span><span class="p">(</span>
+    <span class="n">y_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">offset_region_indices</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs baseline correction by subtracting a constant offset.</span>
+
+<span class="sd">    The offset is calculated from a specified region of y_data (using indices)</span>
+<span class="sd">    via its mean or median.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        y_data (np.ndarray): The 1D spectral data array.</span>
+<span class="sd">        offset_region_indices (tuple, optional): A (start_index, end_index) tuple</span>
+<span class="sd">            specifying the slice of y_data (exclusive of end_index, like Python slicing)</span>
+<span class="sd">            to calculate the offset from. If None, the entire array is used,</span>
+<span class="sd">            which is generally not recommended for data with signals.</span>
+<span class="sd">            Defaults to None.</span>
+<span class="sd">        method (str, optional): Method to calculate the offset within the region.</span>
+<span class="sd">            Options are &#39;mean&#39; or &#39;median&#39;. Defaults to &#39;mean&#39;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[np.ndarray, np.ndarray]:</span>
+<span class="sd">            - y_corrected (np.ndarray): The baseline-corrected y_data.</span>
+<span class="sd">            - baseline (np.ndarray): The calculated constant baseline (an array</span>
+<span class="sd">                                     filled with the calculated offset value).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If y_data is not 1D or if the method is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="n">y_data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;y_data must be a 1D NumPy array.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;median&quot;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Method must be &#39;mean&#39; or &#39;median&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">offset_region_indices</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">offset_region_indices</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">offset_region_indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;offset_region_indices must be a (start_index, end_index) tuple.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">start_idx</span><span class="p">,</span> <span class="n">end_idx</span> <span class="o">=</span> <span class="n">offset_region_indices</span>
+        <span class="c1"># Ensure indices are valid and form a valid slice</span>
+        <span class="n">start_idx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">start_idx</span><span class="p">))</span>
+        <span class="n">end_idx</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y_data</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">end_idx</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">start_idx</span> <span class="o">&gt;=</span> <span class="n">end_idx</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid offset_region_indices (</span><span class="si">{</span><span class="n">offset_region_indices</span><span class="si">}</span><span class="s2">). &quot;</span>
+                <span class="s2">&quot;Start index must be less than end index. Using whole array for offset.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">region_data_for_offset</span> <span class="o">=</span> <span class="n">y_data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">region_data_for_offset</span> <span class="o">=</span> <span class="n">y_data</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:</span><span class="n">end_idx</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;offset_region_indices not provided. Using whole array for offset calculation.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">region_data_for_offset</span> <span class="o">=</span> <span class="n">y_data</span>
+
+    <span class="k">if</span> <span class="n">region_data_for_offset</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;Offset calculation region is empty after slicing. Returning original data.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+        <span class="n">offset_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">region_data_for_offset</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># &#39;median&#39;</span>
+        <span class="n">offset_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">region_data_for_offset</span><span class="p">)</span>
+
+    <span class="n">baseline</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">offset_value</span><span class="p">)</span>
+    <span class="n">y_corrected</span> <span class="o">=</span> <span class="n">y_data</span> <span class="o">-</span> <span class="n">offset_value</span>  <span class="c1"># Broadcasting subtracts scalar from array</span>
+    <span class="k">return</span> <span class="n">y_corrected</span><span class="p">,</span> <span class="n">baseline</span></div>
+
+
+
+<span class="c1"># --- Stretched Exponential Decay Function ---</span>
+<div class="viewcode-block" id="stretched_exponential_decay">
+<a class="viewcode-back" href="../../../api/generated/epyr.sub.processing2.html#epyr.sub.processing2.stretched_exponential_decay">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stretched_exponential_decay</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stretched exponential decay function (Kohlrausch–Williams–Watts type).</span>
+<span class="sd">    f(t) = y0 + amplitude * exp(-(t / tau)**beta)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ensure t/tau is non-negative before raising to power beta, esp. if t can be negative.</span>
+    <span class="c1"># However, for typical decays, t is expected to be non-negative.</span>
+    <span class="c1"># We might need to handle negative t if the x-axis allows it and adjust the model.</span>
+    <span class="c1"># For simplicity, assume t &gt;= 0 and tau &gt; 0.</span>
+    <span class="k">if</span> <span class="n">tau</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># tau must be positive</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>  <span class="c1"># Return a large number to penalize invalid tau in fitting</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">beta</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">beta</span> <span class="o">&gt;</span> <span class="mf">1.0001</span>
+    <span class="p">):</span>  <span class="c1"># Beta typically 0 &lt; beta &lt;= 1 (allow slight &gt;1 for fitting robustness)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="c1"># Handle potential issues with (t/tau) being negative if t or x_offset not handled properly.</span>
+    <span class="c1"># If t is always positive and starts from 0 (or t-t0), this is usually fine.</span>
+    <span class="n">decay_term</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="n">tau</span><span class="p">)</span> <span class="o">**</span> <span class="n">beta</span>
+    <span class="k">return</span> <span class="n">y0</span> <span class="o">+</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">decay_term</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="baseline_stretched_exponential">
+<a class="viewcode-back" href="../../../api/generated/epyr.sub.processing2.html#epyr.sub.processing2.baseline_stretched_exponential">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">baseline_stretched_exponential</span><span class="p">(</span>
+    <span class="n">y_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">x_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">initial_guess</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">bounds</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">fit_region</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">exclude_regions</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs baseline correction by fitting and subtracting a stretched exponential decay.</span>
+
+<span class="sd">    The function y(x) = y0 + A * exp(-((x - x_offset) / τ)**β) is fitted.</span>
+<span class="sd">    This version assumes x_data is provided and that the decay starts effectively</span>
+<span class="sd">    at or after x_data.min().</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        y_data (np.ndarray): The 1D spectral data array.</span>
+<span class="sd">        x_data (np.ndarray): The x-axis data corresponding to y_data. Must be provided</span>
+<span class="sd">                             and should represent the variable against which the decay occurs</span>
+<span class="sd">                             (e.g., time, field).</span>
+<span class="sd">        initial_guess (list, optional): Initial guess for the parameters [y0, A, τ, β].</span>
+<span class="sd">            - y0: baseline offset at infinity</span>
+<span class="sd">            - A: amplitude of decay (can be negative if it&#39;s an increasing baseline)</span>
+<span class="sd">            - τ: characteristic time</span>
+<span class="sd">            - β: stretching exponent (0 &lt; β &lt;= 1)</span>
+<span class="sd">            If None, some heuristics will be used to estimate, but providing</span>
+<span class="sd">            good initial guesses is highly recommended for robust fitting.</span>
+<span class="sd">        bounds (tuple, optional): Bounds for the parameters ([y0_min, A_min, τ_min, β_min],</span>
+<span class="sd">                                 [y0_max, A_max, τ_max, β_max]).</span>
+<span class="sd">            Example: `bounds=([0, -np.inf, 1e-9, 0.01], [np.inf, np.inf, np.inf, 1.0])`</span>
+<span class="sd">            Defaults to `(-np.inf, np.inf)`.</span>
+<span class="sd">        fit_region (tuple, optional): A (start_x, end_x) tuple specifying the</span>
+<span class="sd">            region of x_data to use for fitting the decay. If None, the entire</span>
+<span class="sd">            dataset (respecting exclude_regions) is used. Defaults to None.</span>
+<span class="sd">        exclude_regions (list of tuples, optional): List of (start_x, end_x) tuples</span>
+<span class="sd">            to exclude from fitting (e.g., signal peaks on top of the decay).</span>
+<span class="sd">            Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[np.ndarray, np.ndarray, dict]:</span>
+<span class="sd">            - y_corrected (np.ndarray): Baseline-corrected y_data.</span>
+<span class="sd">            - baseline (np.ndarray): The calculated stretched exponential baseline.</span>
+<span class="sd">            - fit_params (dict): Dictionary of the fitted parameters (y0, A, τ, β)</span>
+<span class="sd">                                 and their standard deviations (if calculable).</span>
+<span class="sd">                                 Returns None for params if fit fails.</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If y_data is not 1D or x_data is not provided or lengths mismatch.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="n">y_data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;y_data must be a 1D NumPy array.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x_data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;x_data must be a 1D NumPy array for stretched exponential fit.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_data</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_data</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;x_data and y_data must have the same length.&quot;</span><span class="p">)</span>
+
+    <span class="n">x_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">x_data</span><span class="p">)</span>
+    <span class="n">y_fit_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">y_data</span><span class="p">)</span>
+
+    <span class="c1"># Create a mask for points to include in the fit</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x_fit</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">fit_region</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fit_region</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;fit_region must be a tuple (start_x, end_x).&quot;</span><span class="p">)</span>
+        <span class="n">start_x_fit</span><span class="p">,</span> <span class="n">end_x_fit</span> <span class="o">=</span> <span class="n">fit_region</span>
+        <span class="k">if</span> <span class="n">start_x_fit</span> <span class="o">&gt;=</span> <span class="n">end_x_fit</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Fit region start (</span><span class="si">{</span><span class="n">start_x_fit</span><span class="si">}</span><span class="s2">) not less than end (</span><span class="si">{</span><span class="n">end_x_fit</span><span class="si">}</span><span class="s2">). Region ignored.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">&amp;=</span> <span class="p">(</span><span class="n">x_fit</span> <span class="o">&gt;=</span> <span class="n">start_x_fit</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x_fit</span> <span class="o">&lt;=</span> <span class="n">end_x_fit</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">exclude_regions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exclude_regions</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;exclude_regions must be a list of (start_x, end_x) tuples.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">exclude_regions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">region</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Each item in exclude_regions must be a (start_x, end_x) tuple.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">start_ex</span><span class="p">,</span> <span class="n">end_ex</span> <span class="o">=</span> <span class="n">region</span>
+            <span class="k">if</span> <span class="n">start_ex</span> <span class="o">&gt;=</span> <span class="n">end_ex</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Exclusion region start (</span><span class="si">{</span><span class="n">start_ex</span><span class="si">}</span><span class="s2">) not less than end (</span><span class="si">{</span><span class="n">end_ex</span><span class="si">}</span><span class="s2">). Region ignored.&quot;</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">mask</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="p">((</span><span class="n">x_fit</span> <span class="o">&gt;=</span> <span class="n">start_ex</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x_fit</span> <span class="o">&lt;=</span> <span class="n">end_ex</span><span class="p">))</span>  <span class="c1"># Exclude these points</span>
+
+    <span class="c1"># Apply mask</span>
+    <span class="n">x_masked</span> <span class="o">=</span> <span class="n">x_fit</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+    <span class="n">y_masked</span> <span class="o">=</span> <span class="n">y_fit_data</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_masked</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>  <span class="c1"># Need at least as many points as parameters</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;Not enough points to fit stretched exponential after applying regions. Returning original data.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_data</span><span class="p">),</span> <span class="kc">None</span>
+
+    <span class="c1"># Heuristic initial guesses if not provided</span>
+    <span class="k">if</span> <span class="n">initial_guess</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># y0: Guess as the mean of the last few points of the *masked* data (or overall mean if fit_region is small)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_masked</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="n">guess_y0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y_masked</span><span class="p">[</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_masked</span><span class="p">)</span> <span class="o">//</span> <span class="mi">10</span><span class="p">)</span> <span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">guess_y0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y_masked</span><span class="p">)</span>
+
+        <span class="c1"># A: Difference between first point (or max) and guess_y0</span>
+        <span class="c1"># This assumes a decaying trend from the start of the masked data.</span>
+        <span class="n">first_masked_y</span> <span class="o">=</span> <span class="n">y_masked</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">guess_A</span> <span class="o">=</span> <span class="n">first_masked_y</span> <span class="o">-</span> <span class="n">guess_y0</span>  <span class="c1"># If decaying from high to low</span>
+        <span class="c1"># If data might increase initially and then decay, or always increase (A &lt; 0)</span>
+        <span class="c1"># max_y = np.max(y_masked)</span>
+        <span class="c1"># min_y = np.min(y_masked)</span>
+        <span class="c1"># if abs(max_y - guess_y0) &gt; abs(min_y - guess_y0):</span>
+        <span class="c1">#     guess_A = max_y - guess_y0</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     guess_A = min_y - guess_y0</span>
+
+        <span class="c1"># τ: Guess as roughly 1/3 of the range of x_masked where the decay happens.</span>
+        <span class="c1"># This is a very rough guess and highly dependent on the data.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_masked</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">guess_tau</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_masked</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_masked</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">3.0</span>
+            <span class="k">if</span> <span class="n">guess_tau</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">guess_tau</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="p">(</span><span class="n">x_masked</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_masked</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">x_masked</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_masked</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                    <span class="k">else</span> <span class="mf">1.0</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">guess_tau</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="n">guess_tau</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">guess_tau</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">)</span>  <span class="c1"># Ensure tau is positive</span>
+
+        <span class="c1"># β: Start with 1 (simple exponential) or 0.5</span>
+        <span class="n">guess_beta</span> <span class="o">=</span> <span class="mf">0.8</span>
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">[</span><span class="n">guess_y0</span><span class="p">,</span> <span class="n">guess_A</span><span class="p">,</span> <span class="n">guess_tau</span><span class="p">,</span> <span class="n">guess_beta</span><span class="p">]</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Using heuristic initial guess for stretched exponential: </span><span class="si">{</span><span class="n">initial_guess</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Default bounds if not provided</span>
+    <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># y0, A, tau, beta</span>
+        <span class="c1"># Tau must be &gt; 0. Beta usually 0 &lt; beta &lt;= 1.</span>
+        <span class="n">lower_bounds</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">]</span>  <span class="c1"># Smallest tau and beta</span>
+        <span class="n">upper_bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>  <span class="c1"># Max beta = 1</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="p">(</span><span class="n">lower_bounds</span><span class="p">,</span> <span class="n">upper_bounds</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Ensure bounds are correctly structured</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">4</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">4</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Bounds must be a tuple of two lists/arrays of length 4: ([lowers], [uppers])&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># --- Perform the fit on the masked data ---</span>
+        <span class="c1"># It&#39;s crucial that x_masked corresponds to the part of the decay we want to model.</span>
+        <span class="c1"># If the x_data doesn&#39;t start near the &quot;beginning&quot; of the decay (t=0 in model),</span>
+        <span class="c1"># we might need to introduce an x_offset parameter in `stretched_exponential_decay`</span>
+        <span class="c1"># and fit for it: e.g., ((x - x_offset) / tau).</span>
+        <span class="c1"># For now, assuming x_masked[0] is close enough to the effective start.</span>
+
+        <span class="n">popt</span><span class="p">,</span> <span class="n">pcov</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span>
+            <span class="n">stretched_exponential_decay</span><span class="p">,</span>
+            <span class="n">x_masked</span><span class="p">,</span>  <span class="c1"># Fit using the selected region&#39;s x values</span>
+            <span class="n">y_masked</span><span class="p">,</span>
+            <span class="n">p0</span><span class="o">=</span><span class="n">initial_guess</span><span class="p">,</span>
+            <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
+            <span class="n">maxfev</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>  <span class="c1"># Increase max iterations if convergence is an issue</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Calculate the baseline over the *entire original* x_data range</span>
+        <span class="n">baseline</span> <span class="o">=</span> <span class="n">stretched_exponential_decay</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="o">*</span><span class="n">popt</span><span class="p">)</span>
+        <span class="n">y_corrected</span> <span class="o">=</span> <span class="n">y_data</span> <span class="o">-</span> <span class="n">baseline</span>
+
+        <span class="c1"># Extract parameter errors (standard deviations)</span>
+        <span class="n">perr</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">pcov</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">pcov</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">pcov</span><span class="p">))</span>
+            <span class="k">else</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">popt</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">fit_parameters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;y0&quot;</span><span class="p">:</span> <span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s2">&quot;tau&quot;</span><span class="p">:</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+            <span class="s2">&quot;beta&quot;</span><span class="p">:</span> <span class="n">popt</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+            <span class="s2">&quot;std_y0&quot;</span><span class="p">:</span> <span class="n">perr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;std_A&quot;</span><span class="p">:</span> <span class="n">perr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s2">&quot;std_tau&quot;</span><span class="p">:</span> <span class="n">perr</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+            <span class="s2">&quot;std_beta&quot;</span><span class="p">:</span> <span class="n">perr</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">y_corrected</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">fit_parameters</span>
+
+    <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Stretched exponential fit did not converge: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. Returning original data.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_data</span><span class="p">),</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># Can happen from bounds or initial guess issues</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;ValueError during stretched exponential fit (check bounds/guesses): </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. Returning original data.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_data</span><span class="p">),</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># Catch any other fitting errors</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;An unexpected error occurred during stretched exponential fit: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. Returning original data.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_data</span><span class="p">),</span> <span class="kc">None</span></div>
+
+
+
+<span class="c1"># --- Mono-Exponential Decay Function ---</span>
+<div class="viewcode-block" id="mono_exponential_decay">
+<a class="viewcode-back" href="../../../api/generated/epyr.sub.processing2.html#epyr.sub.processing2.mono_exponential_decay">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mono_exponential_decay</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span> <span class="n">tau</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mono-exponential decay function.</span>
+<span class="sd">    f(t) = y0 + amplitude * exp(-t / tau)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tau</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># tau must be positive</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>  <span class="c1"># Penalize invalid tau during fitting</span>
+    <span class="k">return</span> <span class="n">y0</span> <span class="o">+</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">t</span> <span class="o">/</span> <span class="n">tau</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="baseline_mono_exponential">
+<a class="viewcode-back" href="../../../api/generated/epyr.sub.processing2.html#epyr.sub.processing2.baseline_mono_exponential">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">baseline_mono_exponential</span><span class="p">(</span>
+    <span class="n">y_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">x_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">initial_guess</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">bounds</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">fit_region</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">exclude_regions</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs baseline correction by fitting and subtracting a mono-exponential decay.</span>
+
+<span class="sd">    The function y(x) = y0 + A * exp(-(x - x_offset) / τ) is fitted.</span>
+<span class="sd">    This version assumes x_data is provided and that the decay starts effectively</span>
+<span class="sd">    at or after x_data.min().</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        y_data (np.ndarray): The 1D spectral data array.</span>
+<span class="sd">        x_data (np.ndarray): The x-axis data corresponding to y_data. Must be provided.</span>
+<span class="sd">        initial_guess (list, optional): Initial guess for parameters [y0, A, τ].</span>
+<span class="sd">            - y0: baseline offset at infinity</span>
+<span class="sd">            - A: amplitude of decay</span>
+<span class="sd">            - τ: characteristic time</span>
+<span class="sd">            If None, heuristics are used (providing good guesses is recommended).</span>
+<span class="sd">        bounds (tuple, optional): Bounds for parameters ([y0_min, A_min, τ_min],</span>
+<span class="sd">                                 [y0_max, A_max, τ_max]).</span>
+<span class="sd">            Example: `bounds=([0, -np.inf, 1e-9], [np.inf, np.inf, np.inf])`</span>
+<span class="sd">            Defaults to `(-np.inf, np.inf)`.</span>
+<span class="sd">        fit_region (tuple, optional): (start_x, end_x) tuple specifying the x_data</span>
+<span class="sd">            region for fitting. If None, the entire dataset (respecting</span>
+<span class="sd">            exclude_regions) is used. Defaults to None.</span>
+<span class="sd">        exclude_regions (list of tuples, optional): List of (start_x, end_x) tuples</span>
+<span class="sd">            to exclude from fitting (e.g., signal peaks). Defaults to None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[np.ndarray, np.ndarray, dict]:</span>
+<span class="sd">            - y_corrected (np.ndarray): Baseline-corrected y_data.</span>
+<span class="sd">            - baseline (np.ndarray): The calculated mono-exponential baseline.</span>
+<span class="sd">            - fit_params (dict): Dictionary of fitted parameters (y0, A, τ) and</span>
+<span class="sd">                                 their standard deviations. None if fit fails.</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If inputs are invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="n">y_data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;y_data must be a 1D NumPy array.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x_data</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;x_data must be a 1D NumPy array for mono-exponential fit.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_data</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_data</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;x_data and y_data must have the same length.&quot;</span><span class="p">)</span>
+
+    <span class="n">x_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">x_data</span><span class="p">)</span>
+    <span class="n">y_fit_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">y_data</span><span class="p">)</span>
+
+    <span class="c1"># Create a mask for points to include in the fit (similar to stretched_exponential)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x_fit</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fit_region</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fit_region</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;fit_region must be a tuple (start_x, end_x).&quot;</span><span class="p">)</span>
+        <span class="n">start_x_fit</span><span class="p">,</span> <span class="n">end_x_fit</span> <span class="o">=</span> <span class="n">fit_region</span>
+        <span class="k">if</span> <span class="n">start_x_fit</span> <span class="o">&gt;=</span> <span class="n">end_x_fit</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fit region start not less than end. Region ignored.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">&amp;=</span> <span class="p">(</span><span class="n">x_fit</span> <span class="o">&gt;=</span> <span class="n">start_x_fit</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x_fit</span> <span class="o">&lt;=</span> <span class="n">end_x_fit</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">exclude_regions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exclude_regions</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;exclude_regions must be a list.&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">exclude_regions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">region</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Each exclude region must be (start,end).&quot;</span><span class="p">)</span>
+            <span class="n">start_ex</span><span class="p">,</span> <span class="n">end_ex</span> <span class="o">=</span> <span class="n">region</span>
+            <span class="k">if</span> <span class="n">start_ex</span> <span class="o">&gt;=</span> <span class="n">end_ex</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Exclusion region start not less than end. Region ignored.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="p">((</span><span class="n">x_fit</span> <span class="o">&gt;=</span> <span class="n">start_ex</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x_fit</span> <span class="o">&lt;=</span> <span class="n">end_ex</span><span class="p">))</span>
+
+    <span class="n">x_masked</span> <span class="o">=</span> <span class="n">x_fit</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+    <span class="n">y_masked</span> <span class="o">=</span> <span class="n">y_fit_data</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_masked</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># Need at least as many points as parameters (y0, A, τ)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="s2">&quot;Not enough points for mono-exponential fit after applying regions. Returning original data.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_data</span><span class="p">),</span> <span class="kc">None</span>
+
+    <span class="c1"># Heuristic initial guesses if not provided</span>
+    <span class="k">if</span> <span class="n">initial_guess</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_masked</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+            <span class="n">guess_y0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+                <span class="n">y_masked</span><span class="p">[</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_masked</span><span class="p">)</span> <span class="o">//</span> <span class="mi">10</span><span class="p">)</span> <span class="p">:]</span>
+            <span class="p">)</span>  <span class="c1"># Offset at long times</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">guess_y0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y_masked</span><span class="p">)</span>
+
+        <span class="n">first_masked_y</span> <span class="o">=</span> <span class="n">y_masked</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">guess_A</span> <span class="o">=</span> <span class="n">first_masked_y</span> <span class="o">-</span> <span class="n">guess_y0</span>  <span class="c1"># Amplitude (assumes decay from start)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_masked</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">guess_tau</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">x_masked</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_masked</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">)</span> <span class="o">/</span> <span class="mf">3.0</span>  <span class="c1"># Characteristic time (very rough)</span>
+            <span class="k">if</span> <span class="n">guess_tau</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">guess_tau</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="p">(</span><span class="n">x_masked</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_masked</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">x_masked</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_masked</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                    <span class="k">else</span> <span class="mf">1.0</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">guess_tau</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="n">guess_tau</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">guess_tau</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">)</span>  <span class="c1"># Ensure tau is positive</span>
+
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">[</span><span class="n">guess_y0</span><span class="p">,</span> <span class="n">guess_A</span><span class="p">,</span> <span class="n">guess_tau</span><span class="p">]</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Using heuristic initial guess for mono-exponential: </span><span class="si">{</span><span class="n">initial_guess</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># y0, A, tau</span>
+        <span class="n">lower_bounds</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="mf">1e-12</span><span class="p">]</span>  <span class="c1"># Smallest tau</span>
+        <span class="n">upper_bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="p">(</span><span class="n">lower_bounds</span><span class="p">,</span> <span class="n">upper_bounds</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">3</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">3</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Bounds must be a tuple of two lists/arrays of length 3 for mono-exponential.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">popt</span><span class="p">,</span> <span class="n">pcov</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span>
+            <span class="n">mono_exponential_decay</span><span class="p">,</span>
+            <span class="n">x_masked</span><span class="p">,</span>
+            <span class="n">y_masked</span><span class="p">,</span>
+            <span class="n">p0</span><span class="o">=</span><span class="n">initial_guess</span><span class="p">,</span>
+            <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
+            <span class="n">maxfev</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">baseline</span> <span class="o">=</span> <span class="n">mono_exponential_decay</span><span class="p">(</span>
+            <span class="n">x_data</span><span class="p">,</span> <span class="o">*</span><span class="n">popt</span>
+        <span class="p">)</span>  <span class="c1"># Calculate over full original x_data</span>
+        <span class="n">y_corrected</span> <span class="o">=</span> <span class="n">y_data</span> <span class="o">-</span> <span class="n">baseline</span>
+
+        <span class="n">perr</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">pcov</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">pcov</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">pcov</span><span class="p">))</span>
+            <span class="k">else</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">popt</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">fit_parameters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;y0&quot;</span><span class="p">:</span> <span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s2">&quot;tau&quot;</span><span class="p">:</span> <span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+            <span class="s2">&quot;std_y0&quot;</span><span class="p">:</span> <span class="n">perr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;std_A&quot;</span><span class="p">:</span> <span class="n">perr</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s2">&quot;std_tau&quot;</span><span class="p">:</span> <span class="n">perr</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">y_corrected</span><span class="p">,</span> <span class="n">baseline</span><span class="p">,</span> <span class="n">fit_parameters</span>
+
+    <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Mono-exponential fit did not converge: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. Returning original data.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_data</span><span class="p">),</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;ValueError during mono-exponential fit (check bounds/guesses): </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. Returning original data.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_data</span><span class="p">),</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;An unexpected error occurred during mono-exponential fit: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">. Returning original data.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">y_data</span><span class="p">),</span> <span class="kc">None</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Sylvain Bertaina.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
