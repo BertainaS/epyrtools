@@ -4,6 +4,8 @@ __pycache__/
 .spyproject/
 .vscode
 .pytest_cache/
+.claude/
+.mypy_cache/
 Test_files/
 Trash/
 .DS_Store
