@@ -51,9 +51,9 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/BertainaS/epyrtest"
-Repository = "https://github.com/BertainaS/epyrtest.git"
-Issues = "https://github.com/BertainaS/epyrtest/issues"
+Homepage = "https://github.com/BertainaS/epyrtools"
+Repository = "https://github.com/BertainaS/epyrtools.git"
+Issues = "https://github.com/BertainaS/epyrtools/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -28,5 +28,7 @@ per-file-ignores =
     epyr/isotope_gui.py:E501
     epyr/isotope_gui/*:E722
     epyr/plot.py:E501
+    # Allow imports after path manipulation in example scripts
+    examples/scripts/*:E402,D202
 max-complexity = 25
 docstring-convention = numpy
