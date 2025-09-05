@@ -45,15 +45,37 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 
 ### Prerequisites
 - Python 3.8 or higher
-- NumPy, matplotlib, pandas, h5py (see `requirements.txt`)
+- NumPy, matplotlib, pandas, h5py (automatically installed)
 
-### Install from GitHub
+### Recommended: Install as Package
 ```bash
 # Clone the repository
 git clone https://github.com/BertainaS/epyrtools.git
 cd epyrtools
 
-# Install dependencies
+# Install package with dependencies
+pip install .
+
+# For development (editable install)
+pip install -e .
+
+# With development tools
+pip install -e .[dev]
+
+# With documentation tools
+pip install -e .[docs]
+
+# Install everything
+pip install -e .[all]
+```
+
+### Alternative: Manual Dependencies
+```bash
+# Clone the repository
+git clone https://github.com/BertainaS/epyrtools.git
+cd epyrtools
+
+# Install dependencies manually
 pip install -r requirements.txt
 
 # Optional: Install development tools
