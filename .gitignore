@@ -43,3 +43,16 @@ htmlcov/
 *.egg-info/
 build/
 dist/
+
+# Documentation build files
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Large EPR data files
+*.DTA
+*.dta
+
+# Generated plots and images
+*_plot.png
+*_plots.png
