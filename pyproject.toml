@@ -46,8 +46,13 @@ dev = [
     "pre-commit>=2.10.0",
 ]
 docs = [
-    "sphinx>=4.0.0",
-    "sphinx-rtd-theme>=0.5.0",
+    "sphinx>=6.0.0",
+    "sphinx-rtd-theme>=1.3.0",
+    "myst-parser>=2.0.0",
+    "scipy>=1.7.0",
+]
+all = [
+    "epyr-tools[dev,docs]",
 ]
 
 [project.urls]
