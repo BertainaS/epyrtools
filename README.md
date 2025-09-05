@@ -2,7 +2,7 @@
 
 | License | Tests | Documentation | Version |
 |---------|-------|---------------|---------|
-| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-44%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-available-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.1-blue) |
+| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-44%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-available-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.2-blue) |
 
 **EPyR Tools** is a comprehensive Python package for Electron Paramagnetic Resonance (EPR) spectroscopy data analysis. It provides a complete toolkit for loading, processing, analyzing, and visualizing EPR data from Bruker spectrometers, with a focus on FAIR (Findable, Accessible, Interoperable, and Reusable) data principles.
 
@@ -215,17 +215,18 @@ epyrtools/
 │   ├── constants.py              # EPR physical constants
 │   ├── plot.py                   # Advanced EPR plotting
 │   ├── isotope_gui/             # Interactive isotope database
-│   └── sub/                     # Low-level processing modules
+│   └── sub/                     # Utility modules
+│       ├── loadBES3T.py         # BES3T format loader
+│       ├── loadESP.py           # ESP format loader
+│       └── utils.py             # File handling utilities
 ├── docs/                        # Sphinx API documentation
 ├── examples/                    # Comprehensive tutorial system
 │   ├── notebooks/               # Interactive Jupyter tutorials
-│   │   ├── 01_Getting_Started.ipynb
-│   │   ├── 02_Baseline_Correction.ipynb
-│   │   └── 03_Advanced_Analysis.ipynb
+│   │   └── Getting_Started.ipynb    # Complete beginner tutorial
 │   ├── scripts/                 # Python automation examples
-│   └── data/                    # Sample data organization
-│       ├── BES3T/              # Modern Bruker format samples
-│       ├── ESP/                # Legacy Bruker format samples
+│   └── data/                    # EPR measurement files
+│       ├── *.DSC, *.DTA        # BES3T format files
+│       ├── *.par, *.spc        # ESP format files
 │       └── processed/          # Analysis results examples
 ├── tests/                       # Comprehensive test suite (44 tests)
 ├── requirements.txt             # Core dependencies

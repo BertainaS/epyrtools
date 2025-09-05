@@ -7,8 +7,10 @@ This script demonstrates how to apply baseline correction to EPR spectra
 using various algorithms available in EPyR Tools.
 
 Requirements:
-- Sample EPR data files with baseline issues
+- Sample EPR data files with baseline issues in ../data/ directory
 - matplotlib for plotting
+
+Compatible with EPyR Tools v0.1.2+
 """
 
 import os
@@ -21,7 +23,7 @@ import numpy as np
 # Add EPyR Tools to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-import epyr.eprload as eprload
+import epyr
 from epyr.baseline import baseline_polynomial
 
 
@@ -33,12 +35,32 @@ def baseline_correction_example():
     print("EPyR Tools - Baseline Correction Example")
     print("=" * 42)
 
-    # Look for sample files
+    # Look for sample files in consolidated data directory
+    data_dir = examples_dir / "data"
     sample_files = []
-    for data_dir in [examples_dir / "data" / "BES3T", examples_dir / "data" / "ESP"]:
-        for file_path in data_dir.glob("*"):
-            if file_path.suffix.lower() in [".dsc", ".par"]:
-                sample_files.append(file_path)
+
+    # Look for BES3T and ESP files
+    for file_path in data_dir.glob("*"):
+        if file_path.suffix.lower() in [".dsc", ".par"]:
+            sample_files.append(file_path)
+
+    # Try to find 1D data first (baseline correction is typically for 1D spectra)
+    one_d_files = []
+    for file_path in sample_files[:]:
+        try:
+            x_test, y_test, _, _ = epyr.eprload(str(file_path), plot_if_possible=False)
+            if x_test is not None and y_test is not None:
+                # Check if it's 1D data
+                if not isinstance(x_test, list) or len(x_test) == 1:
+                    one_d_files.append(file_path)
+                elif len(y_test.shape) == 1:
+                    one_d_files.append(file_path)
+        except Exception:
+            continue
+
+    # Prefer 1D files for baseline correction demo
+    if one_d_files:
+        sample_files = one_d_files
 
     if not sample_files:
         print("No sample files found. Creating synthetic data for demonstration.")
@@ -51,14 +73,26 @@ def baseline_correction_example():
 
     try:
         # Load EPR data
-        x, y, params, filepath = eprload.eprload(str(file_path), plot_if_possible=False)
+        x, y, params, filepath = epyr.eprload(str(file_path), plot_if_possible=False)
 
         if x is None or y is None:
             print("Failed to load data. Creating synthetic example.")
             create_synthetic_example(examples_dir)
             return
 
-        print(f"Loaded {len(x)} data points")
+        # Handle 1D vs 2D data for baseline correction
+        if isinstance(x, list) and len(x) > 1 and len(y.shape) > 1:
+            print(
+                f"2D data detected ({y.shape}). "
+                f"Using first spectrum for baseline correction demo."
+            )
+            # Use the first spectrum from 2D data
+            x = x[0] if hasattr(x[0], "__len__") else x[0]
+            y = y[0, :] if len(y.shape) == 2 else y.flatten()
+        elif isinstance(x, list):
+            x = x[0] if len(x) > 0 else x
+
+        print(f"Using {len(x)} data points for baseline correction")
 
         # Apply different baseline corrections
         corrections = [
