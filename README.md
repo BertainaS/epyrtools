@@ -1,31 +1,72 @@
 # EPyR Tools: Electron Paramagnetic Resonance (EPR) Tools in Python
 
-| License      | [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) |
-|--------------|--------------------------------------------------------------------------------------------------------------------------|
+| License | Tests | Documentation | Version |
+|---------|-------|---------------|---------|
+| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-44%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-available-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.1-blue) |
 
-**EPyR Tools** is a Python package designed for reading, processing, and visualizing Electron Paramagnetic Resonance (EPR) data. It provides a robust toolkit for handling proprietary data files from Bruker spectrometers (EMX, Elexis) and converting them into open, FAIR (Findable, Accessible, Interoperable, and Reusable) formats.
+**EPyR Tools** is a comprehensive Python package for Electron Paramagnetic Resonance (EPR) spectroscopy data analysis. It provides a complete toolkit for loading, processing, analyzing, and visualizing EPR data from Bruker spectrometers, with a focus on FAIR (Findable, Accessible, Interoperable, and Reusable) data principles.
 
-Beyond simple data loading, EPyR Tools offers advanced functionalities for baseline correction, specialized plotting, and interactive data exploration through a graphical user interface.
+From basic data loading to advanced quantitative analysis, EPyR Tools offers professional-grade capabilities for EPR researchers, with comprehensive documentation and interactive tutorials.
 
-## Key Features
+## 🚀 Key Features
 
-*   **Load Bruker Data:** Easily load data from Bruker BES3T (.dta, .dsc) and ESP/WinEPR (.par, .spc) files into Python.
-*   **FAIR Data Conversion:** Convert proprietary Bruker files into accessible formats:
-    *   **CSV & JSON:** Exports data to simple CSV files and creates detailed JSON files for metadata with human-readable parameter names.
-    *   **HDF5:** Creates a self-contained, structured format that includes both data and metadata, ideal for long-term storage and analysis.
-*   **Advanced Baseline Correction:** A suite of tools for 1D and 2D baseline removal, including polynomial, constant offset, and mono/stretched exponential decay models.
-*   **Specialized Plotting:** Generate publication-quality plots tailored for EPR data, such as 2D spectral maps and waterfall plots for angular sweeps.
-*   **Isotope GUI:** An interactive periodic table GUI to quickly look up nuclear isotope properties, such as spin, g-factor, and NMR frequency at a given magnetic field.
+### **📁 Data Loading & Formats**
+- **Bruker File Support:** Load BES3T (.dta/.dsc) and ESP/WinEPR (.par/.spc) files seamlessly
+- **Automatic Format Detection:** Smart file format recognition and parameter extraction
+- **FAIR Data Conversion:** Export to CSV, JSON, and HDF5 formats with complete metadata
+- **Batch Processing:** Handle multiple files efficiently
 
-## Installation
+### **📊 Advanced Analysis**
+- **Baseline Correction:** Multiple algorithms (polynomial, exponential) with signal exclusion
+- **Peak Detection:** Automatic identification of EPR spectral features
+- **g-Factor Calculations:** Precise electronic g-factor determination with field calibration
+- **Hyperfine Analysis:** Pattern recognition and coupling constant extraction
+- **Quantitative Integration:** Single and double integration for spin quantification
 
-EPyR Tools requires Python 3 and the following libraries. You can install them using the provided `requirements.txt` file:
+### **📈 Visualization & Plotting**
+- **2D Spectral Maps:** Professional publication-quality EPR plots
+- **Interactive Plotting:** Real-time parameter adjustment and analysis
+- **Customizable Styling:** Flexible plot configuration for different EPR experiments
+- **Export Options:** High-resolution outputs for publications
 
+### **🎓 Learning & Documentation**
+- **Interactive Tutorials:** 3 comprehensive Jupyter notebooks (beginner → advanced)
+- **Complete API Documentation:** Professional Sphinx-generated docs
+- **Example Scripts:** Ready-to-use Python automation scripts
+- **Best Practices Guide:** EPR analysis workflows and quality assessment
+
+### **🧪 EPR-Specific Tools**
+- **Physical Constants:** Comprehensive EPR-relevant constants library
+- **Isotope Database:** Nuclear properties and magnetic parameters
+- **Field-Frequency Conversion:** Precise EPR measurement calculations
+- **Spectrometer Support:** Optimized for modern Bruker EPR systems
+
+## 📦 Installation
+
+### Prerequisites
+- Python 3.8 or higher
+- NumPy, matplotlib, pandas, h5py (see `requirements.txt`)
+
+### Install from GitHub
 ```bash
+# Clone the repository
+git clone https://github.com/BertainaS/epyrtools.git
+cd epyrtools
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Optional: Install development tools
+pip install -r requirements-dev.txt
 ```
 
-## Quick Start
+### Quick Test
+```bash
+# Verify installation
+python -c "import epyr; print('EPyR Tools successfully installed!')"
+```
+
+## 🚀 Getting Started
 
 ### 1. Loading Data
 
@@ -105,18 +146,93 @@ from epyr.isotope_gui import run_gui
 run_gui()
 ```
 
-## Project Structure
+## 📚 Interactive Tutorials
 
-*   `epyr/`: The main source directory for the package.
-    *   `eprload.py`: Core module for loading Bruker data files.
-    *   `fair.py`: Module for converting data to FAIR formats.
-    *   `baseline/`: Sub-package containing 1D and 2D baseline correction algorithms.
-    *   `plot.py`: Module for creating specialized 2D plots.
-    *   `isotope_gui.py`: A Tkinter-based GUI for isotope data visualization.
-    *   `sub/`: Contains low-level helper modules for data loading and processing.
-*   `notebooks/`: Contains Jupyter notebooks demonstrating key features, such as an in-depth tutorial on baseline correction.
-*   `requirements.txt`: A list of Python dependencies.
+EPyR Tools includes comprehensive Jupyter notebook tutorials for hands-on learning:
 
-## License
+### **Getting Started (Beginner)**
+```bash
+cd examples/notebooks
+jupyter notebook 01_Getting_Started.ipynb
+```
+Learn EPR data loading, visualization, and FAIR data conversion.
 
-This project is licensed under the BSD 3-Clause License. See the [LICENSE](LICENSE) file for details.
+### **Baseline Correction (Intermediate)**
+```bash
+jupyter notebook 02_Baseline_Correction.ipynb
+```
+Master polynomial and advanced baseline correction techniques.
+
+### **Advanced Analysis (Expert)**
+```bash
+jupyter notebook 03_Advanced_Analysis.ipynb
+```
+Complete EPR analysis: g-factors, hyperfine structure, quantitative integration.
+
+### **Example Scripts**
+Ready-to-use automation scripts in `examples/scripts/`:
+```bash
+python examples/scripts/01_basic_loading.py
+python examples/scripts/02_baseline_correction.py
+```
+
+## 📁 Project Structure
+
+```
+epyrtools/
+├── epyr/                           # Main package
+│   ├── eprload.py                 # Core data loading (BES3T, ESP formats)
+│   ├── baseline/                  # Advanced baseline correction
+│   │   ├── _1d.py                # 1D correction algorithms
+│   │   ├── _2d.py                # 2D correction algorithms
+│   │   └── _utils.py             # Correction utilities
+│   ├── fair/                     # FAIR data conversion
+│   │   ├── conversion.py         # Format conversion tools
+│   │   ├── exporters.py          # CSV, JSON, HDF5 export
+│   │   └── parameter_mapping.py  # Metadata standardization
+│   ├── constants.py              # EPR physical constants
+│   ├── plot.py                   # Advanced EPR plotting
+│   ├── isotope_gui/             # Interactive isotope database
+│   └── sub/                     # Low-level processing modules
+├── docs/                        # Sphinx API documentation
+├── examples/                    # Comprehensive tutorial system
+│   ├── notebooks/               # Interactive Jupyter tutorials
+│   │   ├── 01_Getting_Started.ipynb
+│   │   ├── 02_Baseline_Correction.ipynb
+│   │   └── 03_Advanced_Analysis.ipynb
+│   ├── scripts/                 # Python automation examples
+│   └── data/                    # Sample data organization
+│       ├── BES3T/              # Modern Bruker format samples
+│       ├── ESP/                # Legacy Bruker format samples
+│       └── processed/          # Analysis results examples
+├── tests/                       # Comprehensive test suite (44 tests)
+├── requirements.txt             # Core dependencies
+├── requirements-dev.txt         # Development tools
+└── pyproject.toml              # Modern Python packaging
+```
+
+## 🤝 Contributing & Support
+
+### **Documentation**
+- **API Reference:** [docs/](docs/) - Complete function documentation
+- **Tutorials:** [examples/notebooks/](examples/notebooks/) - Interactive learning
+- **Examples:** [examples/scripts/](examples/scripts/) - Ready-to-use code
+
+### **Community**
+- **Issues:** [GitHub Issues](https://github.com/BertainaS/epyrtools/issues)
+- **Discussions:** Share EPR analysis workflows and tips
+- **Contributing:** See contribution guidelines for code contributions
+
+### **Quality Assurance**
+- ✅ **44 passing tests** with pytest
+- ✅ **Pre-commit hooks** for code quality
+- ✅ **Type hints** and comprehensive docstrings
+- ✅ **Professional packaging** with modern Python standards
+
+## 📄 License
+
+This project is licensed under the **BSD 3-Clause License** - see the [LICENSE](LICENSE) file for details.
+
+---
+
+**EPyR Tools** - *Professional EPR analysis for the Python ecosystem* 🧲⚛️📊

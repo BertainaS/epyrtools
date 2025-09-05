@@ -11,7 +11,7 @@ from .plot import *
 from .sub.baseline2 import *
 from .sub.utils import BrukerListFiles
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 # You can add package-level initialization code here if needed in the future.

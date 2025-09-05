@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "epyr-tools"
-version = "0.1.0"
+version = "0.1.1"
 description = "Electron Paramagnetic Resonance (EPR) Tools in Python"
 readme = "README.md"
 license = {text = "BSD-3-Clause"}
