@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue May  6 09:52:16 2025
+Created on Tue May  6 09:52:16 2024
 
 @author: sylvainbertaina
 """
@@ -101,23 +101,23 @@ PROTON_MASS_CGS = PROTON_MASS_SI * _G_PER_KG  # Unit: g
 # --- Magnetic Moments & g-factors (CODATA 2018) ---
 
 BOHR_MAGNETON_SI = 9.2740100783e-24  # Unit: J⋅T⁻¹
-"""(μ<0xE2><0x82><0x8B>) Bohr magneton (SI). μ<0xE2><0x82><0x8B> = eħ / (2mₑ)."""
+"""(μB) Bohr magneton (SI). μB = eħ / (2me)."""
 
 BOHR_MAGNETON_CGS = BOHR_MAGNETON_SI * _ERGG_PER_JT  # Unit: erg⋅G⁻¹
-"""(μ<0xE2><0x82><0x8B>) Bohr magneton (CGS)."""
+"""(μB) Bohr magneton (CGS)."""
 
 NUCLEAR_MAGNETON_SI = 5.0507837461e-27  # Unit: J⋅T⁻¹
-"""(μ<0xE2><0x82><0x99>) Nuclear magneton (SI). μ<0xE2><0x82><0x99> = eħ / (2mₚ)."""
+"""(μN) Nuclear magneton (SI). μN = eħ / (2mp)."""
 
 NUCLEAR_MAGNETON_CGS = NUCLEAR_MAGNETON_SI * _ERGG_PER_JT  # Unit: erg⋅G⁻¹
-"""(μ<0xE2><0x82><0x99>) Nuclear magneton (CGS)."""
+"""(μN) Nuclear magneton (CGS)."""
 
 ELECTRON_G_FACTOR = -2.00231930436256  # Unit: Dimensionless
-"""(gₑ) Electron g-factor (free electron) (Dimensionless). CODATA 2018. Negative sign indicates moment opposes spin angular momentum."""
+"""(ge) Electron g-factor (free electron) (Dimensionless). CODATA 2018. Negative sign indicates moment opposes spin angular momentum."""
 # Often |gₑ| ≈ 2.0023 is used in calculations.
 
 PROTON_G_FACTOR = 5.5856946893  # Unit: Dimensionless
-"""(gₚ) Proton g-factor (Dimensionless). CODATA 2018."""
+"""(gp) Proton g-factor (Dimensionless). CODATA 2018."""
 
 
 # --- Gyromagnetic Ratios (Derived) ---
@@ -132,13 +132,13 @@ ELECTRON_GYROMAGNETIC_RATIO_SI = (
     ELECTRON_G_FACTOR * BOHR_MAGNETON_SI / REDUCED_PLANCK_CONSTANT_SI
 )
 # Unit: rad⋅s⁻¹⋅T⁻¹
-"""(γₑ) Electron gyromagnetic ratio (SI). γₑ = gₑ μ<0xE2><0x82><0x8B> / ħ. Approx -1.7608 × 10¹¹ rad⋅s⁻¹⋅T⁻¹."""
+"""(γe) Electron gyromagnetic ratio (SI). γe = ge μB / ħ. Approx -1.7608 × 10¹¹ rad⋅s⁻¹⋅T⁻¹."""
 
 ELECTRON_GYROMAGNETIC_RATIO_MHZ_T_SI = abs(ELECTRON_GYROMAGNETIC_RATIO_SI) / (
     2 * math.pi * 1e6
 )
 # Unit: MHz⋅T⁻¹
-"""(|γₑ|/2π) Electron gyromagnetic ratio magnitude in MHz/T (SI). Approx 28024.95 MHz/T."""
+"""(|γe|/2π) Electron gyromagnetic ratio magnitude in MHz/T (SI). Approx 28024.95 MHz/T."""
 
 ELECTRON_GYROMAGNETIC_RATIO_CGS = ELECTRON_GYROMAGNETIC_RATIO_SI * _RADSG_PER_RADST
 # Unit: rad⋅s⁻¹⋅G⁻¹
@@ -148,13 +148,13 @@ PROTON_GYROMAGNETIC_RATIO_SI = (
     PROTON_G_FACTOR * NUCLEAR_MAGNETON_SI / REDUCED_PLANCK_CONSTANT_SI
 )
 # Unit: rad⋅s⁻¹⋅T⁻¹
-"""(γₚ) Proton gyromagnetic ratio (SI). γₚ = gₚ μ<0xE2><0x82><0x99> / ħ. Approx 2.6752 × 10⁸ rad⋅s⁻¹⋅T⁻¹."""
+"""(γp) Proton gyromagnetic ratio (SI). γp = gp μN / ħ. Approx 2.6752 × 10⁸ rad⋅s⁻¹⋅T⁻¹."""
 
 PROTON_GYROMAGNETIC_RATIO_MHZ_T_SI = abs(PROTON_GYROMAGNETIC_RATIO_SI) / (
     2 * math.pi * 1e6
 )
 # Unit: MHz⋅T⁻¹
-"""(|γₚ|/2π) Proton gyromagnetic ratio magnitude in MHz/T (SI). Approx 42.577 MHz/T."""
+"""(|γp|/2π) Proton gyromagnetic ratio magnitude in MHz/T (SI). Approx 42.577 MHz/T."""
 
 PROTON_GYROMAGNETIC_RATIO_CGS = PROTON_GYROMAGNETIC_RATIO_SI * _RADSG_PER_RADST
 # Unit: rad⋅s⁻¹⋅G⁻¹
@@ -245,48 +245,48 @@ if __name__ == "__main__":
         f"Planck Constant (h)          | {PLANCK_CONSTANT_SI:<25.8e} J⋅s | {PLANCK_CONSTANT_CGS:<.8e} erg⋅s"
     )
     print(
-        f"Reduced Planck (ħ)         | {REDUCED_PLANCK_CONSTANT_SI:<25.8e} J⋅s | {REDUCED_PLANCK_CONSTANT_CGS:<.8e} erg⋅s"
+        f"Reduced Planck (hbar)         | {REDUCED_PLANCK_CONSTANT_SI:<25.8e} J⋅s | {REDUCED_PLANCK_CONSTANT_CGS:<.8e} erg⋅s"
     )
     print(
         f"Elementary Charge (e)      | {ELEMENTARY_CHARGE_SI:<25.8e} C   | {ELEMENTARY_CHARGE_CGS:<.8e} statC"
     )
     print(
-        f"Electron Mass (mₑ)         | {ELECTRON_MASS_SI:<25.8e} kg  | {ELECTRON_MASS_CGS:<.8e} g"
+        f"Electron Mass (me)         | {ELECTRON_MASS_SI:<25.8e} kg  | {ELECTRON_MASS_CGS:<.8e} g"
     )
     print(
-        f"Proton Mass (mₚ)           | {PROTON_MASS_SI:<25.8e} kg  | {PROTON_MASS_CGS:<.8e} g"
+        f"Proton Mass (mp)           | {PROTON_MASS_SI:<25.8e} kg  | {PROTON_MASS_CGS:<.8e} g"
     )
     print(
-        f"Bohr Magneton (μ<0xE2><0x82><0x8B>)        | {BOHR_MAGNETON_SI:<25.8e} J/T | {BOHR_MAGNETON_CGS:<.8e} erg/G"
+        f"Bohr Magneton (μB)        | {BOHR_MAGNETON_SI:<25.8e} J/T | {BOHR_MAGNETON_CGS:<.8e} erg/G"
     )
     print(
-        f"Nuclear Magneton (μ<0xE2><0x82><0x99>)      | {NUCLEAR_MAGNETON_SI:<25.8e} J/T | {NUCLEAR_MAGNETON_CGS:<.8e} erg/G"
+        f"Nuclear Magneton (μN)      | {NUCLEAR_MAGNETON_SI:<25.8e} J/T | {NUCLEAR_MAGNETON_CGS:<.8e} erg/G"
     )
     print(
-        f"Electron g-factor (gₑ)       | {ELECTRON_G_FACTOR:<25.15f}   | (Dimensionless)"
+        f"Electron g-factor (ge)       | {ELECTRON_G_FACTOR:<25.15f}   | (Dimensionless)"
     )
     print(
-        f"Proton g-factor (gₚ)         | {PROTON_G_FACTOR:<25.10f}   | (Dimensionless)"
+        f"Proton g-factor (gp)         | {PROTON_G_FACTOR:<25.10f}   | (Dimensionless)"
     )
     print(
-        f"Electron Gyromag. (γₑ)     | {ELECTRON_GYROMAGNETIC_RATIO_SI:<25.8e} rad/s/T | {ELECTRON_GYROMAGNETIC_RATIO_CGS:<.8e} rad/s/G"
+        f"Electron Gyromag. (γe)     | {ELECTRON_GYROMAGNETIC_RATIO_SI:<25.8e} rad/s/T | {ELECTRON_GYROMAGNETIC_RATIO_CGS:<.8e} rad/s/G"
     )
     print(
-        f"Electron Gyromag. (|γₑ|/2π) | {ELECTRON_GYROMAGNETIC_RATIO_MHZ_T_SI:<25.4f} MHz/T |"
+        f"Electron Gyromag. (|γe|/2π) | {ELECTRON_GYROMAGNETIC_RATIO_MHZ_T_SI:<25.4f} MHz/T |"
     )
     print(
-        f"Proton Gyromag. (γₚ)       | {PROTON_GYROMAGNETIC_RATIO_SI:<25.8e} rad/s/T | {PROTON_GYROMAGNETIC_RATIO_CGS:<.8e} rad/s/G"
+        f"Proton Gyromag. (γp)       | {PROTON_GYROMAGNETIC_RATIO_SI:<25.8e} rad/s/T | {PROTON_GYROMAGNETIC_RATIO_CGS:<.8e} rad/s/G"
     )
     print(
-        f"Proton Gyromag. (|γₚ|/2π)   | {PROTON_GYROMAGNETIC_RATIO_MHZ_T_SI:<25.4f} MHz/T |"
+        f"Proton Gyromag. (|γp|/2π)   | {PROTON_GYROMAGNETIC_RATIO_MHZ_T_SI:<25.4f} MHz/T |"
     )
     print(
-        f"Vacuum Permeability (μ₀)   | {VACUUM_PERMEABILITY_SI:<25.8e} H/m | (Handled differently)"
+        f"Vacuum Permeability (mu0)   | {VACUUM_PERMEABILITY_SI:<25.8e} H/m | (Handled differently)"
     )
     print(
-        f"Vacuum Permittivity (ε₀)   | {VACUUM_PERMITTIVITY_SI:<25.8e} F/m | (Handled differently)"
+        f"Vacuum Permittivity (eps0)   | {VACUUM_PERMITTIVITY_SI:<25.8e} F/m | (Handled differently)"
     )
     print(
-        f"Fine Structure (α)         | {FINE_STRUCTURE_CONSTANT:<25.8e}   | (Dimensionless)"
+        f"Fine Structure (alpha)         | {FINE_STRUCTURE_CONSTANT:<25.8e}   | (Dimensionless)"
     )
     print("-" * 60)

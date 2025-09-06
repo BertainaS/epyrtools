@@ -87,6 +87,7 @@ setup(
     python_requires=">=3.8",
     install_requires=[
         "numpy>=1.20.0",
+        "scipy>=1.7.0",
         "matplotlib>=3.3.0",
         "h5py>=3.1.0",
         "pandas>=1.3.0",
@@ -102,8 +103,10 @@ setup(
             "pre-commit>=2.10.0",
         ],
         "docs": [
-            "sphinx>=4.0.0",
-            "sphinx-rtd-theme>=0.5.0",
+            "sphinx>=6.0.0",
+            "sphinx-rtd-theme>=1.3.0",
+            "myst-parser>=2.0.0",
+            "scipy>=1.7.0",
         ],
         "all": [
             # Include all optional dependencies
@@ -113,8 +116,10 @@ setup(
             "flake8>=3.8.0",
             "mypy>=0.812",
             "pre-commit>=2.10.0",
-            "sphinx>=4.0.0",
-            "sphinx-rtd-theme>=0.5.0",
+            "sphinx>=6.0.0",
+            "sphinx-rtd-theme>=1.3.0",
+            "myst-parser>=2.0.0",
+            "scipy>=1.7.0",
         ],
     },
     # Entry points for command-line tools (if any)

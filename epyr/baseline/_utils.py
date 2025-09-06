@@ -13,6 +13,7 @@ user-defined regions of interest and exclusion zones, for both 1D and 2D data.
 """
 
 import warnings
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -20,7 +21,9 @@ import numpy as np
 
 
 def _create_fit_mask(
-    reference_axis: np.ndarray, fit_window: tuple = None, exclude_regions: list = None
+    reference_axis: np.ndarray, 
+    fit_window: Optional[Tuple[float, float]] = None, 
+    exclude_regions: Optional[List[Tuple[float, float]]] = None
 ) -> np.ndarray:
     """Creates a boolean mask for data points to be used in 1D fitting.
 

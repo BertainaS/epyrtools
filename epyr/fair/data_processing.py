@@ -31,7 +31,7 @@ def process_parameters(pars: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, 
         "value": {
             "converter_script": "epyr_fair_converter",
             "conversion_timestamp": datetime.now().isoformat(),
-            "epyr_version": "unknown",  # TODO: Add version info
+            "epyr_version": "0.1.2",  # Current EPyR Tools version
         },
         "unit": "",
         "description": "Information about the conversion process to FAIR format.",

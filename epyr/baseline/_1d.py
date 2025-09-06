@@ -12,6 +12,7 @@ It includes polynomial, constant offset, and exponential decay models.
 """
 
 import warnings
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy.optimize import curve_fit
@@ -76,14 +77,14 @@ def _fit_exponential_baseline(
     y_data: np.ndarray,
     x_data: np.ndarray,
     model_func,
-    param_names: list,
+    param_names: List[str],
     default_initial_guess_generator,
-    default_bounds: tuple,
-    user_initial_guess: list = None,
-    user_bounds: tuple = None,
-    fit_region: tuple = None,
-    exclude_regions: list = None,
-) -> tuple[np.ndarray, np.ndarray, dict]:
+    default_bounds: Tuple[List[float], List[float]],
+    user_initial_guess: Optional[List[float]] = None,
+    user_bounds: Optional[Tuple[List[float], List[float]]] = None,
+    fit_region: Optional[Tuple[float, float]] = None,
+    exclude_regions: Optional[List[Tuple[float, float]]] = None,
+) -> Tuple[np.ndarray, np.ndarray, Optional[Dict[str, float]]]:
     """A generic helper to fit an exponential-like baseline model."""
     n_params = len(param_names)
 
@@ -219,11 +220,11 @@ def _fit_exponential_baseline(
 
 def baseline_polynomial(
     y_data: np.ndarray,
-    x_data: np.ndarray = None,
+    x_data: Optional[np.ndarray] = None,
     poly_order: int = 1,
-    exclude_regions: list = None,
-    roi: tuple = None,
-) -> tuple[np.ndarray, np.ndarray]:
+    exclude_regions: Optional[List[Tuple[float, float]]] = None,
+    roi: Optional[Tuple[float, float]] = None,
+) -> Tuple[np.ndarray, np.ndarray]:
     """Performs baseline correction by subtracting a polynomial fit.
 
     The polynomial is fitted to specific regions of the data, which are
@@ -316,8 +317,10 @@ def baseline_polynomial(
 
 
 def baseline_constant_offset(
-    y_data: np.ndarray, offset_region_indices: tuple = None, method: str = "mean"
-) -> tuple[np.ndarray, np.ndarray]:
+    y_data: np.ndarray, 
+    offset_region_indices: Optional[Tuple[int, int]] = None, 
+    method: str = "mean"
+) -> Tuple[np.ndarray, np.ndarray]:
     """Performs baseline correction by subtracting a constant offset.
 
     The offset is calculated from a specified region of `y_data` (using
@@ -401,11 +404,11 @@ def baseline_constant_offset(
 def baseline_stretched_exponential(
     y_data: np.ndarray,
     x_data: np.ndarray,
-    initial_guess: list = None,
-    bounds: tuple = None,
-    fit_region: tuple = None,
-    exclude_regions: list = None,
-) -> tuple[np.ndarray, np.ndarray, dict]:
+    initial_guess: Optional[List[float]] = None,
+    bounds: Optional[Tuple[List[float], List[float]]] = None,
+    fit_region: Optional[Tuple[float, float]] = None,
+    exclude_regions: Optional[List[Tuple[float, float]]] = None,
+) -> Tuple[np.ndarray, np.ndarray, Optional[Dict[str, float]]]:
     """Fits and subtracts a stretched exponential decay baseline.
 
     The model fitted is: ``y(x) = y0 + A * exp(-((x / τ)**β))``
@@ -447,11 +450,11 @@ def baseline_stretched_exponential(
 def baseline_mono_exponential(
     y_data: np.ndarray,
     x_data: np.ndarray,
-    initial_guess: list = None,
-    bounds: tuple = None,
-    fit_region: tuple = None,
-    exclude_regions: list = None,
-) -> tuple[np.ndarray, np.ndarray, dict]:
+    initial_guess: Optional[List[float]] = None,
+    bounds: Optional[Tuple[List[float], List[float]]] = None,
+    fit_region: Optional[Tuple[float, float]] = None,
+    exclude_regions: Optional[List[Tuple[float, float]]] = None,
+) -> Tuple[np.ndarray, np.ndarray, Optional[Dict[str, float]]]:
     """Fits and subtracts a mono-exponential decay baseline.
 
     The model fitted is: ``y(x) = y0 + A * exp(-(x / τ))``

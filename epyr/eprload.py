@@ -11,28 +11,142 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Make sure the 'sub' directory is importable
-# This assumes 'eprload.py' is in the parent directory of 'sub'
+from .logging_config import get_logger
+from .performance import OptimizedLoader, get_global_cache, MemoryMonitor
+
+logger = get_logger(__name__)
+
+# Import loading modules
 try:
     from .sub import loadBES3T, loadESP
 except ImportError:
-    # This works if eprload.py is in the same directory as the 'sub' folder
-    # or if 'sub' is in the Python path.
-    # This is often the case when running a script directly.
     try:
         from sub import loadBES3T, loadESP
-    except ImportError:
-        # If running from a different structure, adjust sys.path if needed
-        # Or ensure the package containing 'sub' is installed
-        print(
-            "Error: Could not import loading modules from 'sub' directory.",
-            file=sys.stderr,
+    except ImportError as e:
+        raise ImportError(
+            "Could not import loading modules from 'sub' directory. "
+            "Ensure the package is properly installed."
+        ) from e
+
+
+def _select_file_dialog(initial_dir: Path) -> Optional[Path]:
+    """Open file dialog to select EPR data file.
+    
+    Args:
+        initial_dir: Initial directory for file dialog
+        
+    Returns:
+        Selected file path or None if cancelled
+    """
+    root = tk.Tk()
+    root.withdraw()  # Hide the main tkinter window
+    ui_file_path = filedialog.askopenfilename(
+        title="Load EPR data file...",
+        initialdir=str(initial_dir),
+        filetypes=[
+            ("Bruker BES3T", "*.DTA *.dta *.DSC *.dsc"),
+            ("Bruker ESP/WinEPR", "*.spc *.SPC *.par *.PAR"),
+            ("All files", "*.*"),
+        ],
+    )
+    root.destroy()  # Close the hidden window
+    
+    if not ui_file_path:
+        logger.info("File selection cancelled by user")
+        return None
+    return Path(ui_file_path)
+
+
+def _determine_file_format(file_path: Path) -> Tuple[Path, str]:
+    """Determine EPR file format and ensure extension exists.
+    
+    Args:
+        file_path: Path to the data file
+        
+    Returns:
+        Tuple of (validated_file_path, file_format)
+        
+    Raises:
+        ValueError: If file format is unsupported
+    """
+    full_base_name = file_path.with_suffix("")
+    file_extension = file_path.suffix
+
+    # Handle case where extension might be missing
+    if not file_extension:
+        found_ext = None
+        for ext in [".dta", ".DTA", ".dsc", ".DSC", ".spc", ".SPC", ".par", ".PAR"]:
+            potential_file = full_base_name.with_suffix(ext)
+            if potential_file.is_file():
+                found_ext = ext
+                file_path = potential_file
+                break
+        if found_ext:
+            file_extension = found_ext
+            logger.warning(
+                f"No extension given, assuming '{found_ext}' based on existing file."
+            )
+        else:
+            raise ValueError(
+                f"File '{full_base_name}' lacks a recognized extension (.dta, .dsc, .spc, .par)."
+            )
+
+    # Determine format based on extension (case-insensitive)
+    ext_upper = file_extension.upper()
+    if ext_upper in [".DTA", ".DSC"]:
+        file_format = "BrukerBES3T"
+    elif ext_upper in [".PAR", ".SPC"]:
+        file_format = "BrukerESP"
+    else:
+        raise ValueError(
+            f"Unsupported file extension '{file_extension}'. Only Bruker formats (.dta, .dsc, .spc, .par) supported."
         )
-        print(
-            "Ensure eprload.py is in the parent directory of 'sub', or adjust Python's path.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+        
+    return file_path, file_format
+
+
+def _validate_scaling(scaling: str) -> None:
+    """Validate scaling parameter string.
+    
+    Args:
+        scaling: Scaling string to validate
+        
+    Raises:
+        ValueError: If scaling contains invalid characters
+    """
+    if scaling:
+        valid_scaling_chars = "nPGTc"
+        invalid_chars = set(scaling) - set(valid_scaling_chars)
+        if invalid_chars:
+            raise ValueError(
+                f"Scaling string contains invalid characters: {invalid_chars}. "
+                f"Allowed: '{valid_scaling_chars}'."
+            )
+
+
+def _load_data_by_format(file_path: Path, file_format: str, scaling: str) -> Tuple[Optional[np.ndarray], Optional[Union[np.ndarray, List[np.ndarray]]], Optional[Dict[str, Any]]]:
+    """Load data using appropriate format loader.
+    
+    Args:
+        file_path: Path to the data file
+        file_format: Format type ("BrukerBES3T" or "BrukerESP")
+        scaling: Scaling parameter string
+        
+    Returns:
+        Tuple of (y_data, x_data, parameters)
+        
+    Raises:
+        Various exceptions from loading functions
+    """
+    full_base_name = file_path.with_suffix("")
+    file_extension = file_path.suffix
+    
+    if file_format == "BrukerBES3T":
+        return loadBES3T.load(full_base_name, file_extension, scaling)
+    elif file_format == "BrukerESP":
+        return loadESP.load(full_base_name, file_extension, scaling)
+    else:
+        raise ValueError(f"Unknown file format: {file_format}")
 
 
 def eprload(file_name=None, scaling="", plot_if_possible=True, save_if_possible=False):
@@ -66,112 +180,62 @@ def eprload(file_name=None, scaling="", plot_if_possible=True, save_if_possible=
         ValueError: If the file format is unsupported, scaling is invalid, or parameter inconsistencies are found.
         IOError: If there are problems reading files.
     """
-    x, y, pars, loaded_file_path = None, None, None, None  # Initialize outputs
+    # Initialize outputs
+    x, y, pars, loaded_file_path = None, None, None, None
 
+    # Handle file name input
     if file_name is None:
-        file_name = Path.cwd()  # Use current directory if none provided
+        file_name = Path.cwd()
     else:
-        file_name = Path(file_name)  # Convert string to Path object
+        file_name = Path(file_name)
 
     # --- File/Directory Handling ---
     if file_name.is_dir():
-        root = tk.Tk()
-        root.withdraw()  # Hide the main tkinter window
-        ui_file_path = filedialog.askopenfilename(
-            title="Load EPR data file...",
-            initialdir=str(file_name),
-            filetypes=[
-                ("Bruker BES3T", "*.DTA *.dta *.DSC *.dsc"),
-                ("Bruker ESP/WinEPR", "*.spc *.SPC *.par *.PAR"),
-                ("All files", "*.*"),
-            ],
-        )
-        root.destroy()  # Close the hidden window
-
-        if not ui_file_path:  # User cancelled
-            warnings.warn("File selection cancelled.")
-            return None, None, None, None  # Return None tuple on cancel
-        else:
-            file_path = Path(ui_file_path)
+        file_path = _select_file_dialog(file_name)
+        if file_path is None:
+            return None, None, None, None
     elif file_name.is_file():
         file_path = file_name
     else:
         raise FileNotFoundError(f"The file or directory '{file_name}' does not exist!")
 
-    # --- Determine File Format ---
-    full_base_name = file_path.with_suffix("")
-    file_extension = file_path.suffix
-
-    # Handle case where extension might be missing but file exists (e.g., JEOL)
-    # For this version, we only support Bruker, so require extension.
-    if not file_extension:
-        # Check for common Bruker extensions if none provided
-        found_ext = None
-        for ext in [".dta", ".DTA", ".dsc", ".DSC", ".spc", ".SPC", ".par", ".PAR"]:
-            potential_file = full_base_name.with_suffix(ext)
-            if potential_file.is_file():
-                found_ext = ext
-                file_path = (
-                    potential_file  # Update file_path to include found extension
-                )
-                break
-        if found_ext:
-            file_extension = found_ext
-            warnings.warn(
-                f"No extension given, assuming '{found_ext}' based on existing file."
-            )
-        else:
-            raise ValueError(
-                f"File '{full_base_name}' lacks a recognized extension (.dta, .dsc, .spc, .par)."
-            )
-
-    # Determine format based on extension (case-insensitive)
-    ext_upper = file_extension.upper()
-    file_format = None
-    if ext_upper in [".DTA", ".DSC"]:
-        file_format = "BrukerBES3T"
-    elif ext_upper in [".PAR", ".SPC"]:
-        file_format = "BrukerESP"
-    # Add other formats here if needed in the future
-    # elif ...
-    else:
-        raise ValueError(
-            f"Unsupported file extension '{file_extension}'. Only Bruker formats (.dta, .dsc, .spc, .par) supported."
-        )
-
-    # --- Validate Scaling ---
-    if scaling:
-        valid_scaling_chars = "nPGTc"
-        invalid_chars = set(scaling) - set(valid_scaling_chars)
-        if invalid_chars:
-            raise ValueError(
-                f"Scaling string contains invalid characters: {invalid_chars}. Allowed: '{valid_scaling_chars}'."
-            )
-        # Note: Scaling applicability is checked within the specific load functions
-
-    # --- Load Data using appropriate module ---
-    loaded_file_path = str(file_path.resolve())  # Store full path string
-
+    # --- Determine File Format and Validate ---
     try:
-        if file_format == "BrukerBES3T":
-            y, x, pars = loadBES3T.load(full_base_name, file_extension, scaling)
-        elif file_format == "BrukerESP":
-            y, x, pars = loadESP.load(full_base_name, file_extension, scaling)
-        # No 'else' needed due to prior format check
-
-    except (FileNotFoundError, ValueError, IOError, NotImplementedError) as e:
-        # Catch errors from loading functions
-        warnings.warn(f"Failed to load data from {file_path}: {e}")
+        file_path, file_format = _determine_file_format(file_path)
+        _validate_scaling(scaling)
+    except ValueError as e:
+        logger.error(str(e))
         return None, None, None, None
-    except Exception as e:
-        # Catch unexpected errors
-        warnings.warn(
-            f"An unexpected error occurred loading {file_path}: {type(e).__name__}: {e}"
-        )
-        import traceback
 
-        traceback.print_exc()
-        return None, None, None, None
+    # --- Load Data ---
+    loaded_file_path = str(file_path.resolve())
+    
+    # Check memory usage before loading
+    if not MemoryMonitor.check_memory_limit():
+        logger.warning("Memory usage high, optimizing before loading")
+        MemoryMonitor.optimize_memory()
+    
+    # Check cache first for potentially cached data
+    cache = get_global_cache()
+    cache_key = file_path.resolve()
+    cached_result = cache.get(cache_key)
+    if cached_result is not None:
+        logger.debug(f"Using cached data for {file_path.name}")
+        x, y, pars, _ = cached_result
+    else:
+        try:
+            y, x, pars = _load_data_by_format(file_path, file_format, scaling)
+            # Cache the result for future use
+            cache.put(cache_key, (x, y, pars, loaded_file_path))
+        except (FileNotFoundError, ValueError, IOError, NotImplementedError) as e:
+            logger.error(f"Failed to load data from {file_path}: {e}")
+            return None, None, None, None
+        except Exception as e:
+            logger.error(
+                f"An unexpected error occurred loading {file_path}: {type(e).__name__}: {e}"
+            )
+            logger.debug("Full traceback:", exc_info=True)
+            return None, None, None, None
 
     # --- Plotting (Optional) ---
     if plot_if_possible and y is not None and x is not None:

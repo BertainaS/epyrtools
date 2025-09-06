@@ -18,11 +18,12 @@ from .exporters import save_fair as _save_fair_formats
 
 
 def convert_bruker_to_fair(
-    input_file_or_dir: Union[str, Path, None] = None,
+    input_file: Union[str, Path],
     output_dir: Optional[Union[str, Path]] = None,
+    formats: List[str] = ["csv", "json"],
+    include_metadata: bool = True,
     scaling: str = "",
-    output_formats: List[str] = ["csv_json", "hdf5"],
-) -> None:
+) -> bool:
     """Load Bruker EPR data using eprload and convert to FAIR formats.
 
     This is the main conversion function that handles the complete workflow
@@ -30,56 +31,82 @@ def convert_bruker_to_fair(
     structured metadata.
 
     Args:
-        input_file_or_dir: Path to Bruker data file (.dta, .dsc, .spc, .par)
-            or directory. If None or directory, opens file dialog.
+        input_file: Path to Bruker data file (.dta, .dsc, .spc, .par).
         output_dir: Directory to save converted files. If None, saves in
             same directory as input file.
+        formats: List of formats to generate. Options: 'csv', 'json', 'hdf5'.
+        include_metadata: Whether to include metadata in output files.
         scaling: Scaling options passed to eprload (e.g., 'nPGT').
-        output_formats: List of formats to generate. Options: 'csv_json', 'hdf5'.
 
     Returns:
-        None. Prints status messages and warnings.
+        True if conversion successful, False otherwise.
     """
-    print("Starting FAIR conversion process...")
+    from ..logging_config import get_logger
+    logger = get_logger(__name__)
+    
+    try:
+        logger.info("Starting FAIR conversion process...")
+        input_file = Path(input_file)
+        
+        if not input_file.exists():
+            logger.error(f"Input file not found: {input_file}")
+            return False
 
-    # Load data using eprload (disable internal plotting)
-    x, y, pars, original_file_path_str = eprload(
-        file_name=input_file_or_dir,
-        scaling=scaling,
-        plot_if_possible=False,
-    )
+        # Load data using eprload (disable internal plotting)
+        x, y, pars, original_file_path_str = eprload(
+            file_name=str(input_file),
+            scaling=scaling,
+            plot_if_possible=False,
+        )
 
-    # Check if loading was successful
-    if y is None or pars is None or original_file_path_str is None:
-        print("Data loading failed or was cancelled by user. Aborting conversion.")
-        return
+        # Check if loading was successful
+        if y is None or pars is None or original_file_path_str is None:
+            logger.error("Data loading failed. Aborting conversion.")
+            return False
 
-    print(f"Successfully loaded: {original_file_path_str}")
-    original_file_path = Path(original_file_path_str)
+        logger.info(f"Successfully loaded: {original_file_path_str}")
+        original_file_path = Path(original_file_path_str)
 
-    # Determine output location and basename
-    if output_dir is None:
-        output_path = original_file_path.parent
-    else:
-        output_path = Path(output_dir)
-        output_path.mkdir(parents=True, exist_ok=True)
+        # Determine output location and basename
+        if output_dir is None:
+            output_path = original_file_path.parent
+        else:
+            output_path = Path(output_dir)
+            output_path.mkdir(parents=True, exist_ok=True)
 
-    output_basename = output_path / original_file_path.stem
-    print(f"Output base name: {output_basename}")
+        output_basename = output_path / original_file_path.stem
+        logger.info(f"Output base name: {output_basename}")
 
-    # Perform conversions based on requested formats
-    if not output_formats:
-        warnings.warn("No output formats specified. Nothing to do.")
-        return
+        # Perform conversions based on requested formats
+        if not formats:
+            logger.warning("No output formats specified. Nothing to do.")
+            return False
 
-    print("\nProcessing parameters and generating outputs...")
+        logger.info("Processing parameters and generating outputs...")
 
-    # Use the consolidated save function from exporters
-    _save_fair_formats(
-        output_basename, x, y, pars, original_file_path_str, output_formats
-    )
+        # Convert formats list to legacy format for compatibility
+        output_formats = []
+        if 'csv' in formats and 'json' in formats:
+            output_formats.append('csv_json')
+        elif 'csv' in formats:
+            output_formats.append('csv')
+        elif 'json' in formats:
+            output_formats.append('json')
+        
+        if 'hdf5' in formats:
+            output_formats.append('hdf5')
 
-    print("\nFAIR conversion process finished.")
+        # Use the consolidated save function from exporters
+        _save_fair_formats(
+            output_basename, x, y, pars, original_file_path_str, output_formats
+        )
+
+        logger.info("FAIR conversion process finished.")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Conversion failed: {e}")
+        return False
 
 
 def save_fair(

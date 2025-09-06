@@ -207,7 +207,7 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
 
     # --- Read Data Matrix ---
     # Assuming single data value type for now (n_data_values=1)
-    # TODO: Handle multiple data values per point if n_data_values > 1
+    # NOTE: Multiple data values per point (n_data_values > 1) not yet supported\n    # This would require handling interleaved data formats in some BES3T files
     if n_data_values > 1:
         warnings.warn(
             f"DSC file indicates {n_data_values} data values per point (IKKF). Only reading the first value."

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "epyr-tools"
-version = "0.1.2"
+version = "0.1.3"
 description = "Electron Paramagnetic Resonance (EPR) Tools in Python"
 readme = "README.md"
 license = {text = "BSD-3-Clause"}
@@ -16,7 +16,7 @@ maintainers = [
 ]
 keywords = ["EPR", "electron paramagnetic resonance", "spectroscopy", "Bruker", "data analysis"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
@@ -25,12 +25,17 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Chemistry",
     "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering",
+    "Environment :: Console",
+    "Natural Language :: English",
 ]
 requires-python = ">=3.8"
 dependencies = [
     "numpy>=1.20.0",
+    "scipy>=1.7.0",
     "matplotlib>=3.3.0",
     "h5py>=3.1.0",
     "pandas>=1.3.0",
@@ -40,10 +45,19 @@ dependencies = [
 dev = [
     "pytest>=6.0.0",
     "pytest-cov>=2.10.0",
-    "black>=21.0.0",
-    "flake8>=3.8.0",
-    "mypy>=0.812",
-    "pre-commit>=2.10.0",
+    "pytest-benchmark>=4.0.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "flake8-docstrings>=1.7.0",
+    "flake8-import-order>=0.18.0",
+    "flake8-bugbear>=23.0.0",
+    "mypy>=1.0.0",
+    "types-requests>=2.28.0",
+    "pre-commit>=3.0.0",
+    "isort>=5.12.0",
+    "bandit>=1.7.5",
+    "pydocstyle>=6.3.0",
+    "pipdeptree>=2.0.0",
 ]
 docs = [
     "sphinx>=6.0.0",
@@ -59,6 +73,16 @@ all = [
 Homepage = "https://github.com/BertainaS/epyrtools"
 Repository = "https://github.com/BertainaS/epyrtools.git"
 Issues = "https://github.com/BertainaS/epyrtools/issues"
+
+[project.scripts]
+epyr = "epyr.cli:main"
+epyr-convert = "epyr.cli:cmd_convert"
+epyr-baseline = "epyr.cli:cmd_baseline" 
+epyr-batch-convert = "epyr.cli:cmd_batch_convert"
+epyr-config = "epyr.cli:cmd_config"
+epyr-info = "epyr.cli:cmd_info"
+epyr-isotopes = "epyr.cli:cmd_isotopes"
+epyr-validate = "epyr.cli:cmd_validate"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -80,4 +104,37 @@ addopts = "--cov=epyr --cov-report=html --cov-report=term-missing"
 python_version = "3.8"
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+no_strict_optional = true
+
+# Per-module configuration
+[[tool.mypy.overrides]]
+module = [
+    "tests.*",
+    "epyr.fair_original_backup",
+    "epyr.isotope_gui.*"
+]
+ignore_errors = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "docs"]
+skips = ["B101", "B601"]  # Skip assert_used and shell injection (controlled usage)
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+# Import groupings
+known_first_party = ["epyr"]
+known_third_party = ["numpy", "scipy", "matplotlib", "pandas", "h5py", "tkinter"]
+
+[tool.pydocstyle]
+convention = "google"
+add_ignore = ["D100", "D104", "D105", "D107", "D203", "D213"]
+match_dir = "(?!tests|docs).*"

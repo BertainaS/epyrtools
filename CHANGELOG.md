@@ -5,6 +5,74 @@ All notable changes to EPyR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2025-09-06
+
+### Added
+- **Complete CLI System**: 8 professional command-line tools
+  - `epyr-convert`: Bruker to FAIR format conversion
+  - `epyr-baseline`: Baseline correction with multiple algorithms
+  - `epyr-batch-convert`: High-throughput batch processing
+  - `epyr-config`: Configuration management with import/export
+  - `epyr-info`: System information and diagnostics
+  - `epyr-isotopes`: Interactive isotope database GUI
+  - `epyr-validate`: Data validation with FAIR compliance checking
+  - `epyr`: Main CLI entry point with subcommands
+
+- **FAIR Data Standards Compliance**
+  - Comprehensive metadata validation system
+  - Data integrity checking with detailed reports
+  - EPR-specific parameter validation
+  - File format validation for CSV, JSON, HDF5
+  - Automated compliance reporting
+
+- **Plugin Architecture**
+  - Extensible plugin system for file formats, processing, and export
+  - Base classes for FileFormatPlugin, ProcessingPlugin, ExportPlugin
+  - Auto-discovery of plugins from user and system directories
+  - Built-in CSV export plugin with metadata support
+
+- **Performance Optimization System**
+  - Intelligent memory monitoring and optimization
+  - LRU data caching with configurable size limits
+  - Optimized data loader with chunked processing support
+  - NumPy operations optimization with MKL support
+
+- **Comprehensive Configuration Management**
+  - Hierarchical configuration with 8 main sections
+  - Environment variable overrides (EPYR_* prefix)
+  - User and system configuration file support
+  - Configuration export/import functionality
+
+- **Professional Documentation**
+  - Complete User Guide (400+ lines) with CLI tutorials
+  - Comprehensive API Reference with examples
+  - Troubleshooting guide and best practices
+  - Installation verification procedures
+
+- **Development Infrastructure**
+  - Complete testing suite with 90+ tests
+  - Pre-commit hooks with Black, isort, flake8, mypy, bandit
+  - Professional Makefile with 40+ development commands
+  - Code quality enforcement with security scanning
+
+### Enhanced
+- **Core Data Loading**: Improved error handling and logging
+- **Baseline Correction**: Integration with CLI system
+- **Package Structure**: Modular architecture with clear separation
+- **GUI Modernization**: Reorganized isotope GUI into proper module
+
+### Changed
+- **Package Status**: Upgraded from Alpha to Beta (Development Status :: 4 - Beta)
+- **Python Support**: Added Python 3.12 support
+- **Dependencies**: Updated to latest versions with comprehensive dev dependencies
+- **Configuration**: Centralized configuration system replacing scattered settings
+
+### Developer Experience
+- **Quality Tools**: Black, isort, flake8, mypy, bandit, pydocstyle integration
+- **Testing**: Pytest with coverage reporting and benchmark support
+- **Documentation**: Automatic API documentation generation
+- **CI/CD**: Complete pipeline simulation with `make ci`
+
 ## [0.1.2] - 2025-09-05
 
 ### Removed

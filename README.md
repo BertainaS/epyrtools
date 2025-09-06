@@ -2,7 +2,7 @@
 
 | License | Tests | Documentation | Version |
 |---------|-------|---------------|---------|
-| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-44%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-available-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.2-blue) |
+| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-90%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.3-blue) |
 
 **EPyR Tools** is a comprehensive Python package for Electron Paramagnetic Resonance (EPR) spectroscopy data analysis. It provides a complete toolkit for loading, processing, analyzing, and visualizing EPR data from Bruker spectrometers, with a focus on FAIR (Findable, Accessible, Interoperable, and Reusable) data principles.
 
@@ -14,7 +14,8 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 - **Bruker File Support:** Load BES3T (.dta/.dsc) and ESP/WinEPR (.par/.spc) files seamlessly
 - **Automatic Format Detection:** Smart file format recognition and parameter extraction
 - **FAIR Data Conversion:** Export to CSV, JSON, and HDF5 formats with complete metadata
-- **Batch Processing:** Handle multiple files efficiently
+- **Batch Processing:** Handle multiple files efficiently with parallel processing
+- **Plugin Architecture:** Extensible system for custom file formats and processing
 
 ### **📊 Advanced Analysis**
 - **Baseline Correction:** Multiple algorithms (polynomial, exponential) with signal exclusion
@@ -22,6 +23,20 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 - **g-Factor Calculations:** Precise electronic g-factor determination with field calibration
 - **Hyperfine Analysis:** Pattern recognition and coupling constant extraction
 - **Quantitative Integration:** Single and double integration for spin quantification
+
+### **🖥️ Command Line Interface**
+- **Complete CLI Suite:** 8 professional commands for all EPR workflows
+- **Batch Processing:** `epyr-batch-convert` for high-throughput data processing  
+- **Data Validation:** `epyr-validate` with FAIR compliance checking
+- **Configuration Management:** `epyr-config` for system-wide settings
+- **Interactive Tools:** `epyr-isotopes` GUI and system information display
+
+### **⚡ Performance & Quality**
+- **Memory Optimization:** Intelligent caching and memory management for large datasets
+- **Parallel Processing:** Multi-core support for batch operations
+- **Quality Assurance:** Comprehensive testing suite with 90+ tests
+- **Code Standards:** Professional development workflow with pre-commit hooks
+- **Security:** Automated vulnerability scanning and safe defaults
 
 ### **📈 Visualization & Plotting**
 - **2D Spectral Maps:** Professional publication-quality EPR plots
@@ -47,26 +62,32 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 - Python 3.8 or higher
 - NumPy, matplotlib, pandas, h5py (automatically installed)
 
-### Recommended: Install as Package
+### Quick Install
+```bash
+pip install epyr-tools
+```
+
+### Development Installation
 ```bash
 # Clone the repository
 git clone https://github.com/BertainaS/epyrtools.git
 cd epyrtools
 
-# Install package with dependencies
-pip install .
+# Install with development dependencies
+pip install -e ".[dev,docs]"
 
-# For development (editable install)
-pip install -e .
+# Set up pre-commit hooks
+pre-commit install
+```
 
-# With development tools
-pip install -e .[dev]
+### Verification
+```bash
+# Test installation
+epyr --help
+epyr-info
 
-# With documentation tools
-pip install -e .[docs]
-
-# Install everything
-pip install -e .[all]
+# Run test suite
+make test
 ```
 
 ### Alternative: Manual Dependencies

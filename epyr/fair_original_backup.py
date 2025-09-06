@@ -1254,7 +1254,7 @@ def _process_parameters(pars: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str,
         "value": {  # Nest value to match other parameter structure
             "converter_script": "fair_converter.py",  # Or add versioning
             "conversion_timestamp": datetime.now().isoformat(),
-            "eprload_version": "unknown",  # TODO: Add version to eprload if possible
+            "eprload_version": "0.1.2",  # Current EPyR Tools version
         },
         "unit": "",
         "description": "Information about the conversion process to FAIR format.",
