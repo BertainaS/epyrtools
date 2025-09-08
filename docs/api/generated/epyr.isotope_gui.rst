@@ -4,18 +4,13 @@ epyr.isotope\_gui
 .. automodule:: epyr.isotope_gui
 
    
-   .. rubric:: Functions
+.. rubric:: Modules
 
-   .. autosummary::
-   
-      element_class
-      rgb_to_hex
-      run_gui
-   
-   .. rubric:: Classes
+.. autosummary::
+   :toctree:
+   :recursive:
 
-   .. autosummary::
-   
-      IsotopesGUI
-      ToolTip
-   
+   gui_components
+   gui_helpers
+   isotope_data
+   main_window

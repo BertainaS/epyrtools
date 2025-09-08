@@ -11,10 +11,15 @@
    :recursive:
 
    baseline
+   cli
+   config
    constants
    eprload
    fair
-   fair_original_backup
    isotope_gui
+   lineshapes
+   logging_config
+   performance
    plot
+   plugins
    sub

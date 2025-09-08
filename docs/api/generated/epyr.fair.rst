@@ -14,3 +14,4 @@ epyr.fair
    data_processing
    exporters
    parameter_mapping
+   validation

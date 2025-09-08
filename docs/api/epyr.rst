@@ -12,6 +12,7 @@ Main Modules
    epyr.eprload
    epyr.baseline
    epyr.fair
+   epyr.lineshapes
    epyr.plot
    epyr.constants
    epyr.isotope_gui
@@ -26,6 +27,7 @@ Complete Module Index
    epyr.eprload
    epyr.baseline
    epyr.fair
+   epyr.lineshapes
    epyr.plot
    epyr.constants
    epyr.isotope_gui

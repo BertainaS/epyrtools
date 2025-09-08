@@ -5,10 +5,10 @@ EPyR Tools Documentation
    :target: https://opensource.org/licenses/BSD-3-Clause
    :alt: License
 
-.. image:: https://img.shields.io/badge/version-0.1.3-blue
+.. image:: https://img.shields.io/badge/version-0.1.5-blue
    :alt: Version
 
-.. image:: https://img.shields.io/badge/tests-44%20passed-brightgreen
+.. image:: https://img.shields.io/badge/tests-100%2B%20passed-brightgreen
    :alt: Tests
 
 **EPyR Tools** is a comprehensive Python package for Electron Paramagnetic Resonance (EPR) spectroscopy data analysis. It provides a complete toolkit for loading, processing, analyzing, and visualizing EPR data from Bruker spectrometers, with a focus on FAIR (Findable, Accessible, Interoperable, and Reusable) data principles.
@@ -31,6 +31,7 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 * **Peak Detection:** Automatic identification of EPR spectral features
 * **g-Factor Calculations:** Precise electronic g-factor determination with field calibration
 * **Quantitative Integration:** Single and double integration for spin quantification
+* **Lineshape Analysis:** Comprehensive EPR lineshape functions (Gaussian, Lorentzian, Voigt, pseudo-Voigt)
 
 📈 **Visualization & Plotting**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -71,11 +72,23 @@ Quick Start
    from epyr.fair import convert_bruker_to_fair
    convert_bruker_to_fair(filepath, output_dir='./fair_data')
 
+   # Generate EPR lineshapes for analysis
+   from epyr.lineshapes import gaussian, lorentzian, Lineshape
+   B = np.linspace(320, 340, 1000)  # mT
+   gauss_line = gaussian(B, center=334.8, width=2.0)
+   lorentz_line = lorentzian(B, center=334.8, width=2.0)
+   
+   # Or use the unified interface
+   shape = Lineshape('pseudo_voigt', width=2.0, alpha=0.5)
+   mixed_line = shape(B, center=334.8)
+
    # Create publication-quality plots
    import matplotlib.pyplot as plt
-   plt.plot(x, y_corrected, 'b-', linewidth=1.5)
+   plt.plot(x, y_corrected, 'b-', linewidth=1.5, label='Corrected Data')
+   plt.plot(B, gauss_line, 'r--', linewidth=1.5, label='Gaussian Fit')
    plt.xlabel('Magnetic Field (G)')
    plt.ylabel('EPR Signal (a.u.)')
+   plt.legend()
    plt.show()
 
 Documentation Contents
