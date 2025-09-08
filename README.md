@@ -56,6 +56,12 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 - **Field-Frequency Conversion:** Precise EPR measurement calculations
 - **Spectrometer Support:** Optimized for modern Bruker EPR systems
 
+### **📚 Professional Documentation**
+- **[Complete Documentation](docs/)**: Comprehensive guides and API reference
+- **[User Guide](docs/user_guide.md)**: Step-by-step tutorials and workflows
+- **[CLI Reference](docs/cli_reference.md)**: Command-line interface documentation
+- **[System Architecture](docs/README.md)**: Core modules and plugin system
+
 ## 📦 Installation
 
 ### Prerequisites
