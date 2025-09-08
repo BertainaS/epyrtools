@@ -5,7 +5,7 @@ EPyR Tools Documentation
    :target: https://opensource.org/licenses/BSD-3-Clause
    :alt: License
 
-.. image:: https://img.shields.io/badge/version-0.1.2-blue
+.. image:: https://img.shields.io/badge/version-0.1.3-blue
    :alt: Version
 
 .. image:: https://img.shields.io/badge/tests-44%20passed-brightgreen

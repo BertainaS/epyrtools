@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "EPyR Tools"
 copyright = "2025, Sylvain Bertaina"
 author = "Sylvain Bertaina"
-release = "0.1.2"
-version = "0.1.2"
+release = "0.1.3"
+version = "0.1.3"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -30,10 +30,25 @@ extensions = [
     "myst_parser",
 ]
 
+# MyST parser configuration
+myst_enable_extensions = [
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "fieldlist",
+    "html_admonition",
+    "html_image",
+    "replacements",
+    "smartquotes",
+    "strikethrough",
+    "substitution",
+    "tasklist",
+]
+
 # Add support for markdown files
 source_suffix = {
     ".rst": None,
-    ".md": "myst_parser",
+    ".md": None,
 }
 
 templates_path = ["_templates"]
