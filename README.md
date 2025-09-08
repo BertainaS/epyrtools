@@ -2,7 +2,7 @@
 
 | License | Tests | Documentation | Version |
 |---------|-------|---------------|---------|
-| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-90%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.3-blue) |
+| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-100%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.5-blue) |
 
 **EPyR Tools** is a comprehensive Python package for Electron Paramagnetic Resonance (EPR) spectroscopy data analysis. It provides a complete toolkit for loading, processing, analyzing, and visualizing EPR data from Bruker spectrometers, with a focus on FAIR (Findable, Accessible, Interoperable, and Reusable) data principles.
 
@@ -23,6 +23,7 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 - **g-Factor Calculations:** Precise electronic g-factor determination with field calibration
 - **Hyperfine Analysis:** Pattern recognition and coupling constant extraction
 - **Quantitative Integration:** Single and double integration for spin quantification
+- **Lineshape Analysis:** Comprehensive suite of EPR lineshape functions (Gaussian, Lorentzian, Voigt, pseudo-Voigt)
 
 ### **🖥️ Command Line Interface**
 - **Complete CLI Suite:** 8 professional commands for all EPR workflows
@@ -45,9 +46,9 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 - **Export Options:** High-resolution outputs for publications
 
 ### **🎓 Learning & Documentation**
-- **Interactive Tutorials:** 3 comprehensive Jupyter notebooks (beginner → advanced)
+- **Interactive Tutorials:** 4 comprehensive Jupyter notebooks (beginner → advanced)
 - **Complete API Documentation:** Professional Sphinx-generated docs
-- **Example Scripts:** Ready-to-use Python automation scripts
+- **Example Scripts:** Ready-to-use Python automation scripts including lineshape analysis
 - **Best Practices Guide:** EPR analysis workflows and quality assessment
 
 ### **🧪 EPR-Specific Tools**
@@ -164,7 +165,40 @@ y = (0.1 * x + 5) + 10 * np.exp(-((x - 50)**2) / 10) # A peak on a sloped baseli
 y_corrected, baseline = baseline_polynomial(y, x_data=x, poly_order=1, exclude_regions=[(40, 60)])
 ```
 
-### 4. Specialized Plotting
+### 4. Lineshape Analysis
+
+The `epyr.lineshapes` module provides comprehensive EPR lineshape functions with advanced capabilities including derivatives, phase rotation, and convolution.
+
+```python
+from epyr.lineshapes import Lineshape, gaussian, lorentzian, voigtian
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Create magnetic field range
+B = np.linspace(-10, 10, 1000)  # mT
+
+# Method 1: Direct functions with advanced options
+gauss = gaussian(B, center=0, width=4.0, derivative=0)  # Absorption
+gauss_1st = gaussian(B, center=0, width=4.0, derivative=1)  # 1st derivative
+lorentz = lorentzian(B, center=0, width=4.0, phase=0.0)  # Pure absorption
+
+# True Voigt profiles (convolution of Gaussian and Lorentzian)
+voigt = voigtian(B, center=0, sigma=2.0, gamma=2.0)
+
+# Method 2: Unified Lineshape class for consistent API
+shape = Lineshape('pseudo_voigt', width=4.0, alpha=0.5)  # 50/50 mix
+mixed = shape(B, center=0)
+
+# Plot comparison
+plt.plot(B, gauss, label='Gaussian')
+plt.plot(B, lorentz, label='Lorentzian')  
+plt.plot(B, voigt, label='True Voigt')
+plt.plot(B, mixed, label='Pseudo-Voigt')
+plt.legend()
+plt.show()
+```
+
+### 5. Specialized Plotting
 
 The `epyr.plot` module offers advanced plotting functions.
 
@@ -184,7 +218,7 @@ fig, ax = plot_2d_map(x_axis, y_axis, Z_data, x_unit='mT', y_unit='GHz')
 plt.show() # If running as a script
 ```
 
-### 5. Isotope GUI
+### 6. Isotope GUI
 
 Run the interactive isotope GUI to explore nuclear data. Note that this requires the `pandas` library.
 
@@ -218,11 +252,18 @@ jupyter notebook 03_Advanced_Analysis.ipynb
 ```
 Complete EPR analysis: g-factors, hyperfine structure, quantitative integration.
 
+### **EPR Lineshape Analysis (Professional)**
+```bash
+jupyter notebook 04_EPR_Lineshape_Analysis.ipynb
+```
+Comprehensive lineshape analysis: Gaussian, Lorentzian, Voigt profiles, derivatives, and convolution techniques.
+
 ### **Example Scripts**
 Ready-to-use automation scripts in `examples/scripts/`:
 ```bash
 python examples/scripts/01_basic_loading.py
 python examples/scripts/02_baseline_correction.py
+python examples/scripts/04_lineshape_analysis.py
 ```
 
 ## 📁 Project Structure
@@ -239,6 +280,13 @@ epyrtools/
 │   │   ├── conversion.py         # Format conversion tools
 │   │   ├── exporters.py          # CSV, JSON, HDF5 export
 │   │   └── parameter_mapping.py  # Metadata standardization
+│   ├── lineshapes/               # EPR lineshape analysis
+│   │   ├── gaussian.py           # Gaussian profiles with derivatives
+│   │   ├── lorentzian.py         # Lorentzian profiles with phase rotation
+│   │   ├── voigtian.py           # True Voigt convolution profiles
+│   │   ├── lshape.py             # General lineshape functions
+│   │   ├── convspec.py           # Spectrum convolution tools
+│   │   └── lineshape_class.py    # Unified lineshape interface
 │   ├── constants.py              # EPR physical constants
 │   ├── plot.py                   # Advanced EPR plotting
 │   ├── isotope_gui/             # Interactive isotope database
