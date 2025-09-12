@@ -118,6 +118,10 @@ python -c "import epyr; print('EPyR Tools successfully installed!')"
 
 ## Getting Started
 
+### Quick Demo: Loading EPR Data
+
+![EPyR Tools eprload demo](eprload_simple_demo.gif)
+
 ### 1. Loading Data
 
 The primary function for loading data is `epyr.eprload()`. It can be called with a file path or without arguments to open a file dialog.
