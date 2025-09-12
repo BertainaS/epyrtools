@@ -299,7 +299,7 @@ When reporting bugs, please include:
    **System:**
    - OS: macOS 12.0
    - Python: 3.9.7
-   - EPyR Tools: 0.1.2
+   - EPyR Tools: 0.1.6
 
    **Issue:**
    Baseline correction fails with 2D data

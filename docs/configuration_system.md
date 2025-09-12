@@ -394,7 +394,7 @@ def migrate_config_if_needed():
     """Migrate configuration from older versions."""
     current_version = config.get('_version', '0.1.0')
     
-    if current_version < '0.1.3':
+    if current_version < '0.1.6':
         # Migrate old settings
         old_cache_enabled = config.get('cache.enabled')
         if old_cache_enabled is not None:

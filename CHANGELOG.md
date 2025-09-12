@@ -5,6 +5,30 @@ All notable changes to EPyR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2025-09-12
+
+### Added
+- **Comprehensive Testing Protocol**: 4-level testing framework (SMOKE, STANDARD, DEEP, SCIENTIFIC)
+- **Deep Testing Infrastructure**: Automated test runners with performance benchmarking
+- **Scientific Validation**: Mathematical accuracy testing against NIST standards
+- **Complete Lineshape Analysis**: Extensive testing of all lineshape functions
+- **Performance Benchmarking**: Speed and memory usage validation for core functions
+
+### Changed
+- **BREAKING**: Removed all numbered example notebooks for cleaner project structure
+- **Documentation Cleanup**: Removed all emojis from documentation files for professional appearance
+- **Version Update**: Updated to v0.1.6 across all configuration files and documentation
+- **Enhanced Testing**: Added comprehensive testing documentation and protocols
+
+### Removed
+- Numbered example notebooks (01_, 04_, 05_, 06_, 07_, 08_, 09_, 10_)
+- Emojis from all markdown and RST documentation files
+
+### Fixed
+- Fixed pseudo_voigt parameter handling in lineshape_class
+- Corrected voigtian function parameter structure
+- Updated all version references throughout the project
+
 ## [0.1.3] - 2025-09-06
 
 ### Added

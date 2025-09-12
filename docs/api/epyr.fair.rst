@@ -88,7 +88,7 @@ Structured metadata with human-readable parameter names:
      "original_file": "spectrum.dsc",
      "conversion_info": {
        "timestamp": "2025-09-02T10:30:00",
-       "epyr_version": "0.1.0"
+       "epyr_version": "0.1.6"
      },
      "measurement_parameters": {
        "microwave_frequency": {

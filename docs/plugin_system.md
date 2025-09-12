@@ -465,7 +465,7 @@ setup(
     name="epyr-my-plugin",
     version="1.0.0",
     py_modules=["my_plugin"],
-    install_requires=["epyr-tools>=0.1.3"],
+    install_requires=["epyr-tools>=0.1.6"],
     entry_points={
         'epyr_plugins': [
             'my_plugin = my_plugin:MyFormatPlugin',

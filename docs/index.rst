@@ -5,7 +5,7 @@ EPyR Tools Documentation
    :target: https://opensource.org/licenses/BSD-3-Clause
    :alt: License
 
-.. image:: https://img.shields.io/badge/version-0.1.5-blue
+.. image:: https://img.shields.io/badge/version-0.1.6-blue
    :alt: Version
 
 .. image:: https://img.shields.io/badge/tests-100%2B%20passed-brightgreen
@@ -15,17 +15,17 @@ EPyR Tools Documentation
 
 From basic data loading to advanced quantitative analysis, EPyR Tools offers professional-grade capabilities for EPR researchers, with comprehensive documentation and interactive tutorials.
 
-🚀 Key Features
+Key Features
 ---------------
 
-📁 **Data Loading & Formats**
+**Data Loading & Formats**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * **Bruker File Support:** Load BES3T (.dta/.dsc) and ESP/WinEPR (.par/.spc) files seamlessly
 * **Automatic Format Detection:** Smart file format recognition and parameter extraction
 * **FAIR Data Conversion:** Export to CSV, JSON, and HDF5 formats with complete metadata
 * **Batch Processing:** Handle multiple files efficiently
 
-📊 **Advanced Analysis**
+**Advanced Analysis**
 ~~~~~~~~~~~~~~~~~~~~~~~~
 * **Baseline Correction:** Multiple algorithms (polynomial, exponential) with signal exclusion
 * **Peak Detection:** Automatic identification of EPR spectral features
@@ -33,21 +33,21 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 * **Quantitative Integration:** Single and double integration for spin quantification
 * **Lineshape Analysis:** Comprehensive EPR lineshape functions (Gaussian, Lorentzian, Voigt, pseudo-Voigt)
 
-📈 **Visualization & Plotting**
+**Visualization & Plotting**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * **2D Spectral Maps:** Professional publication-quality EPR plots
 * **Interactive Plotting:** Real-time parameter adjustment and analysis
 * **Customizable Styling:** Flexible plot configuration for different EPR experiments
 * **Export Options:** High-resolution outputs for publications
 
-🎓 **Learning & Documentation**
+**Learning & Documentation**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * **Interactive Tutorials:** Comprehensive Jupyter notebooks (beginner → advanced)
 * **Complete API Documentation:** Professional Sphinx-generated docs
 * **Example Scripts:** Ready-to-use Python automation scripts
 * **Best Practices Guide:** EPR analysis workflows and quality assessment
 
-🧪 **EPR-Specific Tools**
+**EPR-Specific Tools**
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 * **Physical Constants:** Comprehensive EPR-relevant constants library
 * **Isotope Database:** Nuclear properties and magnetic parameters
