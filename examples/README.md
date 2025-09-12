@@ -2,7 +2,7 @@
 
 This directory contains comprehensive examples, tutorials, and sample data for EPyR Tools - a Python package for EPR (Electron Paramagnetic Resonance) data analysis.
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 examples/
@@ -20,7 +20,7 @@ examples/
     └── 02_baseline_correction.py
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -48,9 +48,9 @@ pip install jupyter matplotlib pandas
    python 01_basic_loading.py
    ```
 
-## 📚 Tutorial Overview
+## Tutorial Overview
 
-### 🟢 01_Getting_Started
+### 01_Getting_Started
 **Perfect for beginners**
 - Loading EPR data from Bruker files
 - Understanding EPR measurement parameters
@@ -62,7 +62,7 @@ pip install jupyter matplotlib pandas
 **Level:** Beginner
 **Files:** `notebooks/01_Getting_Started.ipynb`, `scripts/01_basic_loading.py`
 
-### 🟡 02_Baseline_Correction
+### 02_Baseline_Correction
 **Essential EPR data processing**
 - Understanding baseline issues in EPR
 - Polynomial correction methods (constant, linear, quadratic)
@@ -74,7 +74,7 @@ pip install jupyter matplotlib pandas
 **Level:** Intermediate
 **Files:** `notebooks/02_Baseline_Correction.ipynb`, `scripts/02_baseline_correction.py`
 
-### 🔴 03_Advanced_Analysis
+### 03_Advanced_Analysis
 **Comprehensive EPR analysis**
 - Peak detection and hyperfine structure analysis
 - g-factor calculations and field calibration
@@ -87,7 +87,7 @@ pip install jupyter matplotlib pandas
 **Level:** Advanced
 **Files:** `notebooks/03_Advanced_Analysis.ipynb`
 
-## 📊 Sample Data
+## Sample Data
 
 ### Adding Your EPR Data
 
@@ -106,7 +106,7 @@ pip install jupyter matplotlib pandas
 - Organize by sample type or measurement conditions
 - Document measurement parameters in file names or metadata
 
-## 🛠️ Tutorial Features
+## Tutorial Features
 
 ### Interactive Elements
 - Real-time data visualization
@@ -126,7 +126,7 @@ pip install jupyter matplotlib pandas
 - Quality control procedures
 - Results interpretation
 
-## 📈 Learning Path
+## Learning Path
 
 **Recommended progression:**
 
@@ -147,7 +147,7 @@ pip install jupyter matplotlib pandas
 
 4. **Your Research**: Apply learned techniques to your EPR data!
 
-## 🔬 EPR Concepts Covered
+## EPR Concepts Covered
 
 ### Experimental Techniques
 - Continuous wave (CW) EPR
@@ -169,7 +169,7 @@ pip install jupyter matplotlib pandas
 - Spin concentrations
 - Anisotropy parameters
 
-## 💡 Tips for Success
+## Tips for Success
 
 ### Before Starting
 - Read the EPR theory sections in each notebook
@@ -189,7 +189,7 @@ pip install jupyter matplotlib pandas
 - Share knowledge with colleagues
 - Contribute improvements to EPyR Tools
 
-## 🤝 Getting Help
+## Getting Help
 
 ### Documentation
 - Check the API documentation for function details
@@ -207,7 +207,7 @@ pip install jupyter matplotlib pandas
 - **Plotting issues**: Install matplotlib and check backend
 - **Memory issues**: Use smaller data files for testing
 
-## 📝 Contributing
+## Contributing
 
 We welcome contributions to improve these tutorials:
 
@@ -219,7 +219,7 @@ We welcome contributions to improve these tutorials:
 
 See the project's contribution guidelines for details.
 
-## 📖 References
+## References
 
 ### EPR Theory
 - Weil, J.A. & Bolton, J.R. "Electron Paramagnetic Resonance" (2007)
@@ -234,6 +234,6 @@ See the project's contribution guidelines for details.
 
 ---
 
-**Happy EPR analyzing with EPyR Tools! 🎯⚛️📊**
+**Happy EPR analyzing with EPyR Tools!**
 
 *For questions or suggestions, please open an issue on the project repository.*

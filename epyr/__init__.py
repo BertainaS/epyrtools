@@ -17,7 +17,7 @@ from .plugins import plugin_manager
 from .plot import *
 from .sub.utils import BrukerListFiles
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 # Set up logging
 logger = get_logger(__name__)

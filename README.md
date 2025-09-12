@@ -2,22 +2,22 @@
 
 | License | Tests | Documentation | Version |
 |---------|-------|---------------|---------|
-| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-100%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.5-blue) |
+| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-100%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.6-blue) |
 
 **EPyR Tools** is a comprehensive Python package for Electron Paramagnetic Resonance (EPR) spectroscopy data analysis. It provides a complete toolkit for loading, processing, analyzing, and visualizing EPR data from Bruker spectrometers, with a focus on FAIR (Findable, Accessible, Interoperable, and Reusable) data principles.
 
 From basic data loading to advanced quantitative analysis, EPyR Tools offers professional-grade capabilities for EPR researchers, with comprehensive documentation and interactive tutorials.
 
-## 🚀 Key Features
+## Key Features
 
-### **📁 Data Loading & Formats**
+### **Data Loading & Formats**
 - **Bruker File Support:** Load BES3T (.dta/.dsc) and ESP/WinEPR (.par/.spc) files seamlessly
 - **Automatic Format Detection:** Smart file format recognition and parameter extraction
 - **FAIR Data Conversion:** Export to CSV, JSON, and HDF5 formats with complete metadata
 - **Batch Processing:** Handle multiple files efficiently with parallel processing
 - **Plugin Architecture:** Extensible system for custom file formats and processing
 
-### **📊 Advanced Analysis**
+### **Advanced Analysis**
 - **Baseline Correction:** Multiple algorithms (polynomial, exponential) with signal exclusion
 - **Peak Detection:** Automatic identification of EPR spectral features
 - **g-Factor Calculations:** Precise electronic g-factor determination with field calibration
@@ -25,45 +25,45 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 - **Quantitative Integration:** Single and double integration for spin quantification
 - **Lineshape Analysis:** Comprehensive suite of EPR lineshape functions (Gaussian, Lorentzian, Voigt, pseudo-Voigt)
 
-### **🖥️ Command Line Interface**
+### **Command Line Interface**
 - **Complete CLI Suite:** 8 professional commands for all EPR workflows
 - **Batch Processing:** `epyr-batch-convert` for high-throughput data processing  
 - **Data Validation:** `epyr-validate` with FAIR compliance checking
 - **Configuration Management:** `epyr-config` for system-wide settings
 - **Interactive Tools:** `epyr-isotopes` GUI and system information display
 
-### **⚡ Performance & Quality**
+### **Performance & Quality**
 - **Memory Optimization:** Intelligent caching and memory management for large datasets
 - **Parallel Processing:** Multi-core support for batch operations
 - **Quality Assurance:** Comprehensive testing suite with 90+ tests
 - **Code Standards:** Professional development workflow with pre-commit hooks
 - **Security:** Automated vulnerability scanning and safe defaults
 
-### **📈 Visualization & Plotting**
+### **Visualization & Plotting**
 - **2D Spectral Maps:** Professional publication-quality EPR plots
 - **Interactive Plotting:** Real-time parameter adjustment and analysis
 - **Customizable Styling:** Flexible plot configuration for different EPR experiments
 - **Export Options:** High-resolution outputs for publications
 
-### **🎓 Learning & Documentation**
+### **Learning & Documentation**
 - **Interactive Tutorials:** 4 comprehensive Jupyter notebooks (beginner → advanced)
 - **Complete API Documentation:** Professional Sphinx-generated docs
 - **Example Scripts:** Ready-to-use Python automation scripts including lineshape analysis
 - **Best Practices Guide:** EPR analysis workflows and quality assessment
 
-### **🧪 EPR-Specific Tools**
+### **EPR-Specific Tools**
 - **Physical Constants:** Comprehensive EPR-relevant constants library
 - **Isotope Database:** Nuclear properties and magnetic parameters
 - **Field-Frequency Conversion:** Precise EPR measurement calculations
 - **Spectrometer Support:** Optimized for modern Bruker EPR systems
 
-### **📚 Professional Documentation**
+### **Professional Documentation**
 - **[Complete Documentation](docs/)**: Comprehensive guides and API reference
 - **[User Guide](docs/user_guide.md)**: Step-by-step tutorials and workflows
 - **[CLI Reference](docs/cli_reference.md)**: Command-line interface documentation
 - **[System Architecture](docs/README.md)**: Core modules and plugin system
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 - Python 3.8 or higher
@@ -116,7 +116,7 @@ pip install -r requirements-dev.txt
 python -c "import epyr; print('EPyR Tools successfully installed!')"
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Loading Data
 
@@ -229,7 +229,7 @@ from epyr.isotope_gui import run_gui
 run_gui()
 ```
 
-## 📚 Interactive Tutorials
+## Interactive Tutorials
 
 EPyR Tools includes comprehensive Jupyter notebook tutorials for hands-on learning:
 
@@ -266,7 +266,7 @@ python examples/scripts/02_baseline_correction.py
 python examples/scripts/04_lineshape_analysis.py
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 epyrtools/
@@ -309,7 +309,7 @@ epyrtools/
 └── pyproject.toml              # Modern Python packaging
 ```
 
-## 🤝 Contributing & Support
+## Contributing & Support
 
 ### **Documentation**
 - **API Reference:** [docs/](docs/) - Complete function documentation
@@ -322,15 +322,15 @@ epyrtools/
 - **Contributing:** See contribution guidelines for code contributions
 
 ### **Quality Assurance**
-- ✅ **44 passing tests** with pytest
-- ✅ **Pre-commit hooks** for code quality
-- ✅ **Type hints** and comprehensive docstrings
-- ✅ **Professional packaging** with modern Python standards
+- **44 passing tests** with pytest
+- **Pre-commit hooks** for code quality
+- **Type hints** and comprehensive docstrings
+- **Professional packaging** with modern Python standards
 
-## 📄 License
+## License
 
 This project is licensed under the **BSD 3-Clause License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-**EPyR Tools** - *Professional EPR analysis for the Python ecosystem* 🧲⚛️📊
+**EPyR Tools** - *Professional EPR analysis for the Python ecosystem*

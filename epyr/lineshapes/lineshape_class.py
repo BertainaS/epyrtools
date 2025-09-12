@@ -139,10 +139,11 @@ class Lineshape:
                             phase=params['phase'])
         
         elif self.shape_type in ['pseudo_voigt', 'general']:
-            return self._func(x, center, params['width'],
-                            derivative=params['derivative'],
-                            alpha=params['alpha'],
-                            phase=params['phase'])
+            # pseudo_voigt function doesn't support derivative parameter
+            if 'alpha' in params:
+                return self._func(x, center, params['width'], eta=params['alpha'])
+            else:
+                return self._func(x, center, params['width'])
     
     def absorption(self, x: np.ndarray, center: float) -> np.ndarray:
         """Generate pure absorption lineshape"""

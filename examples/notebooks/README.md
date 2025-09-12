@@ -4,16 +4,16 @@ This directory contains interactive Jupyter notebooks for learning and using EPy
 
 ## Available Notebooks
 
-### 📚 Getting_Started.ipynb
+### Getting_Started.ipynb
 
 **Perfect for beginners!** This notebook demonstrates:
 
-- ✅ Loading 1D and 2D EPR data from real measurements
-- ✅ Handling both BES3T (.dsc/.dta) and ESP (.par/.spc) formats
-- ✅ Automatic detection of complex vs real data
-- ✅ Professional EPR spectrum visualization
-- ✅ Basic data analysis and statistics
-- ✅ Exporting data to common formats (CSV, TXT, NPZ)
+- Loading 1D and 2D EPR data from real measurements
+- Handling both BES3T (.dsc/.dta) and ESP (.par/.spc) formats
+- Automatic detection of complex vs real data
+- Professional EPR spectrum visualization
+- Basic data analysis and statistics
+- Exporting data to common formats (CSV, TXT, NPZ)
 
 **Data Used:**
 - `130406SB_CaWO4_Er_CW_5K_20.DSC` - 1D CW-EPR spectrum
@@ -82,4 +82,4 @@ To add more notebooks:
 
 ---
 
-**EPyR Tools** - Making EPR data analysis accessible and reproducible! 🧲⚛️📊
+**EPyR Tools** - Making EPR data analysis accessible and reproducible!

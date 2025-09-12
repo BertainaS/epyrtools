@@ -42,7 +42,7 @@ EPyR Tools Architecture
 
 ## Key Features by Module
 
-### 🖥️ Command Line Interface (`epyr.cli`)
+### Command Line Interface (`epyr.cli`)
 Professional CLI with 8 commands for all EPR workflows:
 - `epyr-convert` - Bruker to FAIR format conversion
 - `epyr-baseline` - Baseline correction with multiple algorithms
@@ -52,14 +52,14 @@ Professional CLI with 8 commands for all EPR workflows:
 - `epyr-isotopes` - Interactive isotope database
 - `epyr-validate` - Data validation with FAIR compliance
 
-### ⚙️ Configuration System (`epyr.config`)
+### Configuration System (`epyr.config`)
 Centralized, hierarchical configuration with:
 - 8 configuration sections covering all EPyR Tools features
 - Environment variable overrides (`EPYR_*` prefix)
 - Configuration export/import for reproducibility
 - Platform-appropriate configuration file storage
 
-### ⚡ Performance System (`epyr.performance`)
+### Performance System (`epyr.performance`)
 Advanced performance optimization including:
 - Intelligent memory monitoring and optimization
 - LRU caching for frequently accessed data
@@ -67,7 +67,7 @@ Advanced performance optimization including:
 - Multi-core processing support
 - Resource usage tracking and alerts
 
-### 🔧 Plugin System (`epyr.plugins`)
+### Plugin System (`epyr.plugins`)
 Extensible architecture supporting:
 - File format plugins for custom data formats
 - Processing plugins for analysis algorithms
@@ -75,7 +75,7 @@ Extensible architecture supporting:
 - Auto-discovery and hot-loading of plugins
 - Professional plugin development framework
 
-### 📊 FAIR Data Standards (`epyr.fair`)
+### FAIR Data Standards (`epyr.fair`)
 Complete FAIR compliance implementation:
 - Comprehensive metadata validation
 - Data integrity checking
@@ -328,6 +328,6 @@ https://github.com/BertainaS/epyrtools
 
 ---
 
-**EPyR Tools v0.1.3** - Professional-grade EPR data analysis for Python
+**EPyR Tools v0.1.6** - Professional-grade EPR data analysis for Python
 
 This documentation provides comprehensive coverage of all EPyR Tools features. For specific questions or issues, please refer to the appropriate section above or contact the development team.
