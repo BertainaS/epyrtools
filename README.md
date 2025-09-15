@@ -2,7 +2,7 @@
 
 | License | Tests | Documentation | Version |
 |---------|-------|---------------|---------|
-| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-100%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.6-blue) |
+| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-100%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.8-blue) |
 
 **EPyR Tools** is a comprehensive Python package for Electron Paramagnetic Resonance (EPR) spectroscopy data analysis. It provides a complete toolkit for loading, processing, analyzing, and visualizing EPR data from Bruker spectrometers, with a focus on FAIR (Findable, Accessible, Interoperable, and Reusable) data principles.
 
@@ -18,7 +18,7 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 - **Plugin Architecture:** Extensible system for custom file formats and processing
 
 ### **Advanced Analysis**
-- **Baseline Correction:** Multiple algorithms (polynomial, exponential) with signal exclusion
+- **Modern Baseline Correction:** Streamlined polynomial correction with interactive region selection
 - **Peak Detection:** Automatic identification of EPR spectral features
 - **g-Factor Calculations:** Precise electronic g-factor determination with field calibration
 - **Hyperfine Analysis:** Pattern recognition and coupling constant extraction
@@ -152,21 +152,34 @@ convert_bruker_to_fair()
 # convert_bruker_to_fair('path/to/data.dsc', output_dir='path/to/output')
 ```
 
-### 3. Baseline Correction
+### 3. Modern Baseline Correction
 
-The `epyr.baseline` module provides functions for correcting distorted baselines. For more detailed examples, see the `notebooks/Demo_baseline_correction.ipynb` notebook.
+The `epyr.baseline` module provides streamlined functions for correcting EPR baselines with interactive region selection. Compatible with `eprload()` data format.
 
 ```python
-from epyr.baseline import baseline_polynomial
+import epyr
 import numpy as np
 
-# Assuming 'x' and 'y' are loaded spectral data
-# For this example, let's create some sample data
-x = np.linspace(0, 100, 500)
-y = (0.1 * x + 5) + 10 * np.exp(-((x - 50)**2) / 10) # A peak on a sloped baseline
+# Load EPR data using eprload
+x, y, params, filepath = epyr.eprload("data.dsc")
 
-# Correct a linear baseline, excluding the peak region from the fit
-y_corrected, baseline = baseline_polynomial(y, x_data=x, poly_order=1, exclude_regions=[(40, 60)])
+# Simple automatic correction
+corrected, baseline = epyr.baseline.baseline_polynomial_1d(x, y, params)
+
+# With manual region exclusion (e.g., exclude signal regions)
+signal_regions = [(3340, 3360), (3380, 3400)]  # mT
+corrected, baseline = epyr.baseline.baseline_polynomial_1d(
+    x, y, params, 
+    manual_regions=signal_regions,
+    region_mode='exclude',
+    order=2
+)
+
+# Interactive region selection for complex spectra
+corrected, baseline = epyr.baseline.baseline_polynomial_1d(
+    x, y, params,
+    interactive=True
+)
 ```
 
 ### 4. Lineshape Analysis
@@ -202,24 +215,27 @@ plt.legend()
 plt.show()
 ```
 
-### 5. Specialized Plotting
+### 5. Simple EPR Plotting
 
-The `epyr.plot` module offers advanced plotting functions.
+The `epyr.eprplot` module provides simple, direct plotting functions for EPR data from `eprload()`.
 
 ```python
-from epyr.plot import plot_2d_map
-import numpy as np
+import epyr
 import matplotlib.pyplot as plt
 
-# Create sample 2D data
-x_axis = np.linspace(-10, 10, 100)
-y_axis = np.linspace(-10, 10, 100)
-XX, YY = np.meshgrid(x_axis, y_axis)
-Z_data = np.exp(-(XX**2 + YY**2) / 8) # A 2D Gaussian peak
+# Load EPR data
+x, y, params, filepath = epyr.eprload("data.dsc")
 
-# Generate a 2D color map
-fig, ax = plot_2d_map(x_axis, y_axis, Z_data, x_unit='mT', y_unit='GHz')
-plt.show() # If running as a script
+# Plot 1D spectrum
+epyr.eprplot.plot_1d(x, y, params, title="EPR Spectrum")
+
+# Plot 2D data as color map
+epyr.eprplot.plot_2d_map(x, y, params, title="2D EPR Map")
+
+# Plot 2D data as waterfall plot
+epyr.eprplot.plot_2d_waterfall(x, y, params, title="2D Waterfall", max_traces=30)
+
+plt.show()
 ```
 
 ### 6. Isotope GUI
@@ -246,9 +262,9 @@ Learn EPR data loading, visualization, and FAIR data conversion.
 
 ### **Baseline Correction (Intermediate)**
 ```bash
-jupyter notebook 02_Baseline_Correction.ipynb
+jupyter notebook 06_Baseline_Correction_Functions_Complete.ipynb
 ```
-Master polynomial and advanced baseline correction techniques.
+Master modern polynomial baseline correction with interactive region selection.
 
 ### **Advanced Analysis (Expert)**
 ```bash
@@ -276,10 +292,10 @@ python examples/scripts/04_lineshape_analysis.py
 epyrtools/
 ├── epyr/                           # Main package
 │   ├── eprload.py                 # Core data loading (BES3T, ESP formats)
-│   ├── baseline/                  # Advanced baseline correction
-│   │   ├── _1d.py                # 1D correction algorithms
-│   │   ├── _2d.py                # 2D correction algorithms
-│   │   └── _utils.py             # Correction utilities
+│   ├── eprplot.py                 # Simple EPR plotting functions
+│   ├── baseline_correction.py     # Modern streamlined baseline correction
+│   ├── baseline/                  # Compatibility layer for baseline functions
+│   │   └── __init__.py           # Imports from baseline_correction
 │   ├── fair/                     # FAIR data conversion
 │   │   ├── conversion.py         # Format conversion tools
 │   │   ├── exporters.py          # CSV, JSON, HDF5 export

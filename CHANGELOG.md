@@ -5,6 +5,64 @@ All notable changes to EPyR Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2025-09-14
+
+### Added
+- **Modular Baseline Correction Package**: Complete refactoring of baseline correction system
+  - New `epyr.baseline` package with 5 specialized modules (`models.py`, `correction.py`, `selection.py`, `interactive.py`, `auto.py`)
+  - 29+ functions for comprehensive baseline correction capabilities
+  - Mathematical models: polynomial, stretched exponential, bi-exponential, simple exponential
+- **Advanced Baseline Methods**: New correction algorithms for complex EPR data
+  - `baseline_stretched_exponential_1d()` - For T2 relaxation and echo decay measurements (β = 0.01-5.0)
+  - `baseline_bi_exponential_1d()` - For complex decay with multiple components
+  - `baseline_auto_1d()` - Intelligent automatic model selection using AIC/BIC/R² criteria
+- **Backend Control System**: User-controllable matplotlib backend selection
+  - `setup_inline_backend()` - Static plots in Jupyter
+  - `setup_widget_backend()` - Interactive plots in Jupyter
+  - `setup_notebook_backend()` - Alternative interactive backend
+- **Enhanced Interactive Selection**: Improved region selection with Jupyter compatibility
+  - Cross-platform matplotlib widget support (handles version differences)
+  - Multiple window closure methods (keyboard, function calls)
+  - Better error handling and user guidance
+
+### Changed
+- **Architecture**: Refactored 1357-line `baseline_correction.py` into modular 5-file package structure
+- **Default Behavior**: Backend selection now defaults to `'manual'` mode (user choice preserved)
+- **API Design**: Clean, organized imports with comprehensive `__all__` declarations
+- **Documentation**: Enhanced help system with backend control guidance and usage examples
+
+### Improved
+- **Performance**: Specialized modules for better maintainability and testing
+- **Extensibility**: Easy addition of new baseline models and correction algorithms
+- **User Experience**: No more forced backend changes on import - respects user preferences
+- **Code Quality**: Separation of concerns (mathematical models, algorithms, UI components)
+
+### Fixed
+- **Jupyter Backend Issue**: EPyR Tools no longer overrides user's preferred matplotlib backend
+- **Import Conflicts**: Resolved namespace issues between old and new baseline systems
+- **Interactive Selection**: Fixed matplotlib widget compatibility across versions (props vs rectprops)
+- **Backward Compatibility**: All existing baseline functions continue to work without changes
+
+## [0.1.7] - 2025-09-14
+
+### Added
+- **EPR Plot Module**: New `eprplot` module with simple plotting functions
+  - `plot_1d()` - Plot 1D EPR spectra with automatic axis detection
+  - `plot_2d_map()` - Plot 2D EPR data as color maps
+  - `plot_2d_waterfall()` - Plot 2D EPR data as waterfall plots
+- **Enhanced Import System**: Fixed module visibility issues in Jupyter notebooks
+- **Comprehensive Test Suite**: Added interactive Jupyter notebook for testing plot functions
+
+### Changed
+- **Import Architecture**: Improved `__init__.py` structure to prevent import conflicts
+- **Plot Module Organization**: Added `__all__` variables for cleaner namespace management
+- **Jupyter Compatibility**: Resolved module caching issues for better development experience
+
+### Fixed
+- **Module Visibility**: Resolved `AttributeError` when importing `eprplot` functions in Jupyter
+- **Import Conflicts**: Fixed namespace conflicts between `plot.py` and `eprplot.py` modules
+- **Automatic Imports**: Ensured all plotting functions are available via `import epyr`
+
 ## [0.1.6] - 2025-09-12
 
 ### Added

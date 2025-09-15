@@ -32,7 +32,7 @@ from .lineshape_class import (
 )
 
 # Version info
-__version__ = "0.1.5"
+__version__ = "0.1.8"
 __author__ = "EPyR Tools Development Team"
 
 # Main functions for easy access

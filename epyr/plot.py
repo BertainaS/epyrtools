@@ -17,6 +17,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm
 
+# Define public API - only export these functions
+__all__ = [
+    'EPRPlotConfig',
+    'plot_angular_sweep_waterfall',
+    'plot_2d_spectral_map', 
+    'plot_epr_comparison',
+    'generate_example_data',
+    'run_examples'
+]
+
 
 class EPRPlotConfig:
     """Configuration class for EPR plotting parameters."""

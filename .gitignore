@@ -9,6 +9,7 @@ __pycache__/
 Test_files/
 Trash/
 .DS_Store
+deprecated/
 # Compiled source #
 ###################
 *.com

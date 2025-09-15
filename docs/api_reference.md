@@ -33,6 +33,46 @@ import epyr
 x, y, params, path = epyr.eprload('spectrum.dsc')
 ```
 
+## Baseline Correction Package
+
+### epyr.baseline
+
+Complete baseline correction system with modular architecture. See [Baseline Reference](baseline_reference.md) for detailed documentation.
+
+#### Quick Reference
+
+```python
+# Automatic model selection (recommended)
+corrected, baseline, info = epyr.baseline.baseline_auto_1d(x, y, params)
+
+# Specific methods
+corrected, baseline = epyr.baseline.baseline_polynomial_1d(x, y, params, order=3)
+corrected, baseline = epyr.baseline.baseline_stretched_exponential_1d(x, y, params)
+corrected, baseline = epyr.baseline.baseline_bi_exponential_1d(x, y, params)
+
+# Backend control
+epyr.baseline.setup_inline_backend()        # Static plots
+epyr.baseline.setup_widget_backend()        # Interactive plots
+```
+
+#### Key Functions
+
+- **`baseline_auto_1d()`** - Automatic model selection using AIC/BIC/R² criteria
+- **`baseline_polynomial_1d()`** - Polynomial correction for CW EPR spectra
+- **`baseline_stretched_exponential_1d()`** - For T2 relaxation data (β = 0.01-5.0)
+- **`baseline_bi_exponential_1d()`** - For complex decay with multiple components
+- **`baseline_polynomial_2d()`** - 2D surface fitting
+- **`RegionSelector`** - Interactive region selection
+- **`setup_*_backend()`** - Matplotlib backend control
+
+#### Package Structure
+
+- `models.py` - Mathematical functions
+- `correction.py` - Core algorithms  
+- `selection.py` - Region utilities
+- `interactive.py` - Matplotlib widgets
+- `auto.py` - Model selection
+
 ## Configuration Module
 
 ### epyr.config
