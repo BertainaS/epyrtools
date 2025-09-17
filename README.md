@@ -2,7 +2,7 @@
 
 | License | Tests | Documentation | Version |
 |---------|-------|---------------|---------|
-| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-100%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.8-blue) |
+| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-100%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.1.9-blue) |
 
 **EPyR Tools** is a comprehensive Python package for Electron Paramagnetic Resonance (EPR) spectroscopy data analysis. It provides a complete toolkit for loading, processing, analyzing, and visualizing EPR data from Bruker spectrometers, with a focus on FAIR (Findable, Accessible, Interoperable, and Reusable) data principles.
 
@@ -26,7 +26,8 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 - **Lineshape Analysis:** Comprehensive suite of EPR lineshape functions (Gaussian, Lorentzian, Voigt, pseudo-Voigt)
 
 ### **Command Line Interface**
-- **Complete CLI Suite:** 8 professional commands for all EPR workflows
+- **Complete CLI Suite:** 9 professional commands for all EPR workflows
+- **Interactive Plotting:** `epyr-plot` with measurement tools for precise delta x/y analysis
 - **Batch Processing:** `epyr-batch-convert` for high-throughput data processing  
 - **Data Validation:** `epyr-validate` with FAIR compliance checking
 - **Configuration Management:** `epyr-config` for system-wide settings
@@ -40,8 +41,9 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 - **Security:** Automated vulnerability scanning and safe defaults
 
 ### **Visualization & Plotting**
-- **2D Spectral Maps:** Professional publication-quality EPR plots
-- **Interactive Plotting:** Real-time parameter adjustment and analysis
+- **Interactive Measurement Tools:** Click-to-measure delta x/y distances with real-time feedback
+- **2D Spectral Maps:** Professional publication-quality EPR plots  
+- **macOS Optimized:** Smooth interactive plotting with TkAgg backend
 - **Customizable Styling:** Flexible plot configuration for different EPR experiments
 - **Export Options:** High-resolution outputs for publications
 
@@ -238,7 +240,28 @@ epyr.eprplot.plot_2d_waterfall(x, y, params, title="2D Waterfall", max_traces=30
 plt.show()
 ```
 
-### 6. Isotope GUI
+### 6. Interactive Command-Line Plotting
+
+Experience the new interactive plotting with measurement tools:
+
+```bash
+# Interactive plotting with measurement tools
+epyr-plot --interactive --measure
+
+# Load specific file with measurements
+epyr-plot spectrum.dsc --interactive --measure
+
+# Quick analysis with scaling and save
+epyr-plot data.dta --interactive --measure -s nG --save
+```
+
+**Measurement Features:**
+- Click two points to measure Δx, Δy, and distance
+- Real-time visual feedback with annotations
+- macOS optimized for smooth performance
+- Right-click to clear, 'c' key for quick clear
+
+### 7. Isotope GUI
 
 Run the interactive isotope GUI to explore nuclear data. Note that this requires the `pandas` library.
 

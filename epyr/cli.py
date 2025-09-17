@@ -20,11 +20,209 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
+import numpy as np
+
 from .config import config
 from .eprload import eprload
 from .logging_config import get_logger
 
 logger = get_logger(__name__)
+
+
+class InteractiveMeasurementTool:
+    """Interactive tool for measuring distances between two points on a plot."""
+    
+    def __init__(self, ax, x_data, y_data):
+        """Initialize the measurement tool.
+        
+        Args:
+            ax: Matplotlib axes object
+            x_data: X-axis data array
+            y_data: Y-axis data array
+        """
+        self.ax = ax
+        self.x_data = x_data
+        self.y_data = y_data
+        self.points = []
+        self.lines = []
+        self.annotations = []
+        self.cid = None
+        
+    def enable(self):
+        """Enable the measurement tool."""
+        self.cid = self.ax.figure.canvas.mpl_connect('button_press_event', self.on_click)
+        print("\n📏 Measurement tool enabled!")
+        print("Instructions:")
+        print("  • Click two points on the plot to measure distance")
+        print("  • Right-click to clear measurements")
+        print("  • Press 'q' or close window to exit")
+        
+    def disable(self):
+        """Disable the measurement tool."""
+        if self.cid:
+            self.ax.figure.canvas.mpl_disconnect(self.cid)
+            self.cid = None
+            
+    def on_click(self, event):
+        """Handle mouse click events."""
+        if event.inaxes != self.ax:
+            return
+            
+        if event.button == 3:  # Right click - clear measurements
+            self.clear_measurements()
+            return
+            
+        if event.button != 1:  # Only handle left clicks
+            return
+            
+        # Add point
+        x, y = event.xdata, event.ydata
+        if x is None or y is None:
+            return
+            
+        self.points.append((x, y))
+        
+        # Plot the point
+        point_plot = self.ax.plot(x, y, 'ro', markersize=8, markeredgecolor='white', markeredgewidth=1)[0]
+        self.lines.append(point_plot)
+        
+        print(f"Point {len(self.points)}: x={x:.4f}, y={y:.4e}")
+        
+        # If we have two points, calculate and display distance
+        if len(self.points) == 2:
+            self.calculate_distance()
+            self.points = []  # Reset for next measurement
+            
+        self.ax.figure.canvas.draw()
+        
+    def calculate_distance(self):
+        """Calculate and display distance between two points."""
+        if len(self.points) != 2:
+            return
+            
+        p1, p2 = self.points
+        x1, y1 = p1
+        x2, y2 = p2
+        
+        # Calculate deltas
+        delta_x = x2 - x1
+        delta_y = y2 - y1
+        distance = np.sqrt(delta_x**2 + delta_y**2)
+        
+        # Draw line between points
+        line = self.ax.plot([x1, x2], [y1, y2], 'r--', linewidth=2, alpha=0.7)[0]
+        self.lines.append(line)
+        
+        # Add measurement annotation
+        mid_x = (x1 + x2) / 2
+        mid_y = (y1 + y2) / 2
+        
+        measurement_text = f'Δx = {delta_x:.4f}\nΔy = {delta_y:.4e}\n|Δ| = {distance:.4e}'
+        annotation = self.ax.annotate(
+            measurement_text,
+            xy=(mid_x, mid_y),
+            xytext=(10, 10),
+            textcoords='offset points',
+            bbox=dict(boxstyle='round,pad=0.5', facecolor='yellow', alpha=0.8),
+            fontsize=9,
+            ha='left'
+        )
+        self.annotations.append(annotation)
+        
+        # Print results to console
+        print(f"\n📐 Measurement Results:")
+        print(f"  Point 1: ({x1:.4f}, {y1:.4e})")
+        print(f"  Point 2: ({x2:.4f}, {y2:.4e})")
+        print(f"  Δx = {delta_x:.4f}")
+        print(f"  Δy = {delta_y:.4e}")
+        print(f"  Distance = {distance:.4e}")
+        print(f"\nClick two more points for another measurement, or right-click to clear.\n")
+        
+    def clear_measurements(self):
+        """Clear all measurements from the plot."""
+        # Remove all plotted elements
+        for item in self.lines + self.annotations:
+            if item in self.ax.lines:
+                item.remove()
+            elif item in self.ax.texts:
+                item.remove()
+                
+        self.lines.clear()
+        self.annotations.clear()
+        self.points.clear()
+        
+        self.ax.figure.canvas.draw()
+        print("🧹 Measurements cleared. Click two points for a new measurement.")
+
+
+def create_interactive_plot_with_measurements(x, y, params, file_path, enable_measurements=False):
+    """Create an interactive plot with optional measurement tools.
+    
+    Args:
+        x: X-axis data
+        y: Y-axis data  
+        params: Parameter dictionary
+        file_path: Path to the loaded file
+        enable_measurements: Whether to enable measurement tool
+    """
+    import matplotlib.pyplot as plt
+    from pathlib import Path
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    plot_title = Path(file_path).name if file_path else "EPR Data"
+    ax.set_title(plot_title, fontsize=12)
+    
+    # Plot the data
+    if y.ndim == 1:
+        # 1D data
+        absc = x if x is not None and hasattr(x, '__len__') else np.arange(len(y))
+        
+        if np.isrealobj(y):
+            ax.plot(absc, y, 'b-', linewidth=1.5, label='data')
+        else:
+            ax.plot(absc, np.real(y), 'b-', linewidth=1.5, label='real')
+            ax.plot(absc, np.imag(y), 'r--', linewidth=1.5, label='imag')
+            ax.legend()
+            
+        # Set labels
+        x_label = params.get("XAXIS_NAME", "Field") if params else "Field"
+        x_unit = params.get("XAXIS_UNIT", "G") if params else "G"
+        if x_unit:
+            x_label += f" ({x_unit})"
+            
+        ax.set_xlabel(x_label)
+        ax.set_ylabel("Intensity (a.u.)")
+        ax.grid(True, linestyle=":", alpha=0.6)
+        
+        # Enable measurement tool if requested
+        measurement_tool = None
+        if enable_measurements:
+            measurement_tool = InteractiveMeasurementTool(ax, absc, y)
+            measurement_tool.enable()
+            
+    else:
+        # 2D data - basic implementation
+        ax.imshow(np.real(y), aspect='auto', cmap='viridis')
+        ax.set_title(f"{plot_title} (2D data)")
+        print("📊 2D data plotted. Measurement tool works best with 1D data.")
+        
+    plt.tight_layout()
+    
+    # Add keyboard shortcuts
+    def on_key(event):
+        if event.key == 'q':
+            plt.close('all')
+        elif event.key == 'c' and enable_measurements and measurement_tool:
+            measurement_tool.clear_measurements()
+            
+    fig.canvas.mpl_connect('key_press_event', on_key)
+    
+    if enable_measurements:
+        print("\n⌨️  Keyboard shortcuts:")
+        print("  • 'c' - Clear measurements")
+        print("  • 'q' - Quit")
+    
+    return fig, ax
 
 
 def cmd_convert():
@@ -94,7 +292,7 @@ def cmd_baseline():
     parser.add_argument('input', help='Input EPR file')
     parser.add_argument('-o', '--output', help='Output file (default: input_baseline.csv)')
     parser.add_argument('-m', '--method', default='polynomial', 
-                       choices=['polynomial', 'exponential', 'stretched_exponential'],
+                       choices=['polynomial', 'stretched_exponential', 'bi_exponential', 'auto'],
                        help='Baseline correction method')
     parser.add_argument('--order', type=int, default=1,
                        help='Polynomial order (for polynomial method)')
@@ -135,11 +333,28 @@ def cmd_baseline():
         logger.info(f"Applying {args.method} baseline correction")
         
         if args.method == 'polynomial':
-            from .baseline import baseline_polynomial
+            from .baseline import baseline_polynomial_1d
             exclude_regions = args.exclude if args.exclude else None
-            y_corrected, baseline = baseline_polynomial(
-                y, x_data=x, poly_order=args.order, exclude_regions=exclude_regions
+            # Convert exclude_regions format for new API
+            manual_regions = exclude_regions
+            region_mode = 'exclude' if manual_regions else None
+            
+            y_corrected, baseline = baseline_polynomial_1d(
+                x, y, params, 
+                order=args.order, 
+                manual_regions=manual_regions,
+                region_mode=region_mode
             )
+        elif args.method == 'stretched_exponential':
+            from .baseline import baseline_stretched_exponential_1d
+            y_corrected, baseline = baseline_stretched_exponential_1d(x, y, params)
+        elif args.method == 'bi_exponential':
+            from .baseline import baseline_bi_exponential_1d
+            y_corrected, baseline = baseline_bi_exponential_1d(x, y, params)
+        elif args.method == 'auto':
+            from .baseline import baseline_auto_1d
+            y_corrected, baseline, info = baseline_auto_1d(x, y, params, verbose=True)
+            logger.info(f"Automatic selection chose: {info['best_model']}")
         else:
             logger.error(f"Method {args.method} not yet implemented in CLI")
             sys.exit(1)
@@ -399,6 +614,228 @@ def cmd_isotopes():
         sys.exit(1)
 
 
+def _plot_main(args_list=None):
+    """Main plotting function that can accept custom args."""
+    parser = argparse.ArgumentParser(
+        prog='epyr-plot',
+        description='Load and plot EPR data files with interactive visualization'
+    )
+    parser.add_argument('file', nargs='?', help='EPR file to load (.dta, .dsc, .spc, .par). If not provided, opens file dialog.')
+    parser.add_argument('-s', '--scaling', default='', 
+                       help='Scaling string (n=scans, P=power, G=gain, T=temp, c=time)')
+    parser.add_argument('--no-plot', action='store_true',
+                       help='Load data without plotting')
+    parser.add_argument('--interactive', action='store_true',
+                       help='Enable interactive matplotlib backend')
+    parser.add_argument('--save', action='store_true',
+                       help='Save plot as PNG file')
+    parser.add_argument('--measure', action='store_true',
+                       help='Enable interactive measurement tool (click two points to measure distance)')
+    parser.add_argument('-v', '--verbose', action='store_true')
+    
+    args = parser.parse_args(args_list)
+    
+    if args.verbose:
+        from .logging_config import setup_logging
+        setup_logging('DEBUG')
+    
+    # Set up interactive backend if requested
+    if args.interactive:
+        import matplotlib
+        import platform
+        
+        if platform.system() == "Darwin":  # macOS
+            try:
+                matplotlib.use('TkAgg')
+                logger.info("Using TkAgg backend for interactive plotting on macOS")
+            except ImportError:
+                logger.warning("TkAgg not available, using default backend")
+        else:
+            try:
+                matplotlib.use('Qt5Agg')
+                logger.info("Using Qt5Agg backend for interactive plotting")
+            except ImportError:
+                try:
+                    matplotlib.use('TkAgg')
+                    logger.info("Using TkAgg backend for interactive plotting")
+                except ImportError:
+                    logger.warning("No interactive backend available, using default")
+    
+    try:
+        # Load the data
+        logger.info("Loading EPR data...")
+        
+        # For measurement mode, disable default plotting
+        plot_with_eprload = not args.no_plot and not (args.interactive and args.measure)
+        
+        x, y, params, file_path = eprload(
+            args.file,
+            scaling=args.scaling,
+            plot_if_possible=plot_with_eprload,
+            save_if_possible=args.save and not args.measure
+        )
+        
+        if x is None or y is None:
+            logger.error("Failed to load data or loading was cancelled")
+            sys.exit(1)
+        
+        logger.info(f"Successfully loaded: {file_path}")
+        logger.info(f"Data shape: {y.shape}")
+        
+        if hasattr(x, 'shape'):
+            logger.info(f"X-axis shape: {x.shape}")
+        elif isinstance(x, (list, tuple)):
+            logger.info(f"X-axis shapes: {[ax.shape for ax in x]}")
+        
+        logger.info(f"Parameters loaded: {len(params) if params else 0}")
+        
+        # Show key parameters
+        if params:
+            key_params = ['MWFQ', 'MWPW', 'RCAG', 'AVGS', 'SPTP']
+            found_params = {k: params.get(k) for k in key_params if k in params}
+            if found_params:
+                logger.info("Key parameters:")
+                for k, v in found_params.items():
+                    logger.info(f"  {k}: {v}")
+        
+        # Handle interactive plotting with optional measurements
+        if args.interactive and not args.no_plot:
+            if args.measure:
+                # Use custom interactive plot with measurement tools
+                logger.info("Creating interactive plot with measurement tools...")
+                fig, ax = create_interactive_plot_with_measurements(
+                    x, y, params, file_path, enable_measurements=True
+                )
+                
+                if args.save:
+                    from pathlib import Path
+                    save_path = Path(file_path).with_suffix('.png') if file_path else Path('epr_plot.png')
+                    fig.savefig(save_path, dpi=300)
+                    logger.info(f"Plot saved to {save_path}")
+                
+                import matplotlib.pyplot as plt
+                plt.show(block=True)
+                logger.info("Interactive measurement plot closed.")
+            else:
+                # Standard interactive plot
+                import matplotlib.pyplot as plt
+                plt.show(block=True)
+                logger.info("Interactive plot displayed. Close the plot window to exit.")
+        
+    except KeyboardInterrupt:
+        logger.info("Operation cancelled by user")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Error loading data: {e}")
+        if args.verbose:
+            logger.debug("Full traceback:", exc_info=True)
+        sys.exit(1)
+
+
+def cmd_plot():
+    """Load and plot EPR data files interactively."""
+    _plot_main()
+
+
+def cmd_plot_with_args(args):
+    """Load and plot EPR data files interactively with pre-parsed args."""
+    if args.verbose:
+        from .logging_config import setup_logging
+        setup_logging('DEBUG')
+    
+    # Set up interactive backend if requested
+    if args.interactive:
+        import matplotlib
+        import platform
+        
+        if platform.system() == "Darwin":  # macOS
+            try:
+                matplotlib.use('TkAgg')
+                logger.info("Using TkAgg backend for interactive plotting on macOS")
+            except ImportError:
+                logger.warning("TkAgg not available, using default backend")
+        else:
+            try:
+                matplotlib.use('Qt5Agg')
+                logger.info("Using Qt5Agg backend for interactive plotting")
+            except ImportError:
+                try:
+                    matplotlib.use('TkAgg')
+                    logger.info("Using TkAgg backend for interactive plotting")
+                except ImportError:
+                    logger.warning("No interactive backend available, using default")
+    
+    try:
+        # Load the data
+        logger.info("Loading EPR data...")
+        
+        # For measurement mode, disable default plotting
+        plot_with_eprload = not args.no_plot and not (args.interactive and args.measure)
+        
+        x, y, params, file_path = eprload(
+            args.file,
+            scaling=args.scaling,
+            plot_if_possible=plot_with_eprload,
+            save_if_possible=args.save and not args.measure
+        )
+        
+        if x is None or y is None:
+            logger.error("Failed to load data or loading was cancelled")
+            sys.exit(1)
+        
+        logger.info(f"Successfully loaded: {file_path}")
+        logger.info(f"Data shape: {y.shape}")
+        
+        if hasattr(x, 'shape'):
+            logger.info(f"X-axis shape: {x.shape}")
+        elif isinstance(x, (list, tuple)):
+            logger.info(f"X-axis shapes: {[ax.shape for ax in x]}")
+        
+        logger.info(f"Parameters loaded: {len(params) if params else 0}")
+        
+        # Show key parameters
+        if params:
+            key_params = ['MWFQ', 'MWPW', 'RCAG', 'AVGS', 'SPTP']
+            found_params = {k: params.get(k) for k in key_params if k in params}
+            if found_params:
+                logger.info("Key parameters:")
+                for k, v in found_params.items():
+                    logger.info(f"  {k}: {v}")
+        
+        # Handle interactive plotting with optional measurements
+        if args.interactive and not args.no_plot:
+            if args.measure:
+                # Use custom interactive plot with measurement tools
+                logger.info("Creating interactive plot with measurement tools...")
+                fig, ax = create_interactive_plot_with_measurements(
+                    x, y, params, file_path, enable_measurements=True
+                )
+                
+                if args.save:
+                    from pathlib import Path
+                    save_path = Path(file_path).with_suffix('.png') if file_path else Path('epr_plot.png')
+                    fig.savefig(save_path, dpi=300)
+                    logger.info(f"Plot saved to {save_path}")
+                
+                import matplotlib.pyplot as plt
+                plt.show(block=True)
+                logger.info("Interactive measurement plot closed.")
+            else:
+                # Standard interactive plot
+                import matplotlib.pyplot as plt
+                plt.show(block=True)
+                logger.info("Interactive plot displayed. Close the plot window to exit.")
+        
+    except KeyboardInterrupt:
+        logger.info("Operation cancelled by user")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Error loading data: {e}")
+        if args.verbose:
+            logger.debug("Full traceback:", exc_info=True)
+        sys.exit(1)
+
+
 def cmd_validate():
     """Validate EPR data files."""
     parser = argparse.ArgumentParser(
@@ -494,6 +931,22 @@ def main():
     subparsers.add_parser('config', help='Configuration management')
     subparsers.add_parser('info', help='Show system and configuration info')
     subparsers.add_parser('isotopes', help='Launch isotope database GUI')
+    
+    # Plot subcommand with arguments
+    plot_parser = subparsers.add_parser('plot', help='Load and plot EPR data interactively')
+    plot_parser.add_argument('file', nargs='?', help='EPR file to load (.dta, .dsc, .spc, .par). If not provided, opens file dialog.')
+    plot_parser.add_argument('-s', '--scaling', default='', 
+                           help='Scaling string (n=scans, P=power, G=gain, T=temp, c=time)')
+    plot_parser.add_argument('--no-plot', action='store_true',
+                           help='Load data without plotting')
+    plot_parser.add_argument('--interactive', action='store_true',
+                           help='Enable interactive matplotlib backend')
+    plot_parser.add_argument('--save', action='store_true',
+                           help='Save plot as PNG file')
+    plot_parser.add_argument('--measure', action='store_true',
+                           help='Enable interactive measurement tool (click two points to measure distance)')
+    plot_parser.add_argument('-v', '--verbose', action='store_true')
+    
     subparsers.add_parser('validate', help='Validate EPR data files')
     
     args = parser.parse_args()
@@ -516,6 +969,8 @@ def main():
         cmd_info()
     elif args.command == 'isotopes':
         cmd_isotopes()
+    elif args.command == 'plot':
+        cmd_plot_with_args(args)
     elif args.command == 'validate':
         cmd_validate()
     else:

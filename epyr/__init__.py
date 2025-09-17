@@ -34,7 +34,7 @@ from .plugins import plugin_manager
 from .eprplot import *
 from .sub.utils import BrukerListFiles
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
 
 # Set up logging
 logger = get_logger(__name__)

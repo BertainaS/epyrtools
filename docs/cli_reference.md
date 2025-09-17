@@ -1,6 +1,6 @@
 # CLI Reference - Command Line Interface
 
-The `epyr.cli` module provides a comprehensive command-line interface with 8 professional commands for all EPR workflows.
+The `epyr.cli` module provides a comprehensive command-line interface with 9 professional commands for all EPR workflows.
 
 ## Overview
 
@@ -246,7 +246,70 @@ epyr-validate *.dsc --verbose
 - EPR-specific parameter validation
 - Detailed error and warning reports
 
-### 7. `epyr-isotopes` - Isotope Database GUI
+### 7. `epyr-plot` - Interactive Data Visualization
+
+Load and visualize EPR data with interactive plotting and measurement tools.
+
+```bash
+epyr-plot [file] [options]
+```
+
+**Options:**
+- `-s, --scaling STRING`: Scaling string (n=scans, P=power, G=gain, T=temp, c=time)
+- `--no-plot`: Load data without plotting
+- `--interactive`: Enable interactive matplotlib backend
+- `--save`: Save plot as PNG file
+- `--measure`: Enable interactive measurement tool (click two points to measure distance)
+- `-v, --verbose`: Enable verbose output
+
+**Examples:**
+```bash
+# Interactive plot with file dialog
+epyr-plot --interactive
+
+# Load specific file with measurement tools
+epyr-plot spectrum.dsc --interactive --measure
+
+# Load with scaling and save plot
+epyr-plot data.dta -s nG --interactive --save
+
+# Measurement mode with verbose output
+epyr-plot --interactive --measure -v
+```
+
+**Interactive Measurement Features:**
+- **Mouse Controls:**
+  - Left-click: Select measurement points (click two points to measure)
+  - Right-click: Clear all measurements
+  - Standard matplotlib zoom/pan navigation
+- **Keyboard Shortcuts:**
+  - `c`: Clear measurements
+  - `q`: Quit/close plot
+- **Measurements Displayed:**
+  - Δx: Horizontal distance between points
+  - Δy: Vertical distance between points  
+  - |Δ|: Euclidean distance between points
+  - Visual annotations with yellow boxes and red dashed lines
+
+**Console Output Example:**
+```
+📐 Measurement Results:
+  Point 1: (3340.0000, 1.2345e-01)
+  Point 2: (3360.0000, 8.9123e-01)
+  Δx = 20.0000
+  Δy = 7.6778e-01
+  Distance = 21.4567e+00
+```
+
+**Implementation Details:**
+- macOS optimized with TkAgg backend for smooth performance
+- Custom InteractiveMeasurementTool class for precise measurements
+- EPR-aware plotting with proper field/intensity labels
+- Real-time visual feedback with point markers and connecting lines
+- Multiple measurements supported - click two points repeatedly
+- Smart plotting logic that disables default eprload plotting in measurement mode
+
+### 8. `epyr-isotopes` - Isotope Database GUI
 
 Launch the interactive isotope database interface.
 
@@ -261,7 +324,7 @@ epyr-isotopes
 - Search and filter capabilities
 - Integration with EPR calculations
 
-### 8. `epyr` - Main CLI Entry Point
+### 9. `epyr` - Main CLI Entry Point
 
 Unified access to all commands through subcommands.
 
@@ -273,6 +336,7 @@ epyr <command> [options]
 ```bash
 epyr convert spectrum.dsc
 epyr config show plotting
+epyr plot spectrum.dsc --interactive --measure
 epyr validate *.dsc --detailed
 ```
 
