@@ -5,7 +5,7 @@ EPyR Tools Documentation
    :target: https://opensource.org/licenses/BSD-3-Clause
    :alt: License
 
-.. image:: https://img.shields.io/badge/version-0.1.6-blue
+.. image:: https://img.shields.io/badge/version-0.1.9-blue
    :alt: Version
 
 .. image:: https://img.shields.io/badge/tests-100%2B%20passed-brightgreen
@@ -35,8 +35,10 @@ Key Features
 
 **Visualization & Plotting**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* **Interactive CLI Plotting:** Command-line plotting with measurement tools (``epyr-plot --interactive --measure``)
+* **Delta X/Y Measurements:** Click two points to measure precise distances with visual feedback
 * **2D Spectral Maps:** Professional publication-quality EPR plots
-* **Interactive Plotting:** Real-time parameter adjustment and analysis
+* **macOS Optimized:** Smooth interactive plotting with TkAgg backend
 * **Customizable Styling:** Flexible plot configuration for different EPR experiments
 * **Export Options:** High-resolution outputs for publications
 
@@ -91,6 +93,16 @@ Quick Start
    plt.legend()
    plt.show()
 
+For interactive plotting with measurement tools from command line:
+
+.. code-block:: bash
+
+   # Interactive plotting with measurement tools
+   epyr-plot --interactive --measure
+
+   # Load specific file with measurements
+   epyr-plot spectrum.dsc --interactive --measure --save
+
 Documentation Contents
 ----------------------
 
@@ -108,6 +120,7 @@ Documentation Contents
 
    api/epyr
    api/modules
+   cli_reference
 
 .. toctree::
    :maxdepth: 1
