@@ -23,7 +23,9 @@ except ImportError:
 
 
 from . import lineshapes
-from .constants import *
+from . import signalprocessing
+#from .constants import *
+from .physics import *
 from .eprload import *
 from .fair import *
 from .isotope_gui import run_gui as isotopes
@@ -34,7 +36,7 @@ from .plugins import plugin_manager
 from .eprplot import *
 from .sub.utils import BrukerListFiles
 
-__version__ = "0.1.9"
+__version__ = "0.2.0"
 
 # Set up logging
 logger = get_logger(__name__)

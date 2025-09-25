@@ -15,6 +15,7 @@
    config
    constants
    eprload
+   eprplot
    fair
    isotope_gui
    lineshapes

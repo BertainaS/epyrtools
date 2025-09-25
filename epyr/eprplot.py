@@ -268,5 +268,183 @@ def plot_2d_waterfall(
     return fig, ax
 
 
+def plot_2d_slicer(
+    x: Union[np.ndarray, List[np.ndarray], None],
+    y: np.ndarray,
+    params: Optional[Dict[str, Any]] = None,
+    title: Optional[str] = None,
+    slice_direction: str = 'horizontal'
+) -> None:
+    """
+    Interactive 2D EPR data slicer with slider control.
+    
+    Allows visualization of 2D EPR data slice by slice with an interactive
+    slicer to navigate in both directions.
+    
+    Args:
+        x: X-axis data from eprload (can be None, array, or list)
+        y: 2D spectral data array (ny, nx)
+        params: Parameter dictionary from eprload
+        title: Plot title (optional)
+        slice_direction: 'horizontal' for horizontal slices, 'vertical' for vertical slices
+        
+    Note:
+        Uses matplotlib widgets for interactivity. Works in Jupyter
+        with %matplotlib widget or %matplotlib notebook.
+    """
+    if y is None or y.size == 0:
+        raise ValueError("No data available to plot.")
+    
+    if y.ndim != 2:
+        raise ValueError(f"Expected 2D data, got {y.ndim}D array.")
+    
+    # Import widgets here to avoid errors if not available
+    try:
+        from matplotlib.widgets import Slider
+    except ImportError:
+        raise ImportError("matplotlib.widgets required for interactive function. "
+                         "Use %matplotlib widget in Jupyter.")
+    
+    # Use real part if data is complex
+    plot_data = np.real(y)
+    ny, nx = plot_data.shape
+    
+    # Configure axes according to direction
+    if slice_direction == 'horizontal':
+        n_slices = ny
+        slice_axis_name = "Y"
+        plot_axis_name = "X"
+    else:  # vertical
+        n_slices = nx  
+        slice_axis_name = "X"
+        plot_axis_name = "Y"
+        plot_data = plot_data.T  # Transpose for vertical slices
+    
+    # Prepare axes
+    if isinstance(x, list) and len(x) >= 1:
+        x_axis = x[0] if isinstance(x[0], np.ndarray) and x[0].size == nx else np.arange(nx)
+        y_axis = x[1] if len(x) >= 2 and isinstance(x[1], np.ndarray) and x[1].size == ny else np.arange(ny)
+    elif isinstance(x, np.ndarray) and x.size == nx:
+        x_axis = x
+        y_axis = np.arange(ny)
+    else:
+        x_axis = np.arange(nx)
+        y_axis = np.arange(ny)
+    
+    # Determine axes and labels
+    if slice_direction == 'horizontal':
+        slice_values = y_axis
+        plot_axis = x_axis
+        x_name = params.get("XAXIS_NAME", "Field") if params else "Field"
+        x_unit = params.get("XAXIS_UNIT", "G") if params else "G"
+        y_name = params.get("YAXIS_NAME", "Parameter") if params else "Parameter"  
+        y_unit = params.get("YAXIS_UNIT", "a.u.") if params else "a.u."
+        plot_label = f"{x_name} ({x_unit})"
+        slice_label = f"{y_name} ({y_unit})"
+    else:
+        slice_values = x_axis
+        plot_axis = y_axis
+        x_name = params.get("XAXIS_NAME", "Field") if params else "Field"
+        x_unit = params.get("XAXIS_UNIT", "G") if params else "G" 
+        y_name = params.get("YAXIS_NAME", "Parameter") if params else "Parameter"
+        y_unit = params.get("YAXIS_UNIT", "a.u.") if params else "a.u."
+        plot_label = f"{y_name} ({y_unit})"
+        slice_label = f"{x_name} ({x_unit})"
+    
+    # Create figure and axes
+    fig, (ax_main, ax_overview) = plt.subplots(2, 1, figsize=(10, 10), 
+                                               gridspec_kw={'height_ratios': [3, 1]})
+    
+    # Adjust space for slider
+    plt.subplots_adjust(bottom=0.15)
+    
+    # Overview (2D map)
+    if slice_direction == 'horizontal':
+        overview_data = np.real(y)
+        extent = [x_axis[0], x_axis[-1], y_axis[0], y_axis[-1]]
+        ax_overview.imshow(overview_data, aspect='auto', extent=extent, 
+                          origin='lower', cmap='RdBu_r')
+    else:
+        overview_data = np.real(y).T
+        extent = [y_axis[0], y_axis[-1], x_axis[0], x_axis[-1]]
+        ax_overview.imshow(overview_data, aspect='auto', extent=extent, 
+                          origin='lower', cmap='RdBu_r')
+    
+    ax_overview.set_xlabel(plot_label)
+    ax_overview.set_ylabel(slice_label)
+    ax_overview.set_title("Overview - Current slice position shown in red")
+    
+    # Indicator line for current slice
+    if slice_direction == 'horizontal':
+        slice_line = ax_overview.axhline(y=slice_values[0], color='red', linewidth=2)
+    else:
+        slice_line = ax_overview.axvline(x=slice_values[0], color='red', linewidth=2)
+    
+    # Initial plot of first slice
+    line, = ax_main.plot(plot_axis, plot_data[0], 'b-', linewidth=2)
+    ax_main.set_xlabel(plot_label)
+    ax_main.set_ylabel("EPR Intensity")
+    ax_main.grid(True, alpha=0.3)
+    ax_main.set_xlim(plot_axis[0], plot_axis[-1])
+    
+    # Initial title
+    initial_title = title or "Interactive 2D EPR Viewer"
+    slice_value = slice_values[0]
+    ax_main.set_title(f"{initial_title} - {slice_label} = {slice_value:.3f}")
+    
+    # Create slider axis
+    ax_slider = plt.axes([0.2, 0.05, 0.6, 0.03])
+    slider = Slider(ax_slider, f'{slice_axis_name} Index', 0, n_slices-1, 
+                   valinit=0, valfmt='%d', valstep=1)
+    
+    # Slider update function
+    def update_slice(val):
+        idx = int(slider.val)
+        
+        # Update main plot
+        line.set_ydata(plot_data[idx])
+        
+        # Update title with parameter value
+        slice_value = slice_values[idx]
+        ax_main.set_title(f"{initial_title} - {slice_label} = {slice_value:.3f}")
+        
+        # Update indicator line
+        if slice_direction == 'horizontal':
+            slice_line.set_ydata([slice_value, slice_value])
+        else:
+            slice_line.set_xdata([slice_value, slice_value])
+        
+        # Auto-adjust Y scale
+        y_min, y_max = np.min(plot_data[idx]), np.max(plot_data[idx])
+        y_range = y_max - y_min
+        ax_main.set_ylim(y_min - 0.1*y_range, y_max + 0.1*y_range)
+        
+        fig.canvas.draw_idle()
+    
+    # Connect slider to update function
+    slider.on_changed(update_slice)
+    
+    # User instructions
+    print("🎛️  Interactive 2D EPR Viewer")
+    print("="*50)
+    print(f"Direction: {slice_direction}")
+    print(f"Number of slices: {n_slices}")
+    print(f"Use the slider to navigate between slices")
+    print("Red line in overview shows current position")
+    
+    # Show plot
+    plt.show()
+    
+    # Return objects for advanced manipulation if needed
+    return {
+        'figure': fig,
+        'ax_main': ax_main,
+        'ax_overview': ax_overview,
+        'slider': slider,
+        'line': line,
+        'slice_line': slice_line
+    }
+
+
 # Define public API
-__all__ = ['plot_1d', 'plot_2d_map', 'plot_2d_waterfall']
+__all__ = ['plot_1d', 'plot_2d_map', 'plot_2d_waterfall', 'plot_2d_slicer']

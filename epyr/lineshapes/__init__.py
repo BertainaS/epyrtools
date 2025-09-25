@@ -32,35 +32,43 @@ from .lineshape_class import (
 )
 
 # Version info
-__version__ = "0.1.8"
+__version__ = "0.2.0"
 __author__ = "EPyR Tools Development Team"
+
+# Import fitting functionality
+from .fitting import fit_epr_signal, fit_multiple_shapes, FitResult
 
 # Main functions for easy access
 __all__ = [
     # Main class
     'Lineshape',
-    
+
     # Individual lineshape functions
     'gaussian',
-    'lorentzian', 
+    'lorentzian',
     'voigtian',
     'lshape',
     'pseudo_voigt',
     'convspec',
-    
+
     # Factory functions
     'create_gaussian',
     'create_lorentzian',
-    'create_voigt', 
+    'create_voigt',
     'create_pseudo_voigt',
-    
+
     # Convenience functions
     'gaussian_absorption',
-    'gaussian_dispersion', 
+    'gaussian_dispersion',
     'gaussian_derivative',
     'lorentzian_absorption',
     'lorentzian_dispersion',
     'lorentzian_derivative',
+
+    # Fitting functionality
+    'fit_epr_signal',
+    'fit_multiple_shapes',
+    'FitResult',
 ]
 
 # Module-level convenience function
