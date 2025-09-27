@@ -31,8 +31,11 @@ test-cov: ## Run tests with coverage
 test-fast: ## Run fast tests (exclude slow markers)
 	$(PYTEST) tests/ -v -m "not slow"
 
-test-integration: ## Run integration tests only  
+test-integration: ## Run integration tests only
 	$(PYTEST) tests/test_integration.py -v
+
+test-core: ## Run core functionality tests for release validation
+	$(PYTEST) tests/test_core_functionality.py -v
 
 # Code quality targets
 lint: ## Run linting (flake8)
