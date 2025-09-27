@@ -128,6 +128,7 @@ Documentation Contents
 
    contributing
    changelog
+   release_notes
 
 Indices and tables
 ==================

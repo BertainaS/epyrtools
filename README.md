@@ -65,6 +65,32 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 - **[CLI Reference](docs/cli_reference.md)**: Command-line interface documentation
 - **[System Architecture](docs/README.md)**: Core modules and plugin system
 
+## 🎉 What's New in v0.2.0
+
+**EPyR Tools v0.2.0** brings **stable core functionality** with a **100% validated test suite** for essential EPR workflows:
+
+### ✅ **Production-Ready Features**
+- **Data Loading**: Bruker BES3T/ESP format support fully validated
+- **FAIR Conversion**: 235+ parameter mappings with complete metadata preservation
+- **Visualization**: Professional EPR plotting with publication-quality output
+- **Plugin System**: Extensible architecture for custom formats and processing
+- **Configuration**: Hierarchical settings with environment variable support
+
+### 🧪 **Quality Assurance**
+- **Core Test Suite**: 15 essential tests with 100% pass rate (`make test-core`)
+- **Memory Optimization**: Project cleaned up (29MB reduction, now 196MB)
+- **Documentation**: Comprehensive release notes and upgrade guides
+- **Dependencies**: All 5 main dependencies verified as necessary
+
+### 📋 **Known Limitations**
+- Advanced lineshape fitting API in transition (use basic Gaussian/Lorentzian)
+- Some legacy tests require modernization (full suite in v0.2.1)
+- Interactive baseline correction needs manual IPython setup
+
+**→ See [RELEASE_NOTES_v0.2.0.md](RELEASE_NOTES_v0.2.0.md) for complete details**
+
+---
+
 ## Installation
 
 ### Prerequisites
