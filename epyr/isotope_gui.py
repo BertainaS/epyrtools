@@ -160,7 +160,7 @@ class IsotopesGUI:
             Exception: If there's an error reading or processing the data file.
         """
         self.root = root
-        self.root.title("Nuclear Isotopes")
+        self.root.title("EPyR Tools - Nuclear Isotopes Database")
 
         # --- GUI Settings ---
         self.default_field = 340.0  # mT
@@ -220,24 +220,45 @@ class IsotopesGUI:
             + controls_section_height
         )
 
-        # --- Center and Set Window Geometry ---
+        # --- Set Window Properties ---
+        # Store calculated dimensions
+        self.calculated_window_width = int(window_width)
+        self.calculated_window_height = int(window_height)
+
+        # Set minimum window size (80% of calculated size)
+        min_width = int(window_width * 0.8)
+        min_height = int(window_height * 0.8)
+        self.root.minsize(min_width, min_height)
+
+        # Make window resizable by user
+        self.root.resizable(True, True)
+
+        # Center window on screen
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
         x_pos = max(0, (screen_width - window_width) // 2)
         y_pos = max(0, (screen_height - window_height) // 2)
-        self.calculated_window_width = int(window_width)
-        self.root.geometry(
-            f"{self.calculated_window_width}x{int(window_height)}+{int(x_pos)}+{int(y_pos)}"
-        )
-        self.root.resizable(False, False)
 
-        # --- Create Widgets ---
+        # --- Create Widgets First ---
         self._create_periodic_table()
         self._create_table()
         self._create_controls()
 
         # --- Initialize Table Display ---
         self._update_table()
+
+        # --- Set Final Geometry After Widget Creation ---
+        # Force proper window sizing after all widgets are created
+        self.root.update_idletasks()
+
+        # Schedule geometry setting after the GUI is fully realized
+        def set_proper_geometry():
+            self.root.geometry(
+                f"{self.calculated_window_width}x{self.calculated_window_height}+{int(x_pos)}+{int(y_pos)}"
+            )
+
+        # Set geometry on next event loop iteration
+        self.root.after(1, set_proper_geometry)
 
     def _read_isotope_data_file(self):
         """
