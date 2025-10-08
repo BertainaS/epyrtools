@@ -45,10 +45,14 @@ htmlcov/
 build/
 dist/
 
+# PyPI upload instructions (sensitive)
+PYPI_UPLOAD_INSTRUCTIONS.md
+
 # Documentation build files
 docs/_build/
 docs/_static/
 docs/_templates/
+docs/docs/
 
 # Large EPR data files (keep examples)
 *.DTA
@@ -62,7 +66,11 @@ docs/_templates/
 *_plot.png
 *_plots.png
 
+# Claude Code project instructions (keep local only)
 CLAUDE.md
+
+# Sphinx auto-generated files (regenerated during build)
+docs/api/generated/
 
 # Environment files
 .env
@@ -84,6 +92,9 @@ ENV/
 # Jupyter notebook outputs and metadata
 *.ipynb
 !examples/notebooks/*.ipynb
+
+# Module demo output plots (regenerated)
+examples/scripts/module_demos/*.png
 
 # Python cache and compiled files
 *.pyc

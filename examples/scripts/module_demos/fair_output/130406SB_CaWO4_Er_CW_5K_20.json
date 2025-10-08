@@ -1,0 +1,525 @@
+{
+    "original_file": "/Users/sylvainbertaina/Documents/Cloud_CNRS/GitHub/epyrtools/examples/data/130406SB_CaWO4_Er_CW_5K_20.DSC",
+    "fair_metadata": {
+        "conversion_info": {
+            "value": {
+                "converter_script": "epyr_fair_converter",
+                "conversion_timestamp": "2025-09-26T22:32:14.830540",
+                "epyr_version": "0.1.2"
+            },
+            "unit": "",
+            "description": "Information about the conversion process to FAIR format."
+        },
+        "data_source_type": {
+            "value": "EXP",
+            "unit": null,
+            "description": "Type of dataset (e.g., EXP for experimental data)."
+        },
+        "byte_sequence_order": {
+            "value": "BIG",
+            "unit": null,
+            "description": "Byte sequence order (e.g., BIG for big-endian)."
+        },
+        "imaginary_data_kind_format": {
+            "value": "REAL",
+            "unit": null,
+            "description": "Format of imaginary data component (e.g., REAL, CMPLX, NODATA)."
+        },
+        "x_axis_type": {
+            "value": "IDX",
+            "unit": null,
+            "description": "Type of X-axis data (e.g., IDX for indexed, MONO for monotonic)."
+        },
+        "y_axis_type": {
+            "value": "NODATA",
+            "unit": null,
+            "description": "Type of Y-axis data (e.g., IDX for indexed, NODATA for 1D spectra)."
+        },
+        "z_axis_type": {
+            "value": "NODATA",
+            "unit": null,
+            "description": "Type of Z-axis data (e.g., NODATA for 1D/2D spectra)."
+        },
+        "intensity_data_format": {
+            "value": "D",
+            "unit": null,
+            "description": "Format of real part of intensity data (e.g., D for double precision float)."
+        },
+        "number_of_points_x_axis": {
+            "value": 1024,
+            "unit": "points",
+            "description": "Number of data points along the X-axis."
+        },
+        "x_axis_minimum": {
+            "value": 100.0,
+            "unit": "G",
+            "description": "Minimum value of the X-axis. Unit specified by XUNI."
+        },
+        "x_axis_width": {
+            "value": 6000.0,
+            "unit": "G",
+            "description": "Width (range) of the X-axis. Unit specified by XUNI."
+        },
+        "title": {
+            "value": "Er",
+            "unit": null,
+            "description": "Title of the experiment or dataset."
+        },
+        "intensity_axis_name_real": {
+            "value": "Intensity",
+            "unit": null,
+            "description": "Name of the real part of the intensity (ordinate) axis."
+        },
+        "x_axis_name": {
+            "value": "Field",
+            "unit": null,
+            "description": "Name of the X-axis (abscissa)."
+        },
+        "intensity_axis_unit_real": {
+            "value": "",
+            "unit": null,
+            "description": "Unit of the real part of the intensity (ordinate) axis."
+        },
+        "x_axis_unit": {
+            "value": "G",
+            "unit": null,
+            "description": "Unit of the X-axis (abscissa)."
+        },
+        "operator_name": {
+            "value": "xuser",
+            "unit": null,
+            "description": "Name or identifier of the operator."
+        },
+        "acquisition_date": {
+            "value": "04/13/06",
+            "unit": null,
+            "description": "Date of the experiment."
+        },
+        "acquisition_time": {
+            "value": "09:46:01",
+            "unit": null,
+            "description": "Time of the experiment."
+        },
+        "comment": {
+            "value": "",
+            "unit": null,
+            "description": "User-defined comment for the experiment."
+        },
+        "sample_identifier": {
+            "value": "NTE 36",
+            "unit": null,
+            "description": "Sample name or identifier."
+        },
+        "sample_form": {
+            "value": "bois pyrolyse",
+            "unit": null,
+            "description": "Description of the sample's form or preparation."
+        },
+        "sample_stage_temperature": {
+            "value": "A",
+            "unit": "K",
+            "description": "Sample stage or temperature controller setting. Assumed Kelvin, verify units."
+        },
+        "experiment_type": {
+            "value": "CW",
+            "unit": null,
+            "description": "Type of experiment (e.g., CW for Continuous Wave, PLS for Pulsed)."
+        },
+        "ordinate_axis_1_source": {
+            "value": "IADC",
+            "unit": null,
+            "description": "Source/type for the first ordinate axis (e.g., IADC - Imaginary ADC signal, TADC - Transient ADC)."
+        },
+        "abscissa_axis_1_type": {
+            "value": "B0VL",
+            "unit": null,
+            "description": "Type/parameter for the first abscissa axis (e.g., B0VL - Magnetic Field)."
+        },
+        "abscissa_axis_2_type": {
+            "value": "NONE",
+            "unit": null,
+            "description": "Type/parameter for the second abscissa axis (if used)."
+        },
+        "abscissa_axis_3_type": {
+            "value": "",
+            "unit": null,
+            "description": "Type/parameter for the third abscissa axis (if used)."
+        },
+        "abscissa_1_center": {
+            "value": 0.31,
+            "unit": null,
+            "description": "Center value for the first abscissa axis. Units depend on AXS1 (e.g., Tesla if B0VL)."
+        },
+        "abscissa_1_sweep_width": {
+            "value": 0.6,
+            "unit": null,
+            "description": "Sweep width for the first abscissa axis. Units depend on AXS1 (e.g., Tesla if B0VL)."
+        },
+        "microwave_frequency": {
+            "value": 9704197000.0,
+            "unit": "GHz",
+            "description": "Microwave frequency."
+        },
+        "microwave_power": {
+            "value": 1.013e-05,
+            "unit": "mW",
+            "description": "Microwave power."
+        },
+        "number_of_averages_set": {
+            "value": 0,
+            "unit": "scans",
+            "description": "Number of averages/scans set for accumulation."
+        },
+        "resonator_identifier": {
+            "value": "md4w10301",
+            "unit": null,
+            "description": "Identifier or type of the resonator used."
+        },
+        "sweep_time_per_point": {
+            "value": 0.08192,
+            "unit": "s",
+            "description": "Sweep time per data point (dwell time)."
+        },
+        "receiver_gain_spl": {
+            "value": 60,
+            "unit": "dB",
+            "description": "Receiver gain value from Standard Parameter Layer."
+        },
+        "receiver_harmonic_spl": {
+            "value": 1,
+            "unit": null,
+            "description": "Receiver harmonic setting from Standard Parameter Layer."
+        },
+        "modulation_amplitude": {
+            "value": 0.0001,
+            "unit": "G",
+            "description": "Magnetic field modulation amplitude in Gauss."
+        },
+        "modulation_frequency_spl": {
+            "value": 100000,
+            "unit": "Hz",
+            "description": "Magnetic field modulation frequency in Hz from Standard Parameter Layer."
+        },
+        "receiver_phase": {
+            "value": 0.0,
+            "unit": "deg",
+            "description": "Receiver phase."
+        },
+        "receiver_offset_spl": {
+            "value": 0.0,
+            "unit": "%",
+            "description": "Receiver offset as a percentage from Standard Parameter Layer."
+        },
+        "abscissa_1_resolution_points": {
+            "value": 1024,
+            "unit": "points",
+            "description": "Resolution (number of points) for the first abscissa axis."
+        },
+        "receiver_time_constant": {
+            "value": 0.04096,
+            "unit": "ms",
+            "description": "Receiver time constant in milliseconds."
+        },
+        "field_controller_center_field": {
+            "value": "3100.00 G",
+            "unit": "G",
+            "description": "Center magnetic field setting for the field controller."
+        },
+        "field_controller_delay": {
+            "value": "0.0 s",
+            "unit": "s",
+            "description": "Delay after setting field before measurement by field controller."
+        },
+        "field_controller_flyback_enabled": {
+            "value": "On",
+            "unit": null,
+            "description": "Field flyback status (On/Off) for field controller."
+        },
+        "field_controller_wait_condition": {
+            "value": "Wait LED off",
+            "unit": null,
+            "description": "Condition for waiting after field set by field controller (e.g., 'Wait LED off')."
+        },
+        "field_controller_g_factor_reference": {
+            "value": 2.0,
+            "unit": null,
+            "description": "g-factor setting used for field-frequency calculations by field controller."
+        },
+        "field_controller_set_to_sample_g_factor": {
+            "value": "False",
+            "unit": null,
+            "description": "Indicates if field controller uses a sample-specific g-factor."
+        },
+        "field_controller_sweep_direction": {
+            "value": "Up",
+            "unit": null,
+            "description": "Direction of magnetic field sweep by field controller (e.g., Up, Down)."
+        },
+        "field_controller_sweep_width": {
+            "value": "6000.0 G",
+            "unit": "G",
+            "description": "Magnetic field sweep width setting for the field controller."
+        },
+        "frequency_counter_monitored_frequency": {
+            "value": "9.704197 GHz",
+            "unit": "GHz",
+            "description": "Microwave frequency as monitored by the frequency counter."
+        },
+        "frequency_counter_q_monitor_bridge_enabled": {
+            "value": "On",
+            "unit": null,
+            "description": "Q-factor monitoring bridge status via frequency counter."
+        },
+        "cw_bridge_acquisition_fine_tuning": {
+            "value": "Never",
+            "unit": null,
+            "description": "Continuous Wave bridge fine tuning mode during acquisition."
+        },
+        "cw_bridge_power_output": {
+            "value": "0.01013 mW",
+            "unit": "mW",
+            "description": "Microwave power setting at the CW bridge output."
+        },
+        "cw_bridge_power_attenuation": {
+            "value": "43 dB",
+            "unit": "dB",
+            "description": "Microwave power attenuation setting at the CW bridge."
+        },
+        "recorder_baseline_correction": {
+            "value": "Off",
+            "unit": null,
+            "description": "Recorder baseline correction setting."
+        },
+        "recorder_accumulated_scans": {
+            "value": 0,
+            "unit": null,
+            "description": "Number of scans accumulated by the recorder."
+        },
+        "recorder_scans_completed": {
+            "value": 0,
+            "unit": null,
+            "description": "Number of scans completed by the recorder."
+        },
+        "recorder_scans_to_do": {
+            "value": 1,
+            "unit": null,
+            "description": "Number of scans remaining to be performed."
+        },
+        "recorder_replace_mode": {
+            "value": "Off",
+            "unit": null,
+            "description": "Recorder data replace mode (On/Off)."
+        },
+        "signal_channel_afc_trap": {
+            "value": "True",
+            "unit": null,
+            "description": "Automatic Frequency Control (AFC) trap status."
+        },
+        "signal_channel_calibrated": {
+            "value": "True",
+            "unit": null,
+            "description": "Indicates if the signal channel is calibrated."
+        },
+        "signal_channel_conversion_time": {
+            "value": "81.92 ms",
+            "unit": "ms",
+            "description": "Analog-to-digital conversion time."
+        },
+        "signal_channel_double_modulation_afc_trap": {
+            "value": "True",
+            "unit": null,
+            "description": "Double modulation AFC trap status."
+        },
+        "signal_channel_double_modulation_amplitude": {
+            "value": "1.00 G",
+            "unit": "G",
+            "description": "Double modulation amplitude."
+        },
+        "signal_channel_double_modulation_calibrated": {
+            "value": "True",
+            "unit": null,
+            "description": "Calibration status for double modulation."
+        },
+        "signal_channel_double_modulation_detection_sct": {
+            "value": "First",
+            "unit": null,
+            "description": "Double modulation detection SCT (Signal Channel Transducer) setting."
+        },
+        "signal_channel_double_modulation_elimination_delay": {
+            "value": "1.0 us",
+            "unit": "us",
+            "description": "Elimination delay for double modulation."
+        },
+        "signal_channel_double_modulation_external_lockin": {
+            "value": "False",
+            "unit": null,
+            "description": "External lock-in status for double modulation."
+        },
+        "signal_channel_double_modulation_external_trigger": {
+            "value": "False",
+            "unit": null,
+            "description": "External trigger status for double modulation."
+        },
+        "signal_channel_double_modulation_field_modulation": {
+            "value": "First",
+            "unit": null,
+            "description": "Field modulation type for double modulation."
+        },
+        "signal_channel_double_modulation_gain": {
+            "value": "60 dB",
+            "unit": "dB",
+            "description": "Gain for double modulation."
+        },
+        "signal_channel_double_modulation_high_pass_filter": {
+            "value": "True",
+            "unit": null,
+            "description": "High-pass filter status for double modulation."
+        },
+        "signal_channel_double_modulation_integrator": {
+            "value": "True",
+            "unit": null,
+            "description": "Integrator status for double modulation."
+        },
+        "signal_channel_double_modulation_output": {
+            "value": "Internal",
+            "unit": null,
+            "description": "Modulation output source for double modulation (e.g., Internal)."
+        },
+        "signal_channel_double_modulation_signal_input": {
+            "value": "Internal",
+            "unit": null,
+            "description": "Signal input source for double modulation (e.g., Internal)."
+        },
+        "signal_channel_double_modulation_time_constant": {
+            "value": "1.28 ms",
+            "unit": "ms",
+            "description": "Time constant for double modulation."
+        },
+        "signal_channel_double_modulation_mode_enabled": {
+            "value": "False",
+            "unit": null,
+            "description": "Double modulation mode status."
+        },
+        "signal_channel_elimination_delay": {
+            "value": "1.0 us",
+            "unit": "us",
+            "description": "Elimination delay in the signal channel."
+        },
+        "signal_channel_external_lockin_enabled": {
+            "value": "False",
+            "unit": null,
+            "description": "External lock-in status."
+        },
+        "signal_channel_external_trigger_enabled": {
+            "value": "False",
+            "unit": null,
+            "description": "External trigger status."
+        },
+        "signal_channel_gain": {
+            "value": "60 dB",
+            "unit": "dB",
+            "description": "Gain of the signal channel."
+        },
+        "signal_channel_harmonic": {
+            "value": 1,
+            "unit": null,
+            "description": "Harmonic number for detection."
+        },
+        "signal_channel_high_pass_filter_enabled": {
+            "value": "True",
+            "unit": null,
+            "description": "High-pass filter status."
+        },
+        "signal_channel_integrator_enabled": {
+            "value": "True",
+            "unit": null,
+            "description": "Integrator status."
+        },
+        "signal_channel_modulation_amplitude": {
+            "value": "1.00 G",
+            "unit": "G",
+            "description": "Modulation amplitude."
+        },
+        "signal_channel_modulation_frequency": {
+            "value": "100.00 kHz",
+            "unit": "kHz",
+            "description": "Modulation frequency."
+        },
+        "signal_channel_modulation_input_source": {
+            "value": "Internal",
+            "unit": null,
+            "description": "Modulation input source (e.g., Internal)."
+        },
+        "signal_channel_modulation_output_source": {
+            "value": "Internal",
+            "unit": null,
+            "description": "Modulation output source (e.g., Internal)."
+        },
+        "signal_channel_modulation_phase": {
+            "value": 0.0,
+            "unit": "deg",
+            "description": "Modulation phase."
+        },
+        "signal_channel_offset": {
+            "value": "0.0 %",
+            "unit": "%",
+            "description": "Signal offset percentage."
+        },
+        "signal_channel_quadrature_mode_enabled": {
+            "value": "False",
+            "unit": null,
+            "description": "Quadrature detection mode status."
+        },
+        "signal_channel_quadrature_phase": {
+            "value": 90.0,
+            "unit": "deg",
+            "description": "Quadrature phase."
+        },
+        "signal_channel_resolution": {
+            "value": 1024,
+            "unit": "points",
+            "description": "Signal acquisition resolution (number of points)."
+        },
+        "signal_channel_resonator_selection": {
+            "value": 1,
+            "unit": null,
+            "description": "Selected resonator ID or type."
+        },
+        "signal_channel_sct_normalization": {
+            "value": "False",
+            "unit": null,
+            "description": "Signal Channel Transducer normalization status."
+        },
+        "signal_channel_sct_revision": {
+            "value": "SCT",
+            "unit": null,
+            "description": "Signal Channel Transducer revision."
+        },
+        "signal_channel_input_source": {
+            "value": "Internal",
+            "unit": null,
+            "description": "Signal input source (e.g., Internal)."
+        },
+        "signal_channel_sweep_time_actual": {
+            "value": "83.89 s",
+            "unit": "s",
+            "description": "Actual sweep time for the signal channel."
+        },
+        "signal_channel_time_constant": {
+            "value": "40.96 ms",
+            "unit": "ms",
+            "description": "Time constant for the signal channel."
+        },
+        "signal_channel_tuning_capacitors_value": {
+            "value": 32,
+            "unit": null,
+            "description": "Tuning capacitors value or setting."
+        }
+    },
+    "unmapped_parameters": {
+        "DoubleModFreq": "5.00 kHz",
+        "DoubleModPhase": 0.0,
+        "XAXIS_NAME": "Field",
+        "XAXIS_UNIT": "G"
+    }
+}

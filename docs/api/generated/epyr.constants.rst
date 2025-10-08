@@ -1,38 +1,27 @@
-epyr.constants
+﻿epyr.constants
 ==============
 
 .. automodule:: epyr.constants
 
    
-   .. rubric:: Module Attributes
+   .. rubric:: Functions
 
    .. autosummary::
    
-      SPEED_OF_LIGHT_SI
-      VACUUM_PERMEABILITY_SI
-      VACUUM_PERMITTIVITY_SI
-      PLANCK_CONSTANT_SI
-      REDUCED_PLANCK_CONSTANT_SI
-      ELEMENTARY_CHARGE_SI
-      ELECTRON_MASS_SI
-      PROTON_MASS_SI
-      FINE_STRUCTURE_CONSTANT
-      SPEED_OF_LIGHT_CGS
-      PLANCK_CONSTANT_CGS
-      REDUCED_PLANCK_CONSTANT_CGS
-      ELEMENTARY_CHARGE_CGS
-      ELECTRON_MASS_CGS
-      PROTON_MASS_CGS
-      BOHR_MAGNETON_SI
-      BOHR_MAGNETON_CGS
-      NUCLEAR_MAGNETON_SI
-      NUCLEAR_MAGNETON_CGS
-      ELECTRON_G_FACTOR
-      PROTON_G_FACTOR
-      ELECTRON_GYROMAGNETIC_RATIO_SI
-      ELECTRON_GYROMAGNETIC_RATIO_MHZ_T_SI
-      ELECTRON_GYROMAGNETIC_RATIO_CGS
-      PROTON_GYROMAGNETIC_RATIO_SI
-      PROTON_GYROMAGNETIC_RATIO_MHZ_T_SI
-      PROTON_GYROMAGNETIC_RATIO_CGS
+      avogadro
+      bmagn
+      boltzm
+      clight
+      constants_summary
+      echarge
+      evolt
+      frequency_to_magnetic_field
+      gamma_hz
+      gfree
+      hbar
+      magnetic_field_to_frequency
+      nmagn
+      planck
+      thermal_energy
+      wavelength_to_frequency
    

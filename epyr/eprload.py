@@ -149,7 +149,7 @@ def _load_data_by_format(file_path: Path, file_format: str, scaling: str) -> Tup
         raise ValueError(f"Unknown file format: {file_format}")
 
 
-def eprload(file_name=None, scaling="", plot_if_possible=True, save_if_possible=False):
+def eprload(file_name=None, scaling="", plot_if_possible=False, save_if_possible=False, return_type="default"):
     """
     Load experimental EPR data from Bruker BES3T or ESP formats.
 
@@ -165,7 +165,13 @@ def eprload(file_name=None, scaling="", plot_if_possible=True, save_if_possible=
                 'c': Divide by conversion/sampling time in ms (SPTP/RCT).
             Defaults to "" (no scaling).
         plot_if_possible (bool, optional): If True and data is loaded successfully, a simple plot is generated using matplotlib.
-            Defaults to True.
+            Defaults to False.
+        return_type (str, optional): Specifies which component of the signal to return.
+            Options:
+                "default": Return y as-is (both real and imaginary parts if complex).
+                "real": Return only the real part of y (np.real(y)).
+                "imag": Return only the imaginary part of y (np.imag(y)).
+            Defaults to "default".
 
     Returns:
         tuple:
@@ -236,6 +242,17 @@ def eprload(file_name=None, scaling="", plot_if_possible=True, save_if_possible=
             )
             logger.debug("Full traceback:", exc_info=True)
             return None, None, None, None
+
+    # --- Apply return_type filter ---
+    if y is not None and return_type != "default":
+        if return_type == "real":
+            y = np.real(y)
+        elif return_type == "imag":
+            y = np.imag(y)
+        else:
+            raise ValueError(
+                f"Invalid return_type '{return_type}'. Must be 'default', 'real', or 'imag'."
+            )
 
     # --- Plotting (Optional) ---
     if plot_if_possible and y is not None and x is not None:

@@ -1,8 +1,18 @@
 # EPyR Tools: Electron Paramagnetic Resonance (EPR) Tools in Python
 
+<p align="center">
+  <img src="Epyrtools_logo.jpg" alt="EPyR Tools Logo" height="120"/>
+</p>
+
+<p align="center">
+  <img src="LogoL.png" alt="Institution Logo Left" height="60"/>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="LogoR.png" alt="Institution Logo Right" height="60"/>
+</p>
+
 | License | Tests | Documentation | Version |
 |---------|-------|---------------|---------|
-| [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) | ![Tests Passing](https://img.shields.io/badge/tests-100%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.2.0-blue) |
+| [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) | ![Tests Passing](https://img.shields.io/badge/tests-100%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.2.5-blue) |
 
 **EPyR Tools** is a comprehensive Python package for Electron Paramagnetic Resonance (EPR) spectroscopy data analysis. It provides a complete toolkit for loading, processing, analyzing, and visualizing EPR data from Bruker spectrometers, with a focus on FAIR (Findable, Accessible, Interoperable, and Reusable) data principles.
 
@@ -65,29 +75,38 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
 - **[CLI Reference](docs/cli_reference.md)**: Command-line interface documentation
 - **[System Architecture](docs/README.md)**: Core modules and plugin system
 
-## 🎉 What's New in v0.2.0
+## What's New in v0.2.5
 
-**EPyR Tools v0.2.0** brings **stable core functionality** with a **100% validated test suite** for essential EPR workflows:
+**EPyR Tools v0.2.5** introduces **enhanced data handling and signal processing** capabilities:
 
-### ✅ **Production-Ready Features**
-- **Data Loading**: Bruker BES3T/ESP format support fully validated
-- **FAIR Conversion**: 235+ parameter mappings with complete metadata preservation
-- **Visualization**: Professional EPR plotting with publication-quality output
-- **Plugin System**: Extensible architecture for custom formats and processing
-- **Configuration**: Hierarchical settings with environment variable support
+### New Features
+- **Enhanced eprload()**: New `return_type` parameter for selective real/imaginary component extraction
+  - `return_type="default"`: Return signal as-is (backward compatible)
+  - `return_type="real"`: Extract only real part for CW-EPR data
+  - `return_type="imag"`: Extract only imaginary part for out-of-phase signals
+  - `plot_if_possible` now defaults to `False` for cleaner programmatic use
 
-### 🧪 **Quality Assurance**
-- **Core Test Suite**: 15 essential tests with 100% pass rate (`make test-core`)
-- **Memory Optimization**: Project cleaned up (29MB reduction, now 196MB)
-- **Documentation**: Comprehensive release notes and upgrade guides
-- **Dependencies**: All 5 main dependencies verified as necessary
+- **Advanced 2D FFT Analysis**: Complete frequency analysis for time-domain EPR
+  - Row-by-row 1D FFT for 2D Rabi oscillation data
+  - Full 2D FFT for HYSCORE-type measurements
+  - Automatic time unit detection (ns, μs, ms, s)
+  - DC offset removal and apodization windowing
+  - Centered frequency spectrum (positive and negative frequencies)
+  - Four-panel visualization: original signal, FFT linear/log scale, phase spectrum
 
-### 📋 **Known Limitations**
-- Advanced lineshape fitting API in transition (use basic Gaussian/Lorentzian)
-- Some legacy tests require modernization (full suite in v0.2.1)
-- Interactive baseline correction needs manual IPython setup
+### Code Quality Improvements
+- **Refactored frequency_analysis.py**: Eliminated code duplication through helper functions
+  - Unified time unit detection across all analysis functions
+  - Consistent frequency conversion and DC offset removal
+  - Maintainable codebase with single source of truth
 
-**→ See [RELEASE_NOTES_v0.2.0.md](RELEASE_NOTES_v0.2.0.md) for complete details**
+### Testing & Validation
+- All new features tested with synthetic and real EPR data
+- Backward compatibility maintained for existing workflows
+- Enhanced test coverage for signal processing module
+
+**Previous Release: v0.2.0** - Stable core functionality with validated test suite
+- See [RELEASE_NOTES_v0.2.0.md](RELEASE_NOTES_v0.2.0.md) for v0.2.0 details
 
 ---
 
@@ -398,7 +417,16 @@ epyrtools/
 
 ## License
 
-This project is licensed under the **BSD 3-Clause License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+## Contributors
+
+**Lead Developer & Maintainer:**
+- **Sylvain Bertaina** - [sylvain.bertaina@cnrs.fr](mailto:sylvain.bertaina@cnrs.fr)
+
+**Affiliation:**
+- [Magnetism Group (MAG), IM2NP Laboratory](https://www.im2np.fr/fr/equipe-magnetisme-mag)
+- CNRS (Centre National de la Recherche Scientifique)
 
 ---
 

@@ -97,3 +97,69 @@ class TestEPRLoad:
             assert file_path is not None
             assert len(y) == 4
             assert params["MWFQ"] == 9.4e9
+
+    def test_return_type_parameter(self, temp_data_files):
+        """Test return_type parameter with real, imag, and default options."""
+        test_file = temp_data_files["test.dta"]
+
+        # Create complex data for testing
+        complex_y = np.array([1 + 2j, 3 + 4j, 5 + 6j])
+        real_x = np.array([0, 1, 2])
+
+        with patch("epyr.sub.loadBES3T.load") as mock_load:
+            mock_load.return_value = (complex_y, real_x, {"MWFQ": 9.4e9})
+
+            # Test default (should return complex data as-is)
+            x, y, params, file_path = eprload(
+                str(test_file), plot_if_possible=False, return_type="default"
+            )
+            assert np.iscomplexobj(y)
+            assert np.array_equal(y, complex_y)
+
+            # Test real (should return only real part)
+            mock_load.return_value = (complex_y.copy(), real_x, {"MWFQ": 9.4e9})
+            x, y, params, file_path = eprload(
+                str(test_file), plot_if_possible=False, return_type="real"
+            )
+            assert np.isrealobj(y)
+            assert np.array_equal(y, np.real(complex_y))
+
+            # Test imag (should return only imaginary part)
+            mock_load.return_value = (complex_y.copy(), real_x, {"MWFQ": 9.4e9})
+            x, y, params, file_path = eprload(
+                str(test_file), plot_if_possible=False, return_type="imag"
+            )
+            assert np.isrealobj(y)
+            assert np.array_equal(y, np.imag(complex_y))
+
+            # Test invalid return_type
+            mock_load.return_value = (complex_y.copy(), real_x, {"MWFQ": 9.4e9})
+            with pytest.raises(ValueError, match="Invalid return_type"):
+                eprload(
+                    str(test_file), plot_if_possible=False, return_type="invalid"
+                )
+
+    def test_return_type_with_real_data(self, temp_data_files):
+        """Test that return_type works correctly with already-real data."""
+        test_file = temp_data_files["test.dta"]
+
+        # Real data should remain real regardless of return_type
+        real_y = np.array([1.0, 2.0, 3.0])
+        real_x = np.array([0, 1, 2])
+
+        with patch("epyr.sub.loadBES3T.load") as mock_load:
+            # Test with real data and return_type="real"
+            mock_load.return_value = (real_y.copy(), real_x, {"MWFQ": 9.4e9})
+            x, y, params, file_path = eprload(
+                str(test_file), plot_if_possible=False, return_type="real"
+            )
+            assert np.isrealobj(y)
+            assert np.array_equal(y, real_y)
+
+            # Test with real data and return_type="imag" (should give zeros)
+            mock_load.return_value = (real_y.copy(), real_x, {"MWFQ": 9.4e9})
+            x, y, params, file_path = eprload(
+                str(test_file), plot_if_possible=False, return_type="imag"
+            )
+            assert np.isrealobj(y)
+            assert np.allclose(y, np.zeros_like(real_y))

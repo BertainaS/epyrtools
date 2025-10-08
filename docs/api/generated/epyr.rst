@@ -13,7 +13,6 @@
    baseline
    cli
    config
-   constants
    eprload
    eprplot
    fair
@@ -21,6 +20,7 @@
    lineshapes
    logging_config
    performance
-   plot
+   physics
    plugins
+   signalprocessing
    sub

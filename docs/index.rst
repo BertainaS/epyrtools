@@ -1,11 +1,11 @@
 EPyR Tools Documentation
 ========================
 
-.. image:: https://img.shields.io/badge/License-BSD%203--Clause-blue.svg
-   :target: https://opensource.org/licenses/BSD-3-Clause
+.. image:: https://img.shields.io/badge/License-MIT-blue.svg
+   :target: https://opensource.org/licenses/MIT
    :alt: License
 
-.. image:: https://img.shields.io/badge/version-0.2.0-blue
+.. image:: https://img.shields.io/badge/version-0.2.5-blue
    :alt: Version
 
 .. image:: https://img.shields.io/badge/tests-100%2B%20passed-brightgreen

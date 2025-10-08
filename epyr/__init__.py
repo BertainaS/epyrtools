@@ -24,19 +24,19 @@ except ImportError:
 
 from . import lineshapes
 from . import signalprocessing
-#from .constants import *
 from .physics import *
+from .physics import constants
 from .eprload import *
 from .fair import *
 from .isotope_gui import run_gui as isotopes
 from .lineshapes import Lineshape, gaussian, lorentzian, voigtian, pseudo_voigt
 from .performance import OptimizedLoader, DataCache, get_performance_info
 from .plugins import plugin_manager
-#from .plot import *
 from .eprplot import *
+from . import eprplot as plot  # Alias for backward compatibility
 from .sub.utils import BrukerListFiles
 
-__version__ = "0.2.0"
+__version__ = "0.2.5"
 
 # Set up logging
 logger = get_logger(__name__)

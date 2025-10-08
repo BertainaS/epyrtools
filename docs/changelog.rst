@@ -6,6 +6,82 @@ All notable changes to EPyR Tools are documented here.
 The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`_,
 and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
 
+[0.2.5] - 2025-10-07
+---------------------
+
+Added
+~~~~~
+- **NEW:** ``return_type`` parameter in ``eprload()`` for selective component extraction
+
+  - ``return_type="default"``: Return signal as-is (backward compatible)
+  - ``return_type="real"``: Extract only real part
+  - ``return_type="imag"``: Extract only imaginary part
+
+- **NEW:** Advanced 2D FFT analysis module (``analyze_frequencies_2d``)
+
+  - Row-by-row 1D FFT mode for 2D Rabi oscillations
+  - Full 2D FFT mode for HYSCORE measurements
+  - Automatic time unit detection (ns, μs, ms, s)
+  - DC offset removal and apodization windowing
+  - Centered frequency spectrum (fftshift for positive and negative frequencies)
+  - Four-panel visualization: original, FFT linear/log, phase spectrum
+
+Changed
+~~~~~~~
+- **DEFAULT CHANGE:** ``eprload()`` parameter ``plot_if_possible`` now defaults to ``False``
+
+  - Previous default was ``True`` (automatic plotting)
+  - New default is ``False`` for cleaner programmatic use
+  - Explicitly set ``plot_if_possible=True`` if automatic plotting is desired
+
+- **REFACTORED:** Signal processing module (``frequency_analysis.py``)
+
+  - Extracted helper functions to eliminate code duplication
+  - ``_detect_time_units()``: Unified time unit detection
+  - ``_convert_to_display_freq()``: Consistent frequency conversion
+  - ``_remove_dc_offset()``: Standardized DC removal
+  - ``_apply_window()``: Centralized apodization
+  - Reduced code duplication by ~150 lines
+  - Single source of truth for common operations
+
+Documentation
+~~~~~~~~~~~~~
+- Updated README with v0.2.5 features and contributor information
+- Added institutional logos (LogoL.png, LogoR.png)
+- Created comprehensive RELEASE_NOTES_v0.2.5.md
+- Updated version badges to 0.2.5 across all documentation
+- Enhanced API documentation for new parameters
+
+Testing
+~~~~~~~
+- Added tests for ``return_type`` parameter in ``eprload()``
+- Validated 2D FFT analysis with synthetic EPR data
+- Verified backward compatibility for all existing workflows
+- Confirmed refactored code produces identical results
+
+[0.2.0] - 2025-09-27
+---------------------
+
+Added
+~~~~~
+- **NEW:** Stable core functionality with validated test suite
+- **NEW:** FAIR data conversion with 235+ parameter mappings
+- **NEW:** Plugin system for extensible file formats
+- **NEW:** Configuration management with environment variable support
+- **NEW:** Memory optimization and performance tracking
+
+Changed
+~~~~~~~
+- **IMPROVEMENT:** Updated to stable release status
+- **CLEANUP:** Removed 29MB of unnecessary files
+- **UPDATE:** Comprehensive documentation overhaul
+
+Fixed
+~~~~~
+- Core test suite passing at 100%
+- Memory management improvements
+- Dependency verification
+
 [0.1.6] - 2025-09-12
 ---------------------
 

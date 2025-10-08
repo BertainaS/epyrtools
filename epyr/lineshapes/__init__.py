@@ -18,7 +18,7 @@ Classes and Functions:
     convspec: Spectrum convolution
 
 Author: EPyR Tools Development Team
-License: BSD-3-Clause
+License: MIT
 """
 
 from .gaussian import gaussian, gaussian_absorption, gaussian_dispersion, gaussian_derivative

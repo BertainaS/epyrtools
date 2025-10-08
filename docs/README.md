@@ -315,7 +315,10 @@ See [CHANGELOG.md](../CHANGELOG.md) for detailed version history.
 
 ## License and Citation
 
-EPyR Tools is released under the BSD 3-Clause License. See [LICENSE](../LICENSE) for details.
+EPyR Tools is released under the MIT License. See [LICENSE](../LICENSE) for details.
+
+**Author:** Sylvain Bertaina (sylvain.bertaina@cnrs.fr)
+**Laboratory:** [Magnetism Group (MAG), IM2NP](https://www.im2np.fr/fr/equipe-magnetisme-mag)
 
 ### Citation
 If you use EPyR Tools in your research, please cite:

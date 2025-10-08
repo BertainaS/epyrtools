@@ -7,7 +7,7 @@ of EPyR Tools, including Gaussian, Lorentzian, Voigt, and pseudo-Voigt profiles
 with derivatives, phase rotation, and convolution.
 
 Author: EPyR Tools Development Team
-License: BSD-3-Clause
+License: MIT
 """
 
 import numpy as np

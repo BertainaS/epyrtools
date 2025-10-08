@@ -1,0 +1,26 @@
+
+EPyR Tools CLI Quick Reference
+=============================
+
+Data Loading & Conversion:
+  epyr-convert file.dsc                    # Convert to CSV/JSON
+  epyr-convert file.dsc -f csv,json,hdf5   # Multiple formats
+  epyr-batch-convert ./data/ --jobs 4      # Parallel processing
+
+Analysis:
+  epyr-baseline file.dsc --plot            # Baseline correction
+  epyr-plot file.dsc --interactive --measure # Interactive analysis
+  epyr-validate *.dsc --detailed           # Data validation
+
+Configuration:
+  epyr-config show                         # View settings
+  epyr-config set plotting.dpi 300         # Change setting
+  epyr-config export settings.json         # Backup config
+
+System:
+  epyr-info --all                          # System information
+  epyr-isotopes                           # Isotope database GUI
+
+Help:
+  epyr --help                             # Main help
+  epyr-<command> --help                   # Command-specific help

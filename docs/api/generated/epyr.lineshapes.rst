@@ -17,6 +17,7 @@ epyr.lineshapes
    :recursive:
 
    convspec
+   fitting
    gaussian
    lineshape_class
    lorentzian

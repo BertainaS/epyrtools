@@ -75,6 +75,7 @@ setup(
         "Repository": "https://github.com/BertainaS/epyrtools.git",
         "Issues": "https://github.com/BertainaS/epyrtools/issues",
         "Documentation": "https://github.com/BertainaS/epyrtools/tree/main/docs",
+        "Laboratory": "https://www.im2np.fr/fr/equipe-magnetisme-mag",
     },
     # Package discovery and content
     packages=find_packages(exclude=["tests", "tests.*"]),
@@ -133,7 +134,7 @@ setup(
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: BSD License",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
@@ -145,7 +146,7 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     # License
-    license="BSD-3-Clause",
+    license="MIT",
     # Keywords
     keywords=[
         "EPR",

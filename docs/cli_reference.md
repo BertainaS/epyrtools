@@ -311,18 +311,36 @@ epyr-plot --interactive --measure -v
 
 ### 8. `epyr-isotopes` - Isotope Database GUI
 
-Launch the interactive isotope database interface.
+Launch the interactive nuclear isotope database interface with periodic table visualization.
 
 ```bash
 epyr-isotopes
 ```
 
 **Features:**
-- Tkinter-based GUI application
-- Nuclear isotope database browser
-- Magnetic properties and parameters
-- Search and filter capabilities
-- Integration with EPR calculations
+- **Interactive Periodic Table**: Color-coded elements by category (main group, transition metals, rare earth)
+- **Comprehensive Isotope Data**: Natural abundance, nuclear spin, g-factors, quadrupole moments
+- **Real-time NMR Frequency Calculation**: Enter magnetic field strength for frequency calculations
+- **EPR Band Presets**: Quick selection for X-band (340 mT), Q-band (1200 mT), W-band (3400 mT)
+- **Advanced Filtering**: Show/hide unstable isotopes (*) and non-magnetic nuclei (spin=0)
+- **Element-Specific Views**: Click any element to filter isotopes for that element only
+- **Sortable Data Table**: Click column headers to sort by any parameter
+- **Professional GUI**: Tooltips, resizable interface, cross-platform compatibility
+
+**Data Source:**
+- EasySpin nuclear isotope database format (`sub/isotopedata.txt`)
+- CODATA 2018 physical constants for accurate calculations
+- Both stable and selected radioactive isotopes included
+
+**Usage Examples:**
+```python
+# Programmatic access
+from epyr import isotopes
+isotopes()  # Launch GUI
+
+# Direct CLI launch
+epyr-isotopes
+```
 
 ### 9. `epyr` - Main CLI Entry Point
 

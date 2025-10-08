@@ -223,7 +223,7 @@ class IsotopesGUI:
         # --- Set Window Properties ---
         # Store calculated dimensions
         self.calculated_window_width = int(window_width)
-        self.calculated_window_height = int(window_height)
+        self.calculated_window_height = int(window_height*1.15)
 
         # Set minimum window size (80% of calculated size)
         min_width = int(window_width * 0.8)

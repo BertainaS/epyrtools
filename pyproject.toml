@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "epyr-tools"
-version = "0.2.0"
+version = "0.2.5"
 description = "Electron Paramagnetic Resonance (EPR) Tools in Python"
 readme = "README.md"
-license = {text = "BSD-3-Clause"}
+license = {text = "MIT"}
 authors = [
     {name = "Sylvain Bertaina", email = "sylvain.bertaina@cnrs.fr"}
 ]
@@ -18,7 +18,7 @@ keywords = ["EPR", "electron paramagnetic resonance", "spectroscopy", "Bruker", 
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -73,6 +73,7 @@ all = [
 Homepage = "https://github.com/BertainaS/epyrtools"
 Repository = "https://github.com/BertainaS/epyrtools.git"
 Issues = "https://github.com/BertainaS/epyrtools/issues"
+Laboratory = "https://www.im2np.fr/fr/equipe-magnetisme-mag"
 
 [project.scripts]
 epyr = "epyr.cli:main"
