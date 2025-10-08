@@ -1,13 +1,13 @@
 # EPyR Tools: Electron Paramagnetic Resonance (EPR) Tools in Python
 
 <p align="center">
-  <img src="Epyrtools_logo.jpg" alt="EPyR Tools Logo" height="120"/>
+  <img src="Epyrtools_logo.jpg" alt="EPyR Tools Logo" height="240"/>
 </p>
 
 <p align="center">
-  <img src="LogoL.png" alt="Institution Logo Left" height="60"/>
+  <img src="LogoL.png" alt="Institution Logo Left" height="120"/>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="LogoR.png" alt="Institution Logo Right" height="60"/>
+  <img src="LogoR.png" alt="Institution Logo Right" height="120"/>
 </p>
 
 | License | Tests | Documentation | Version |
