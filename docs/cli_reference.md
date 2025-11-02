@@ -91,7 +91,7 @@ epyr-baseline spectrum.dsc -o corrected.csv --plot
 
 ### 3. `epyr-batch-convert` - Batch Processing
 
-Convert multiple EPR files efficiently with parallel processing.
+Convert multiple EPR files efficiently with automatic figure generation for data quality verification.
 
 ```bash
 epyr-batch-convert input_dir [options]
@@ -100,28 +100,57 @@ epyr-batch-convert input_dir [options]
 **Options:**
 - `-o, --output-dir DIR`: Output directory (default: input_dir/converted)
 - `-f, --formats LIST`: Output formats (default: csv,json)
-- `--pattern PATTERN`: File pattern to match (default: *.dsc)
+- `--save-jpg`: Save JPG figures of loaded data (default: True)
+- `--no-jpg`: Disable JPG figure generation
 - `-j, --jobs INT`: Number of parallel jobs (default: 1)
 - `-v, --verbose`: Enable verbose output
 
 **Examples:**
 ```bash
-# Convert all .dsc files
+# Convert all .dsc and .spc files with JPG generation
 epyr-batch-convert ./data/
 
-# Parallel processing with custom pattern
-epyr-batch-convert ./data/ --pattern "*.spc" --jobs 4
+# Disable JPG generation for faster processing
+epyr-batch-convert ./data/ --no-jpg
 
-# Custom output and formats
-epyr-batch-convert ./data/ -o ./converted -f csv,hdf5
+# Custom output directory with all formats
+epyr-batch-convert ./data/ -o ./converted -f csv,json,hdf5
+
+# Verbose mode for detailed progress tracking
+epyr-batch-convert ./data/ -v
 ```
 
+**JPG Figure Generation:**
+By default, batch conversion now generates high-quality JPG figures (150 DPI) for visual verification of converted data:
+
+- **1D EPR Data**: Line plots with real and imaginary components
+  - Proper axis labels from EPR parameters (field unit, intensity)
+  - Grid overlay for easy reading
+  - Legend for complex data
+
+- **2D EPR Data**: Color map visualizations
+  - Intensity colorbars with proper units
+  - Optimized layout without tight_layout conflicts
+  - Clear axis labels for point and scan indices
+
+**File Discovery:**
+Automatically discovers EPR files with case-insensitive patterns:
+- `*.dsc`, `*.DSC` (Bruker BES3T descriptor files)
+- `*.spc`, `*.SPC` (Bruker ESP spectrum files)
+- Removes duplicates on case-insensitive filesystems
+- Processes files in sorted order for consistency
+
 **Implementation Details:**
-- Discovers files using glob patterns
-- Progress reporting with file counter
-- Parallel processing support (future enhancement)
-- Comprehensive error handling per file
-- Summary statistics on completion
+- Loads each file with `eprload()` before conversion
+- Generates JPG only after successful data loading
+- Independent error handling for conversion and figure generation
+- Progress reporting: `[N/M] Processing filename.dsc`
+- Detailed summary statistics:
+  - Successfully converted: X/Y files
+  - Failed: X/Y files
+  - Output directory location
+- Comprehensive error handling per file with optional verbose traceback
+- Automatic output directory creation
 
 ### 4. `epyr-config` - Configuration Management
 

@@ -94,6 +94,14 @@ From basic data loading to advanced quantitative analysis, EPyR Tools offers pro
   - Centered frequency spectrum (positive and negative frequencies)
   - Four-panel visualization: original signal, FFT linear/log scale, phase spectrum
 
+- **Enhanced Batch Conversion**: Automatic figure generation for data quality verification
+  - `epyr-batch-convert` now generates high-quality JPG figures (150 DPI) by default
+  - Visual verification of 1D line plots and 2D color maps for all converted files
+  - Automatic discovery of both `.dsc` and `.spc` files (case-insensitive)
+  - Independent error handling for conversion and figure generation
+  - `--save-jpg` / `--no-jpg` flags for flexible workflow control
+  - Detailed progress reporting with success/failure statistics
+
 ### Code Quality Improvements
 - **Refactored frequency_analysis.py**: Eliminated code duplication through helper functions
   - Unified time unit detection across all analysis functions
