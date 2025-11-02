@@ -123,11 +123,18 @@ setup(
             "scipy>=1.7.0",
         ],
     },
-    # Entry points for command-line tools (if any)
+    # Entry points for command-line tools
     entry_points={
         "console_scripts": [
-            # Add command-line scripts here if needed in the future
-            # "epyr-convert=epyr.fair.cli:main",
+            "epyr=epyr.cli:main",
+            "epyr-convert=epyr.cli:cmd_convert",
+            "epyr-baseline=epyr.cli:cmd_baseline",
+            "epyr-batch-convert=epyr.cli:cmd_batch_convert",
+            "epyr-config=epyr.cli:cmd_config",
+            "epyr-info=epyr.cli:cmd_info",
+            "epyr-isotopes=epyr.cli:cmd_isotopes",
+            "epyr-plot=epyr.cli:cmd_plot",
+            "epyr-validate=epyr.cli:cmd_validate",
         ],
     },
     # Classification
