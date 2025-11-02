@@ -10,6 +10,9 @@ from typing import Union, Optional
 from .constants import (
     clight, planck, bmagn, boltzm, evolt, gfree
 )
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 def unitconvert(value: Union[float, np.ndarray], 
@@ -119,71 +122,71 @@ def list_conversions():
         "MHz <-> cm^-1, eV, K, mT"
     ]
 
-    print("Supported Unit Conversions")
-    print("=" * 35)
+    logger.info("Supported Unit Conversions")
+    logger.info("=" * 35)
     for conv in conversions:
-        print(f"  {conv}")
+        logger.info(f"  {conv}")
 
-    print(f"\nPhysical Constants Used:")
-    print(f"  Speed of light: {clight():.0f} m⋅s⁻¹")
-    print(f"  Planck constant: {planck():.2e} J⋅s")
-    print(f"  Bohr magneton: {bmagn():.2e} J⋅T⁻¹")
-    print(f"  Boltzmann constant: {boltzm():.2e} J⋅K⁻¹")
-    print(f"  Electron volt: {evolt():.2e} J")
-    print(f"  Free electron g-factor: {gfree():.8f}")
+    logger.info("Physical Constants Used:")
+    logger.info(f"  Speed of light: {clight():.0f} m⋅s⁻¹")
+    logger.info(f"  Planck constant: {planck():.2e} J⋅s")
+    logger.info(f"  Bohr magneton: {bmagn():.2e} J⋅T⁻¹")
+    logger.info(f"  Boltzmann constant: {boltzm():.2e} J⋅K⁻¹")
+    logger.info(f"  Electron volt: {evolt():.2e} J")
+    logger.info(f"  Free electron g-factor: {gfree():.8f}")
 
 
 def demo_conversions():
     """Demonstrate common unit conversions in EPR spectroscopy."""
-    print("EPR Unit Conversion Examples")
-    print("=" * 40)
-    
+    logger.info("EPR Unit Conversion Examples")
+    logger.info("=" * 40)
+
     # Example 1: X-band EPR field calculation
     freq_ghz = 9.5  # GHz
     freq_mhz = freq_ghz * 1000
     field_mt = unitconvert(freq_mhz, 'MHz->mT')
-    print(f"X-band EPR ({freq_ghz} GHz):")
-    print(f"  Resonant field: {field_mt:.1f} mT")
+    logger.info(f"X-band EPR ({freq_ghz} GHz):")
+    logger.info(f"  Resonant field: {field_mt:.1f} mT")
     
     # Example 2: Energy scale conversions
     energy_wn = 1000  # cm⁻¹
     energy_ev = unitconvert(energy_wn, 'cm^-1->eV')
     energy_k = unitconvert(energy_wn, 'cm^-1->K')
     energy_mhz = unitconvert(energy_wn, 'cm^-1->MHz')
-    
-    print(f"\nEnergy scale comparisons for {energy_wn} cm⁻¹:")
-    print(f"  {energy_ev:.6f} eV")
-    print(f"  {energy_k:.1f} K") 
-    print(f"  {energy_mhz/1000:.1f} GHz")
-    
+
+    logger.info(f"Energy scale comparisons for {energy_wn} cm⁻¹:")
+    logger.info(f"  {energy_ev:.6f} eV")
+    logger.info(f"  {energy_k:.1f} K")
+    logger.info(f"  {energy_mhz/1000:.1f} GHz")
+
     # Example 3: Temperature to field conversion
     temp_k = 4.2  # Liquid helium temperature
     temp_wn = unitconvert(temp_k, 'K->cm^-1')
     temp_field = unitconvert(temp_k, 'K->mT')
-    
-    print(f"\nThermal energy at {temp_k} K:")
-    print(f"  {temp_wn:.3f} cm⁻¹")
-    print(f"  {temp_field:.3f} mT equivalent field")
+
+    logger.info(f"Thermal energy at {temp_k} K:")
+    logger.info(f"  {temp_wn:.3f} cm⁻¹")
+    logger.info(f"  {temp_field:.3f} mT equivalent field")
     
     # Example 4: Vector conversion
     fields = np.array([100, 200, 300, 400])  # mT
     freqs = unitconvert(fields, 'mT->MHz', g_factor=2.003)
-    
-    print(f"\nField to frequency conversion (g=2.003):")
+
+    logger.info("Field to frequency conversion (g=2.003):")
     for b, f in zip(fields, freqs):
-        print(f"  {b} mT → {f/1000:.3f} GHz")
-    
+        logger.info(f"  {b} mT → {f/1000:.3f} GHz")
+
     # Example 5: Different g-factors
     field = 340  # mT
     g_factors = np.array([2.000, 2.003, 2.010, 2.100])
     frequencies = unitconvert(field, 'mT->MHz', g_factor=g_factors)
-    
-    print(f"\nFrequency at {field} mT for different g-factors:")
+
+    logger.info(f"Frequency at {field} mT for different g-factors:")
     for g, f in zip(g_factors, frequencies):
-        print(f"  g = {g:.3f} → {f/1000:.3f} GHz")
+        logger.info(f"  g = {g:.3f} → {f/1000:.3f} GHz")
 
 
 if __name__ == "__main__":
     list_conversions()
-    print()
+    logger.info("")
     demo_conversions()

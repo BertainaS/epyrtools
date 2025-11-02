@@ -11,6 +11,10 @@ from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
+
 from .parameter_mapping import BRUKER_PARAM_MAP
 
 
@@ -31,7 +35,7 @@ def process_parameters(pars: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, 
         "value": {
             "converter_script": "epyr_fair_converter",
             "conversion_timestamp": datetime.now().isoformat(),
-            "epyr_version": "0.1.2",  # Current EPyR Tools version
+            "epyr_version": "0.3.0",  # Current EPyR Tools version
         },
         "unit": "",
         "description": "Information about the conversion process to FAIR format.",
@@ -73,7 +77,7 @@ def process_parameters(pars: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, 
         else:
             # Store unmapped parameters
             unmapped_parameters[key] = value
-            print(
+            logger.debug(
                 f"Parameter '{key}' not found in BRUKER_PARAM_MAP. "
                 f"Storing in 'unmapped_parameters'."
             )

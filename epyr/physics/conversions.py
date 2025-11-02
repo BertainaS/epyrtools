@@ -10,6 +10,9 @@ from typing import Union, Optional, List, Tuple
 from .constants import (
     gfree, bmagn, planck, clight, boltzm, evolt
 )
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 def mhz_to_mt(frequency_mhz: Union[float, np.ndarray],
@@ -202,24 +205,24 @@ def frequency_field_conversion_table(frequencies_ghz: Optional[List[float]] = No
     if g_factors is None:
         g_factors = [2.000, 2.002, 2.005, 2.010]
 
-    print("EPR Frequency to Magnetic Field Conversion Table")
-    print("=" * 60)
-    print(f"{'Freq (GHz)':<12}", end="")
+    logger.info("EPR Frequency to Magnetic Field Conversion Table")
+    logger.info("=" * 60)
+    header = f"{'Freq (GHz)':<12}"
     for g in g_factors:
-        print(f"{'g=' + str(g):<12}", end="")
-    print()
-    print("-" * 60)
+        header += f"{'g=' + str(g):<12}"
+    logger.info(header)
+    logger.info("-" * 60)
 
     for freq_ghz in frequencies_ghz:
         freq_mhz = freq_ghz * 1000
-        print(f"{freq_ghz:<12.1f}", end="")
+        row = f"{freq_ghz:<12.1f}"
         for g in g_factors:
             field_mt = mhz_to_mt(freq_mhz, g_factor=g)
-            print(f"{field_mt:<12.1f}", end="")
-        print()
+            row += f"{field_mt:<12.1f}"
+        logger.info(row)
 
-    print("-" * 60)
-    print("All fields in mT")
+    logger.info("-" * 60)
+    logger.info("All fields in mT")
 
 
 def energy_conversion_table(energies_cm_inv: Optional[List[float]] = None) -> None:
@@ -235,10 +238,10 @@ def energy_conversion_table(energies_cm_inv: Optional[List[float]] = None) -> No
     if energies_cm_inv is None:
         energies_cm_inv = [1, 10, 100, 1000, 5000, 10000]
 
-    print("Energy Unit Conversion Table")
-    print("=" * 70)
-    print(f"{'cm^-1':<10} {'MHz':<15} {'GHz':<10} {'eV':<12} {'K':<10} {'meV':<8}")
-    print("-" * 70)
+    logger.info("Energy Unit Conversion Table")
+    logger.info("=" * 70)
+    logger.info(f"{'cm^-1':<10} {'MHz':<15} {'GHz':<10} {'eV':<12} {'K':<10} {'meV':<8}")
+    logger.info("-" * 70)
 
     for wn in energies_cm_inv:
         # Convert cm^-1 to other units
@@ -251,68 +254,68 @@ def energy_conversion_table(energies_cm_inv: Optional[List[float]] = None) -> No
         energy_mev = energy_ev * 1000  # eV to meV
         temp_k = energy_j / boltzm()  # J to K
 
-        print(f"{wn:<10.0f} {freq_mhz:<15.3e} {freq_ghz:<10.3f} "
-              f"{energy_ev:<12.6f} {temp_k:<10.3f} {energy_mev:<8.3f}")
+        logger.info(f"{wn:<10.0f} {freq_mhz:<15.3e} {freq_ghz:<10.3f} "
+                    f"{energy_ev:<12.6f} {temp_k:<10.3f} {energy_mev:<8.3f}")
 
-    print("-" * 70)
+    logger.info("-" * 70)
 
 
 def conversion_examples():
     """Show practical examples of EPR unit conversions."""
-    print("EPR Unit Conversion Examples")
-    print("=" * 40)
+    logger.info("EPR Unit Conversion Examples")
+    logger.info("=" * 40)
 
     # Example 1: X-band EPR
-    print("1. X-band EPR (9.5 GHz)")
+    logger.info("1. X-band EPR (9.5 GHz)")
     freq_xband = 9500  # MHz
     field_xband = mhz_to_mt(freq_xband)
-    print(f"   Frequency: {freq_xband} MHz")
-    print(f"   Field: {field_xband:.1f} mT")
-    print(f"   Check: {mt_to_mhz(field_xband):.0f} MHz")
-    print()
+    logger.info(f"   Frequency: {freq_xband} MHz")
+    logger.info(f"   Field: {field_xband:.1f} mT")
+    logger.info(f"   Check: {mt_to_mhz(field_xband):.0f} MHz")
+    logger.info("")
 
     # Example 2: Q-band EPR
-    print("2. Q-band EPR (~34 GHz)")
+    logger.info("2. Q-band EPR (~34 GHz)")
     freq_qband = 34000  # MHz
     field_qband = mhz_to_mt(freq_qband)
-    print(f"   Frequency: {freq_qband} MHz")
-    print(f"   Field: {field_qband:.0f} mT")
-    print()
+    logger.info(f"   Frequency: {freq_qband} MHz")
+    logger.info(f"   Field: {field_qband:.0f} mT")
+    logger.info("")
 
     # Example 3: Energy scale conversions
-    print("3. Energy scale conversions")
+    logger.info("3. Energy scale conversions")
     energy_wn = 1000  # cm^-1
     energy_freq = cm_inv_to_mhz(energy_wn)
-    print(f"   {energy_wn} cm^-1 = {energy_freq:.3e} MHz")
-    print(f"   Check: {mhz_to_cm_inv(energy_freq):.1f} cm^-1")
-    print()
+    logger.info(f"   {energy_wn} cm^-1 = {energy_freq:.3e} MHz")
+    logger.info(f"   Check: {mhz_to_cm_inv(energy_freq):.1f} cm^-1")
+    logger.info("")
 
     # Example 4: Different g-factors
-    print("4. g-factor effects at X-band")
+    logger.info("4. g-factor effects at X-band")
     freq = 9500  # MHz
     g_values = [2.000, 2.002, 2.005, 2.010]
     fields = mhz_to_mt(freq, g_factor=g_values)
 
-    print(f"   Frequency: {freq} MHz")
+    logger.info(f"   Frequency: {freq} MHz")
     for g, b in zip(g_values, fields):
-        print(f"   g = {g:.3f}: {b:.1f} mT")
-    print()
+        logger.info(f"   g = {g:.3f}: {b:.1f} mT")
+    logger.info("")
 
     # Example 5: Field sweep range
-    print("5. Typical EPR field sweep (g = 2.002)")
+    logger.info("5. Typical EPR field sweep (g = 2.002)")
     center_field = 340  # mT
     sweep_width = 20   # mT
     fields = np.array([center_field - sweep_width/2, center_field, center_field + sweep_width/2])
     freqs = mt_to_mhz(fields, g_factor=2.002)
 
-    print(f"   Field range: {fields[0]:.1f} - {fields[2]:.1f} mT")
-    print(f"   Frequency range: {freqs[0]:.1f} - {freqs[2]:.1f} MHz")
-    print(f"   Frequency width: {freqs[2] - freqs[0]:.1f} MHz")
+    logger.info(f"   Field range: {fields[0]:.1f} - {fields[2]:.1f} mT")
+    logger.info(f"   Frequency range: {freqs[0]:.1f} - {freqs[2]:.1f} MHz")
+    logger.info(f"   Frequency width: {freqs[2] - freqs[0]:.1f} MHz")
 
 
 if __name__ == "__main__":
     conversion_examples()
-    print()
+    logger.info("")
     frequency_field_conversion_table()
-    print()
+    logger.info("")
     energy_conversion_table()

@@ -12,6 +12,10 @@ from typing import Optional, Dict, Any, Tuple, Union, List
 from dataclasses import dataclass
 import warnings
 
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
+
 from .gaussian import gaussian
 from .lorentzian import lorentzian
 from .voigtian import voigtian
@@ -614,7 +618,7 @@ def fit_multiple_shapes(x_data: np.ndarray,
                                   fit_phase=fit_phase, plot=False)
             results[shape] = result
         except Exception as e:
-            print(f"Failed to fit {shape}: {e}")
+            logger.warning(f"Failed to fit {shape}: {e}")
             results[shape] = FitResult(
                 shape_type=shape,
                 parameters={}, parameter_errors={},
@@ -630,17 +634,17 @@ def fit_multiple_shapes(x_data: np.ndarray,
         _plot_comparison(x_data, y_data, successful_fits)
 
     # Print comparison
-    print("=== Fit Comparison ===")
+    logger.info("=== Fit Comparison ===")
     for shape, result in results.items():
         if result.success:
-            print(f"{shape:12s}: R² = {result.r_squared:.6f}, χ² = {result.chi_squared:.2e}")
+            logger.info(f"{shape:12s}: R² = {result.r_squared:.6f}, χ² = {result.chi_squared:.2e}")
         else:
-            print(f"{shape:12s}: FAILED - {result.message}")
+            logger.info(f"{shape:12s}: FAILED - {result.message}")
 
     if successful_fits:
         best_shape = max(successful_fits.keys(),
                         key=lambda k: successful_fits[k].r_squared)
-        print(f"\nBest fit: {best_shape} (R² = {successful_fits[best_shape].r_squared:.6f})")
+        logger.info(f"\nBest fit: {best_shape} (R² = {successful_fits[best_shape].r_squared:.6f})")
 
     return results
 

@@ -12,6 +12,10 @@ from scipy.optimize import curve_fit
 from typing import Union, Tuple, Optional, List, Dict, Any
 import warnings
 
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
+
 # Import from our new modules
 from .models import (polynomial_1d, polynomial_2d, stretched_exponential_1d, 
                      bi_exponential_1d, exponential_1d)
@@ -68,15 +72,15 @@ def baseline_polynomial_1d(
     
     if interactive:
         if not is_interactive_available():
-            print("⚠️  Interactive selection may not work in this environment.")
-            print("   Consider using manual_regions parameter instead.")
-        
-        print("🖱️ Interactive region selection enabled...")
+            logger.warning("⚠️  Interactive selection may not work in this environment.")
+            logger.warning("   Consider using manual_regions parameter instead.")
+
+        logger.info("🖱️ Interactive region selection enabled...")
         selected_regions = interactive_select_regions_1d(
             x_coords, y,
             f"Select regions to {region_mode.upper()} from baseline fitting"
         )
-        print(f"✅ Selected {len(selected_regions)} regions")
+        logger.info(f"✅ Selected {len(selected_regions)} regions")
     
     # Create baseline mask
     mask = get_baseline_regions_1d(
@@ -187,10 +191,10 @@ def baseline_polynomial_2d(
     if np.iscomplexobj(y):
         if use_real_part:
             data_for_fitting = np.real(y)
-            print("ℹ Using real part of complex 2D data for fitting")
+            logger.info("ℹ Using real part of complex 2D data for fitting")
         else:
             data_for_fitting = np.abs(y)
-            print("ℹ Using magnitude of complex 2D data for fitting")
+            logger.info("ℹ Using magnitude of complex 2D data for fitting")
     else:
         data_for_fitting = y
     
@@ -199,14 +203,14 @@ def baseline_polynomial_2d(
     
     if interactive:
         if not is_interactive_available():
-            print("⚠️  Interactive selection may not work in this environment.")
-        
-        print("🖱️ Interactive 2D region selection enabled...")
+            logger.warning("⚠️  Interactive selection may not work in this environment.")
+
+        logger.info("🖱️ Interactive 2D region selection enabled...")
         selected_regions = interactive_select_regions_2d(
             X, Y, data_for_fitting,
             f"Select regions to {region_mode.upper()} from baseline fitting"
         )
-        print(f"✅ Selected {len(selected_regions)} regions")
+        logger.info(f"✅ Selected {len(selected_regions)} regions")
     
     # Create baseline mask
     mask = get_baseline_regions_2d(
@@ -294,10 +298,10 @@ def _prepare_data_for_exponential_fitting(x, y, use_real_part=True, exclude_init
     if np.iscomplexobj(y):
         if use_real_part:
             data_for_fitting = np.real(y)
-            print("ℹ Using real part of complex data for fitting")
+            logger.info("ℹ Using real part of complex data for fitting")
         else:
             data_for_fitting = np.abs(y)
-            print("ℹ Using magnitude of complex data for fitting")
+            logger.info("ℹ Using magnitude of complex data for fitting")
     else:
         data_for_fitting = y
     
@@ -400,9 +404,9 @@ def baseline_stretched_exponential_1d(
         
         if interactive:
             if not is_interactive_available():
-                print("⚠️  Interactive selection may not work in this environment.")
-            
-            print("🖱️ Interactive region selection for stretched exponential fitting...")
+                logger.warning("⚠️  Interactive selection may not work in this environment.")
+
+            logger.info("🖱️ Interactive region selection for stretched exponential fitting...")
             selected_regions = interactive_select_regions_1d(
                 x_coords, data_for_fitting,
                 "Select regions to include in stretched exponential fitting"
@@ -423,8 +427,8 @@ def baseline_stretched_exponential_1d(
                   initial_guess.get('beta', 1.0), initial_guess.get('offset', 0)]
         else:
             p0 = _smart_exponential_initial_guess(x_fit, y_fit, 'stretched')
-        
-        print(f"🔧 Initial guesses: A={p0[0]:.2e}, tau={p0[1]:.2e}, beta={p0[2]:.2f}, offset={p0[3]:.2e}")
+
+        logger.debug(f"🔧 Initial guesses: A={p0[0]:.2e}, tau={p0[1]:.2e}, beta={p0[2]:.2f}, offset={p0[3]:.2e}")
         
         # Parameter bounds
         bounds = (
@@ -443,10 +447,10 @@ def baseline_stretched_exponential_1d(
         # Calculate parameter uncertainties
         try:
             param_errors = np.sqrt(np.diag(pcov))
-            print(f"✅ Fit successful: A={A_fit:.2e}, tau={tau_fit:.2e}, beta={beta_fit:.2f}, offset={offset_fit:.2e}")
-            print(f"📊 Parameter uncertainties: ΔA={param_errors[0]:.2e}, Δτ={param_errors[1]:.2e}, Δβ={param_errors[2]:.3f}, Δoffset={param_errors[3]:.2e}")
+            logger.info(f"✅ Fit successful: A={A_fit:.2e}, tau={tau_fit:.2e}, beta={beta_fit:.2f}, offset={offset_fit:.2e}")
+            logger.info(f"📊 Parameter uncertainties: ΔA={param_errors[0]:.2e}, Δτ={param_errors[1]:.2e}, Δβ={param_errors[2]:.3f}, Δoffset={param_errors[3]:.2e}")
         except:
-            print(f"✅ Fit successful: A={A_fit:.2e}, tau={tau_fit:.2e}, beta={beta_fit:.2f}, offset={offset_fit:.2e}")
+            logger.info(f"✅ Fit successful: A={A_fit:.2e}, tau={tau_fit:.2e}, beta={beta_fit:.2f}, offset={offset_fit:.2e}")
         
         # Evaluate baseline over full range
         baseline = stretched_exponential_1d(x_coords, *popt)
@@ -506,9 +510,9 @@ def baseline_bi_exponential_1d(
         
         if interactive:
             if not is_interactive_available():
-                print("⚠️  Interactive selection may not work in this environment.")
-            
-            print("🖱️ Interactive region selection for bi-exponential fitting...")
+                logger.warning("⚠️  Interactive selection may not work in this environment.")
+
+            logger.info("🖱️ Interactive region selection for bi-exponential fitting...")
             selected_regions = interactive_select_regions_1d(
                 x_coords, data_for_fitting,
                 "Select regions to include in bi-exponential fitting"
@@ -530,8 +534,8 @@ def baseline_bi_exponential_1d(
                   initial_guess.get('offset', 0)]
         else:
             p0 = _smart_exponential_initial_guess(x_fit, y_fit, 'bi_exponential')
-        
-        print(f"🔧 Initial guesses: A1={p0[0]:.2e}, τ1={p0[1]:.2e}, A2={p0[2]:.2e}, τ2={p0[3]:.2e}, offset={p0[4]:.2e}")
+
+        logger.debug(f"🔧 Initial guesses: A1={p0[0]:.2e}, τ1={p0[1]:.2e}, A2={p0[2]:.2e}, τ2={p0[3]:.2e}, offset={p0[4]:.2e}")
         
         # Custom fitting function with tau ratio constraint
         def constrained_bi_exponential(x, A1, tau1, A2, tau2, offset):
@@ -558,9 +562,9 @@ def baseline_bi_exponential_1d(
         # Ensure tau ordering
         if tau2_fit < tau1_fit * tau_ratio_min:
             tau2_fit = tau1_fit * tau_ratio_min
-        
-        print(f"✅ Fit successful: A1={A1_fit:.2e}, τ1={tau1_fit:.2e}, A2={A2_fit:.2e}, τ2={tau2_fit:.2e}, offset={offset_fit:.2e}")
-        print(f"📊 Time constant ratio: τ2/τ1 = {tau2_fit/tau1_fit:.2f}")
+
+        logger.info(f"✅ Fit successful: A1={A1_fit:.2e}, τ1={tau1_fit:.2e}, A2={A2_fit:.2e}, τ2={tau2_fit:.2e}, offset={offset_fit:.2e}")
+        logger.info(f"📊 Time constant ratio: τ2/τ1 = {tau2_fit/tau1_fit:.2f}")
         
         # Evaluate baseline over full range
         baseline = bi_exponential_1d(x_coords, A1_fit, tau1_fit, A2_fit, tau2_fit, offset_fit)

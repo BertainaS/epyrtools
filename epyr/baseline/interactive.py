@@ -13,6 +13,10 @@ from matplotlib.widgets import RectangleSelector, SpanSelector
 import matplotlib
 from typing import List, Tuple, Optional
 
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 def _get_widget_props_param():
     """Get the correct parameter name for matplotlib widget properties based on version."""
@@ -43,21 +47,21 @@ class RegionSelector:
     def _on_select_1d(self, xmin, xmax):
         """Callback for 1D region selection."""
         self.regions.append((xmin, xmax))
-        print(f"Selected region: {xmin:.2f} - {xmax:.2f}")
-    
+        logger.info(f"Selected region: {xmin:.2f} - {xmax:.2f}")
+
     def _on_key_press(self, event):
         """Handle key press events."""
         if event.key == 'enter' or event.key == 'escape':
             self.selection_done = True
             plt.close(self.fig)
-            print("✅ Region selection completed!")
-    
+            logger.info("✅ Region selection completed!")
+
     def finish_selection(self):
         """Manually finish selection and close plot."""
         self.selection_done = True
         if self.fig:
             plt.close(self.fig)
-        print("✅ Region selection completed!")
+        logger.info("✅ Region selection completed!")
     
     def _on_select_2d(self, eclick, erelease):
         """Callback for 2D region selection."""
@@ -65,7 +69,7 @@ class RegionSelector:
         x2, y2 = erelease.xdata, erelease.ydata
         region = ((min(x1, x2), max(x1, x2)), (min(y1, y2), max(y1, y2)))
         self.regions.append(region)
-        print(f"Selected region: x={region[0][0]:.2f}-{region[0][1]:.2f}, y={region[1][0]:.2f}-{region[1][1]:.2f}")
+        logger.info(f"Selected region: x={region[0][0]:.2f}-{region[0][1]:.2f}, y={region[1][0]:.2f}-{region[1][1]:.2f}")
     
     def select_regions_1d(self, x, y, title="Select regions to EXCLUDE from baseline fitting"):
         """
@@ -194,7 +198,7 @@ def interactive_select_regions_2d(x, y, z, title="Select regions to EXCLUDE from
 def close_selector_window():
     """
     Utility function to close RegionSelector windows in Jupyter notebooks.
-    
+
     Use this if the interactive region selector gets stuck or won't close.
     """
     try:
@@ -202,10 +206,10 @@ def close_selector_window():
         if _current_selector is not None:
             _current_selector.finish_selection()
         plt.close('all')
-        print("✅ All selector windows closed")
+        logger.info("✅ All selector windows closed")
     except Exception as e:
         plt.close('all')
-        print(f"✅ Windows closed (with warning: {e})")
+        logger.info(f"✅ Windows closed (with warning: {e})")
 
 
 def jupyter_help():
@@ -250,7 +254,7 @@ def jupyter_help():
     from epyr.baseline.interactive import close_selector_window
     close_selector_window()
     """
-    print(help_text)
+    logger.info(help_text)
 
 
 def is_interactive_available():
@@ -271,8 +275,8 @@ def is_interactive_available():
         # Check for notebook backends
         backend = matplotlib.get_backend().lower()
         if 'inline' in backend:
-            print("⚠️  Warning: Inline backend detected. Interactive selection may not work.")
-            print("   Try: %matplotlib widget or %matplotlib notebook")
+            logger.warning("⚠️  Warning: Inline backend detected. Interactive selection may not work.")
+            logger.warning("   Try: %matplotlib widget or %matplotlib notebook")
             return False
         elif 'widget' in backend or 'nbagg' in backend:
             return True
@@ -294,18 +298,18 @@ def setup_interactive_backend():
             # We're in Jupyter
             current_backend = matplotlib.get_backend().lower()
             if 'inline' in current_backend:
-                print("🔧 Setting up interactive backend...")
+                logger.info("🔧 Setting up interactive backend...")
                 try:
                     ipython.magic('matplotlib widget')
-                    print("✅ Switched to widget backend")
+                    logger.info("✅ Switched to widget backend")
                 except:
                     try:
                         ipython.magic('matplotlib notebook')
-                        print("✅ Switched to notebook backend")
+                        logger.info("✅ Switched to notebook backend")
                     except:
-                        print("⚠️  Could not switch to interactive backend")
-                        print("   Try running: %matplotlib widget")
+                        logger.warning("⚠️  Could not switch to interactive backend")
+                        logger.warning("   Try running: %matplotlib widget")
         else:
-            print("✅ Desktop matplotlib detected, interactive selection should work")
+            logger.info("✅ Desktop matplotlib detected, interactive selection should work")
     except ImportError:
-        print("✅ Desktop environment, interactive selection should work")
+        logger.info("✅ Desktop environment, interactive selection should work")

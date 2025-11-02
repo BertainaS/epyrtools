@@ -12,7 +12,7 @@ specifically designed for EPR data from epyr.eprload():
 Features:
 ---------
 • **Polynomial correction**: For smooth baseline drifts in CW EPR spectra
-• **Stretched exponential**: For T2 relaxation and echo decay measurements  
+• **Stretched exponential**: For T2 relaxation and echo decay measurements
 • **Bi-exponential**: For complex decay patterns with multiple components
 • **Automatic model selection**: Intelligent model choice using AIC/BIC/R² criteria
 • **Interactive region selection**: Manual region specification with matplotlib widgets
@@ -39,11 +39,15 @@ corrected, baseline = epyr.baseline.baseline_bi_exponential_1d(x, y, params)
 Modules:
 --------
 • `models`: Mathematical functions for baseline fitting
-• `correction`: Core baseline correction algorithms  
+• `correction`: Core baseline correction algorithms
 • `selection`: Region selection and masking utilities
 • `interactive`: Interactive matplotlib widgets for Jupyter
 • `auto`: Automatic model selection and comparison
 """
+
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
 
 # Import core correction functions
 from .correction import (
@@ -155,127 +159,127 @@ def get_help():
     help_text = """
     📋 EPyR Baseline Correction Package - Help
     ========================================
-    
+
     🎯 QUICK START - MOST COMMON USAGE:
-    
+
     # Automatic model selection (RECOMMENDED)
     corrected, baseline, info = epyr.baseline.baseline_auto_1d(x, y, params)
     print(f"Best model: {info['best_model']}")
-    
+
     # Manual model selection
     corrected, baseline = epyr.baseline.baseline_polynomial_1d(x, y, params, order=3)
     corrected, baseline = epyr.baseline.baseline_stretched_exponential_1d(x, y, params)
-    
+
     🔧 CORRECTION METHODS:
-    
+
     baseline_polynomial_1d()        - For CW EPR spectra with smooth drifts
-    baseline_polynomial_2d()        - For 2D EPR datasets  
+    baseline_polynomial_2d()        - For 2D EPR datasets
     baseline_stretched_exponential_1d()  - For T2 relaxation, echo decay
     baseline_bi_exponential_1d()    - For complex multi-component decay
     baseline_auto_1d()              - Automatic model selection (recommended!)
-    
+
     🖱️  INTERACTIVE SELECTION:
-    
+
     # All correction functions support interactive=True
     corrected, baseline = epyr.baseline.baseline_polynomial_1d(
         x, y, params, interactive=True
     )
-    
+
     # Manual region selection
     from epyr.baseline import RegionSelector
     selector = RegionSelector()
     regions = selector.select_regions_1d(x, y)
-    
+
     📊 DATA TYPE RECOMMENDATIONS:
-    
-    • CW EPR spectra → baseline_polynomial_1d() 
+
+    • CW EPR spectra → baseline_polynomial_1d()
     • T2 relaxation data → baseline_stretched_exponential_1d()
     • Complex decay → baseline_bi_exponential_1d()
     • Unknown/mixed → baseline_auto_1d()
-    
+
     🆘 JUPYTER NOTEBOOK HELP:
-    
+
     If interactive selection gets stuck:
     from epyr.baseline import close_selector_window
     close_selector_window()
-    
+
     🎨 BACKEND CONTROL:
-    
+
     EPyR baseline now respects your matplotlib backend choice!
-    
+
     # Set inline backend (static plots)
     epyr.baseline.setup_inline_backend()
     # or: %matplotlib inline
-    
-    # Set interactive backend (zoomable plots)  
+
+    # Set interactive backend (zoomable plots)
     epyr.baseline.setup_widget_backend()
     # or: %matplotlib widget
-    
+
     # Alternative interactive backend
     epyr.baseline.setup_notebook_backend()
     # or: %matplotlib notebook
-    
+
     💡 For more details: help(epyr.baseline.baseline_auto_1d)
     """
-    print(help_text)
+    logger.info(help_text)
 
 
 def demo():
     """Run a demonstration of baseline correction capabilities."""
-    print("🎬 EPyR Baseline Correction Demo")
-    print("=" * 50)
-    
+    logger.info("🎬 EPyR Baseline Correction Demo")
+    logger.info("=" * 50)
+
     try:
         import numpy as np
         import matplotlib.pyplot as plt
-        
+
         # Create synthetic test data
-        print("📊 Creating synthetic EPR-like data...")
-        
+        logger.info("📊 Creating synthetic EPR-like data...")
+
         # 1. CW EPR spectrum with polynomial baseline
         x_cw = np.linspace(3300, 3400, 200)
         signal_cw = 50 * np.exp(-((x_cw - 3350) / 10)**2)  # Gaussian signal
         baseline_cw = 0.1 * x_cw**2 - 680 * x_cw + 1150000  # Quadratic drift
         noise_cw = 5 * np.random.normal(size=len(x_cw))
         y_cw = signal_cw + baseline_cw + noise_cw
-        
-        print("   Testing polynomial correction on synthetic CW EPR...")
+
+        logger.info("   Testing polynomial correction on synthetic CW EPR...")
         corrected_cw, fitted_baseline = baseline_polynomial_1d(None, y_cw, None, order=2)
-        
+
         # 2. T2 relaxation data with stretched exponential baseline
         x_t2 = np.linspace(0, 2000, 150)
         baseline_t2 = 1000 * np.exp(-((x_t2 / 500)**1.2)) + 50
         noise_t2 = 20 * np.random.normal(size=len(x_t2))
         y_t2 = baseline_t2 + noise_t2
-        
-        print("   Testing stretched exponential correction on synthetic T2 data...")
+
+        logger.info("   Testing stretched exponential correction on synthetic T2 data...")
         corrected_t2, fitted_t2 = baseline_stretched_exponential_1d(None, y_t2, None)
-        
+
         # 3. Automatic model selection
-        print("   Testing automatic model selection...")
-        
+        logger.info("   Testing automatic model selection...")
+
         test_data = [
             ("CW EPR", None, y_cw),
             ("T2 relaxation", None, y_t2)
         ]
-        
+
         for name, x_data, y_data in test_data:
             try:
                 corrected_auto, baseline_auto, info = baseline_auto_1d(
                     x_data, y_data, None, verbose=False
                 )
-                print(f"   ✅ {name}: Best model = {info['best_model']} (R² = {info['parameters']['r2']:.3f})")
+                logger.info(f"   ✅ {name}: Best model = {info['best_model']} (R² = {info['parameters']['r2']:.3f})")
             except Exception as e:
-                print(f"   ⚠️  {name}: {e}")
-        
-        print("\n🎉 Demo completed successfully!")
-        print("\n🚀 Available models:", list_available_models())
-        print("💡 Run epyr.baseline.get_help() for detailed usage instructions")
-        
+                logger.info(f"   ⚠️  {name}: {e}")
+
+        logger.info("🎉 Demo completed successfully!")
+        logger.info("🚀 Available models: " + str(list_available_models()))
+        logger.info("💡 Run epyr.baseline.get_help() for detailed usage instructions")
+
     except ImportError as e:
-        print(f"⚠️  Demo requires numpy and matplotlib: {e}")
+        logger.warning(f"Demo requires numpy and matplotlib: {e}")
     except Exception as e:
-        print(f"⚠️  Demo error: {e}")
+        logger.warning(f"Demo error: {e}")
 
 
 # Convenience aliases for backward compatibility
@@ -299,10 +303,10 @@ _DEFAULT_SETTINGS = {
 def configure(**kwargs):
     """
     Configure default settings for baseline correction.
-    
+
     Args:
         polynomial_order: Default polynomial order (default: 2)
-        beta_range: Default beta range for stretched exponentials (default: (0.01, 5.0))  
+        beta_range: Default beta range for stretched exponentials (default: (0.01, 5.0))
         selection_criterion: Default criterion for automatic selection (default: 'aic')
         center_fraction: Default center exclusion fraction (default: 0.3)
         interactive_backend: Preferred matplotlib backend (default: 'auto')
@@ -311,9 +315,9 @@ def configure(**kwargs):
         if key in _DEFAULT_SETTINGS:
             _DEFAULT_SETTINGS[key] = value
         else:
-            print(f"⚠️  Unknown configuration option: {key}")
-    
-    print("✅ Baseline correction settings updated:", _DEFAULT_SETTINGS)
+            logger.warning(f"Unknown configuration option: {key}")
+
+    logger.info(f"✅ Baseline correction settings updated: {_DEFAULT_SETTINGS}")
 
 def get_configuration():
     """Get current default settings."""
@@ -327,11 +331,11 @@ def setup_inline_backend():
         ipython = get_ipython()
         if ipython is not None:
             ipython.magic('matplotlib inline')
-            print("✅ Switched to inline backend (static plots)")
+            logger.info("✅ Switched to inline backend (static plots)")
         else:
-            print("⚠️  Not in Jupyter environment")
+            logger.warning("⚠️  Not in Jupyter environment")
     except ImportError:
-        print("⚠️  IPython not available")
+        logger.warning("⚠️  IPython not available")
 
 
 def setup_widget_backend():
@@ -341,11 +345,11 @@ def setup_widget_backend():
         ipython = get_ipython()
         if ipython is not None:
             ipython.magic('matplotlib widget')
-            print("✅ Switched to widget backend (interactive plots)")
+            logger.info("✅ Switched to widget backend (interactive plots)")
         else:
-            print("⚠️  Not in Jupyter environment")
+            logger.warning("⚠️  Not in Jupyter environment")
     except ImportError:
-        print("⚠️  IPython not available")
+        logger.warning("⚠️  IPython not available")
 
 
 def setup_notebook_backend():
@@ -355,11 +359,11 @@ def setup_notebook_backend():
         ipython = get_ipython()
         if ipython is not None:
             ipython.magic('matplotlib notebook')
-            print("✅ Switched to notebook backend (interactive plots)")
+            logger.info("✅ Switched to notebook backend (interactive plots)")
         else:
-            print("⚠️  Not in Jupyter environment")
+            logger.warning("⚠️  Not in Jupyter environment")
     except ImportError:
-        print("⚠️  IPython not available")
+        logger.warning("⚠️  IPython not available")
 
 
 # Backend setup - only if explicitly requested

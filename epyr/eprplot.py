@@ -18,6 +18,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 def plot_1d(
     x: Union[np.ndarray, List[np.ndarray], None],
@@ -425,12 +429,12 @@ def plot_2d_slicer(
     slider.on_changed(update_slice)
     
     # User instructions
-    print("🎛️  Interactive 2D EPR Viewer")
-    print("="*50)
-    print(f"Direction: {slice_direction}")
-    print(f"Number of slices: {n_slices}")
-    print(f"Use the slider to navigate between slices")
-    print("Red line in overview shows current position")
+    logger.info("🎛️  Interactive 2D EPR Viewer")
+    logger.info("="*50)
+    logger.info(f"Direction: {slice_direction}")
+    logger.info(f"Number of slices: {n_slices}")
+    logger.info(f"Use the slider to navigate between slices")
+    logger.info("Red line in overview shows current position")
     
     # Show plot
     plt.show()

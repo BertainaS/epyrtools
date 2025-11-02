@@ -7,6 +7,10 @@ Constants available in both SI and CGS units.
 import numpy as np
 from typing import Tuple, Optional, Union
 
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 # ============================================================================
 # FUNDAMENTAL PHYSICAL CONSTANTS (2022 CODATA) - SI Units
@@ -465,12 +469,12 @@ def wavelength_to_frequency(wavelength_m: float) -> float:
 def constants_summary():
     """Print summary of all physical constants with units and values."""
 
-    print("EPyR Tools Physical Constants")
-    print("=" * 50)
-    print("All values from 2022 CODATA recommendations")
-    print()
+    logger.info("EPyR Tools Physical Constants")
+    logger.info("=" * 50)
+    logger.info("All values from 2022 CODATA recommendations")
+    logger.info("")
 
-    print("SI Units:")
+    logger.info("SI Units:")
     si_constants = [
         ("Free electron g-factor", GFREE, "dimensionless"),
         ("Bohr magneton", BMAGN, "J⋅T⁻¹"),
@@ -485,10 +489,10 @@ def constants_summary():
     ]
 
     for name, value, unit in si_constants:
-        print(f"  {name:<30}: {value:.6e} {unit}")
+        logger.info(f"  {name:<30}: {value:.6e} {unit}")
 
-    print()
-    print("CGS Units:")
+    logger.info("")
+    logger.info("CGS Units:")
     cgs_constants = [
         ("Free electron g-factor", GFREE_CGS, "dimensionless"),
         ("Bohr magneton", BMAGN_CGS, "erg⋅G⁻¹"),
@@ -503,22 +507,22 @@ def constants_summary():
     ]
 
     for name, value, unit in cgs_constants:
-        print(f"  {name:<30}: {value:.6e} {unit}")
+        logger.info(f"  {name:<30}: {value:.6e} {unit}")
 
-    print()
-    print("EPR Examples:")
+    logger.info("")
+    logger.info("EPR Examples:")
     # Free electron gyromagnetic ratio
     gamma_free = gamma_hz()
-    print(f"  Free electron γ/2π: {gamma_free:.3e} Hz/T")
+    logger.info(f"  Free electron γ/2π: {gamma_free:.3e} Hz/T")
 
     # X-band EPR
     freq_xband = 9.5e9  # Hz
     B_xband = frequency_to_magnetic_field(freq_xband)
-    print(f"  X-band EPR (9.5 GHz): {B_xband*1000:.1f} mT")
+    logger.info(f"  X-band EPR (9.5 GHz): {B_xband*1000:.1f} mT")
 
     # Room temperature thermal energy
     E_thermal = thermal_energy(295)  # K
-    print(f"  Room temperature kT: {E_thermal/(1.602176634e-19)*1000:.2f} meV")
+    logger.info(f"  Room temperature kT: {E_thermal/(1.602176634e-19)*1000:.2f} meV")
 
 
 if __name__ == "__main__":

@@ -13,6 +13,10 @@ from io import StringIO
 from typing import Union, Tuple, Optional, List, Dict, Any
 import warnings
 
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
+
 # Import correction functions from our new modules
 from .correction import (baseline_polynomial_1d, baseline_stretched_exponential_1d, 
                         baseline_bi_exponential_1d)
@@ -109,7 +113,7 @@ def _test_polynomial_models(x, y, params, common_args, selection_criterion='aic'
                 
         except Exception as e:
             if verbose:
-                print(f"     Polynomial order {order}: FAILED - {e}")
+                logger.warning(f"     Polynomial order {order}: FAILED - {e}")
             continue
     
     return best_result
@@ -141,7 +145,7 @@ def _test_stretched_exponential_model(x, y, params, common_args, selection_crite
         
     except Exception as e:
         if verbose:
-            print(f"   Stretched exponential model failed: {e}")
+            logger.warning(f"   Stretched exponential model failed: {e}")
         return None
 
 
@@ -171,7 +175,7 @@ def _test_bi_exponential_model(x, y, params, common_args, selection_criterion='a
         
     except Exception as e:
         if verbose:
-            print(f"   Bi-exponential model failed: {e}")
+            logger.warning(f"   Bi-exponential model failed: {e}")
         return None
 
 
@@ -237,19 +241,19 @@ def baseline_auto_1d(
         if use_real_part:
             y_fit = np.real(y)
             if verbose:
-                print("ℹ Using real part of complex data for fitting")
+                logger.info("ℹ Using real part of complex data for fitting")
         else:
             y_fit = np.abs(y)
             if verbose:
-                print("ℹ Using magnitude of complex data for fitting")
+                logger.info("ℹ Using magnitude of complex data for fitting")
     else:
         y_fit = y.copy()
-    
+
     # Create x-coordinates
     if x is None or len(x) != n_points:
         x_coords = np.arange(n_points, dtype=float)
         if verbose:
-            print("ℹ No x-axis provided, using index as x-coordinates")
+            logger.info("ℹ No x-axis provided, using index as x-coordinates")
     else:
         x_coords = x.astype(float)
     
@@ -258,18 +262,18 @@ def baseline_auto_1d(
     
     if interactive:
         if not is_interactive_available():
-            print("⚠️  Interactive selection may not work in this environment.")
-        
+            logger.warning("⚠️  Interactive selection may not work in this environment.")
+
         if verbose:
-            print("🖱️ Interactive region selection enabled...")
-        
+            logger.info("🖱️ Interactive region selection enabled...")
+
         selector = RegionSelector()
         selected_regions = selector.select_regions_1d(
             x_coords, y_fit,
             f"Select regions to {region_mode.upper()} from automatic baseline fitting"
         )
         if verbose:
-            print(f"✅ Selected {len(selected_regions)} regions")
+            logger.info(f"✅ Selected {len(selected_regions)} regions")
     
     # Prepare common arguments for all models
     common_args = {
@@ -283,45 +287,45 @@ def baseline_auto_1d(
     
     # Test each model
     model_results = {}
-    
+
     if verbose:
-        print(f"\n🧪 Testing {len(models)} baseline models...")
-    
+        logger.info(f"\n🧪 Testing {len(models)} baseline models...")
+
     # Test polynomial model
     if 'polynomial' in models:
         if verbose:
-            print("   Testing polynomial baseline...")
-        
+            logger.info("   Testing polynomial baseline...")
+
         poly_result = _test_polynomial_models(x_coords, y_fit, params, common_args, selection_criterion, verbose)
         if poly_result is not None:
             model_results['polynomial'] = poly_result
             if verbose:
                 metrics = poly_result['metrics']
-                print(f"   ✅ Polynomial (order {poly_result['order']}): {selection_criterion.upper()}={metrics[selection_criterion]:.2f}")
-    
-    # Test stretched exponential model  
+                logger.info(f"   ✅ Polynomial (order {poly_result['order']}): {selection_criterion.upper()}={metrics[selection_criterion]:.2f}")
+
+    # Test stretched exponential model
     if 'stretched_exponential' in models:
         if verbose:
-            print("   Testing stretched exponential baseline...")
-        
+            logger.info("   Testing stretched exponential baseline...")
+
         stretch_result = _test_stretched_exponential_model(x_coords, y_fit, params, common_args, selection_criterion, verbose)
         if stretch_result is not None:
             model_results['stretched_exponential'] = stretch_result
             if verbose:
                 metrics = stretch_result['metrics']
-                print(f"   ✅ Stretched exponential: {selection_criterion.upper()}={metrics[selection_criterion]:.2f}")
-    
+                logger.info(f"   ✅ Stretched exponential: {selection_criterion.upper()}={metrics[selection_criterion]:.2f}")
+
     # Test bi-exponential model
     if 'bi_exponential' in models:
         if verbose:
-            print("   Testing bi-exponential baseline...")
-        
+            logger.info("   Testing bi-exponential baseline...")
+
         bi_result = _test_bi_exponential_model(x_coords, y_fit, params, common_args, selection_criterion, verbose)
         if bi_result is not None:
             model_results['bi_exponential'] = bi_result
             if verbose:
                 metrics = bi_result['metrics']
-                print(f"   ✅ Bi-exponential: {selection_criterion.upper()}={metrics[selection_criterion]:.2f}")
+                logger.info(f"   ✅ Bi-exponential: {selection_criterion.upper()}={metrics[selection_criterion]:.2f}")
     
     # Select best model
     if not model_results:
@@ -362,18 +366,18 @@ def baseline_auto_1d(
         model_info['polynomial_order'] = best_result['order']
     
     if verbose:
-        print(f"\n🏆 Best model: {best_model}")
-        print(f"📊 {selection_criterion.upper()} = {best_criterion:.2f}")
-        print(f"📊 R² = {best_result['metrics']['r2']:.4f}")
-        
+        logger.info(f"\n🏆 Best model: {best_model}")
+        logger.info(f"📊 {selection_criterion.upper()} = {best_criterion:.2f}")
+        logger.info(f"📊 R² = {best_result['metrics']['r2']:.4f}")
+
         if len(model_results) > 1:
-            print(f"\n📋 Model comparison ({selection_criterion.upper()}):")
-            sorted_models = sorted(criteria_dict.items(), 
-                                 key=lambda x: x[1], 
+            logger.info(f"\n📋 Model comparison ({selection_criterion.upper()}):")
+            sorted_models = sorted(criteria_dict.items(),
+                                 key=lambda x: x[1],
                                  reverse=(selection_criterion == 'r2'))
             for i, (model, criterion_val) in enumerate(sorted_models):
                 marker = "🥇" if model == best_model else f"{i+1}. "
-                print(f"   {marker} {model}: {criterion_val:.2f}")
+                logger.info(f"   {marker} {model}: {criterion_val:.2f}")
     
     # Return the corrected data in the original format
     corrected_data = best_result['corrected']
@@ -499,11 +503,11 @@ def auto_baseline_with_recommendations(
         tuple: (corrected_data, baseline, model_info)
     """
     recommended_models = get_model_recommendations(data_type, experiment_type)
-    
+
     kwargs['models'] = recommended_models
     kwargs.setdefault('verbose', True)
-    
+
     if kwargs.get('verbose'):
-        print(f"🎯 Recommended models for {data_type or 'unknown'} {experiment_type or 'data'}: {recommended_models}")
-    
+        logger.info(f"🎯 Recommended models for {data_type or 'unknown'} {experiment_type or 'data'}: {recommended_models}")
+
     return baseline_auto_1d(x, y, params, **kwargs)

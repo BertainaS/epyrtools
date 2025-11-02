@@ -8,6 +8,10 @@ import matplotlib.pyplot as plt
 from scipy import special
 from typing import Optional, Union
 
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 def apowin(window_type, n_points, alpha=None, half_window=None):
     """
@@ -365,56 +369,56 @@ def apply_window_demo():
     
     plt.tight_layout()
     plt.show()
-    
-    print("\nWindowing Effects:")
-    print("- Rectangular: Sharp cutoff, high sidelobes")
-    print("- Hamming: Good sidelobe suppression, moderate resolution")
-    print("- Hann: Smooth transition, balanced performance")
-    print("- Blackman: Excellent sidelobe suppression, wider main lobe")
+
+    logger.info("\nWindowing Effects:")
+    logger.info("- Rectangular: Sharp cutoff, high sidelobes")
+    logger.info("- Hamming: Good sidelobe suppression, moderate resolution")
+    logger.info("- Hann: Smooth transition, balanced performance")
+    logger.info("- Blackman: Excellent sidelobe suppression, wider main lobe")
 
 
 def demo():
     """Comprehensive demonstration of apodization windows"""
-    
-    print("🪟 Apodization Windows Demo")
-    print("=" * 40)
-    
+
+    logger.info("🪟 Apodization Windows Demo")
+    logger.info("=" * 40)
+
     # Basic window examples
-    print("\n1. Basic window generation:")
-    
+    logger.info("\n1. Basic window generation:")
+
     # Create some example windows
     n = 64
-    
+
     hamming_win = apowin('hamming', n)
-    print(f"-> Hamming window: {n} points, peak = {np.max(hamming_win):.3f}")
-    
+    logger.info(f"-> Hamming window: {n} points, peak = {np.max(hamming_win):.3f}")
+
     kaiser_win = apowin('kaiser', n, alpha=6)
-    print(f"-> Kaiser window (β=6): {n} points, peak = {np.max(kaiser_win):.3f}")
-    
+    logger.info(f"-> Kaiser window (β=6): {n} points, peak = {np.max(kaiser_win):.3f}")
+
     # Half window
     half_win = apowin('hann', n//2, half_window='right')
-    print(f"-> Half Hann window: {len(half_win)} points")
-    
+    logger.info(f"-> Half Hann window: {len(half_win)} points")
+
     # Show comparison plots
-    print("\n2. Showing window comparison...")
+    logger.info("\n2. Showing window comparison...")
     window_comparison()
-    
-    print("\n3. Showing frequency response characteristics...")
+
+    logger.info("\n3. Showing frequency response characteristics...")
     frequency_response_demo()
-    
-    print("\n4. Showing practical application to signals...")
+
+    logger.info("\n4. Showing practical application to signals...")
     apply_window_demo()
-    
+
     # Print window properties
-    print("\n>> Window Properties Summary:")
-    print("Window Type    | Main Lobe Width | Peak Sidelobe (dB) | Use Case")
-    print("-" * 70)
-    print("Rectangular    |      2          |       -13          | Maximum resolution")
-    print("Hamming        |      4          |       -41          | General purpose")  
-    print("Hann           |      4          |       -32          | Smooth spectrum")
-    print("Blackman       |      6          |       -58          | Low sidelobes")
-    print("Kaiser (β=6)   |      5          |       -50          | Adjustable tradeoff")
-    print("Gaussian       |   Variable      |       -55          | Smooth, parametric")
+    logger.info("\n>> Window Properties Summary:")
+    logger.info("Window Type    | Main Lobe Width | Peak Sidelobe (dB) | Use Case")
+    logger.info("-" * 70)
+    logger.info("Rectangular    |      2          |       -13          | Maximum resolution")
+    logger.info("Hamming        |      4          |       -41          | General purpose")
+    logger.info("Hann           |      4          |       -32          | Smooth spectrum")
+    logger.info("Blackman       |      6          |       -58          | Low sidelobes")
+    logger.info("Kaiser (β=6)   |      5          |       -50          | Adjustable tradeoff")
+    logger.info("Gaussian       |   Variable      |       -55          | Smooth, parametric")
 
 
 if __name__ == "__main__":

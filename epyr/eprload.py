@@ -272,7 +272,7 @@ def _plot_data(
 ) -> None:
     """Helper function to plot the loaded EPR data using Matplotlib."""
     if y is None or y.size == 0:
-        print("No data available to plot.")
+        logger.warning("No data available to plot.")
         return
 
     fig, ax = plt.subplots()
@@ -352,7 +352,7 @@ def _plot_data(
             x_label = f"X Axis ({x_unit})"
             # y-axis remains index
 
-        print("Plotting 2D data (real part) using pcolormesh.")
+        logger.debug("Plotting 2D data (real part) using pcolormesh.")
         # Take real part if complex
         plot_data = np.real(y)
 
@@ -370,7 +370,7 @@ def _plot_data(
         ax.autoscale(tight=True)  # Fit axes to data
 
     else:
-        print(f"Warning: Cannot plot data with {y.ndim} dimensions.")
+        logger.warning(f"Cannot plot data with {y.ndim} dimensions.")
         return  # Don't show empty plot
 
     # Apply tight_layout only for 1D plots (colorbar in 2D causes layout engine conflict)
@@ -379,50 +379,50 @@ def _plot_data(
 
     if save_if_possible:
         # Save the figure if requested
-        print(file_name)
+        logger.debug(f"Saving plot for: {file_name}")
         save_path = Path(file_name).with_suffix(".png")  # Save as PNG
         fig.savefig(save_path, dpi=300)
-        print(f"Plot saved to {save_path}")
+        logger.info(f"Plot saved to {save_path}")
     plt.show()
 
 
 # --- Example Usage ---
 if __name__ == "__main__":
-    print("Running eprload example...")
-    print("This will open a file dialog to select a Bruker EPR file.")
+    logger.info("Running eprload example...")
+    logger.info("This will open a file dialog to select a Bruker EPR file.")
 
     # Example 1: Load data using file dialog and plot
-    print("\n--- Example 1: Load with dialog, default scaling, plotting enabled ---")
+    logger.info("\n--- Example 1: Load with dialog, default scaling, plotting enabled ---")
     x_data, y_data, parameters, file = eprload()  # plot_if_possible is True by default
 
     if y_data is not None:
-        print(f"Successfully loaded: {file}")
-        print(f"Data shape: {y_data.shape}")
+        logger.info(f"Successfully loaded: {file}")
+        logger.info(f"Data shape: {y_data.shape}")
         if isinstance(x_data, np.ndarray):
-            print(f"Abscissa shape: {x_data.shape}")
+            logger.info(f"Abscissa shape: {x_data.shape}")
         elif isinstance(x_data, (list, tuple)):
-            print(f"Abscissa shapes: {[ax.shape for ax in x_data]}")
-        print(f"Number of parameters loaded: {len(parameters)}")
-        # print("Parameters:", parameters) # Uncomment to see all parameters
+            logger.info(f"Abscissa shapes: {[ax.shape for ax in x_data]}")
+        logger.info(f"Number of parameters loaded: {len(parameters)}")
+        # logger.debug("Parameters:", parameters) # Uncomment to see all parameters
         # Example accessing a parameter:
         mw_freq = parameters.get("MWFQ", "N/A")  # Get MW frequency if available
-        print(f"Microwave Frequency (MWFQ): {mw_freq}")
+        logger.info(f"Microwave Frequency (MWFQ): {mw_freq}")
     else:
-        print("Loading failed or was cancelled.")
+        logger.warning("Loading failed or was cancelled.")
 
     # Example 2: Specify a file, apply scaling, suppress plotting
     # Replace 'path/to/your/datafile.DTA' with an actual file path
     # test_file = Path('path/to/your/datafile.DTA')
     # if test_file.exists():
-    #      print("\n--- Example 2: Load specific file, scaling='nG', no plot ---")
+    #      logger.info("\n--- Example 2: Load specific file, scaling='nG', no plot ---")
     #      x_scaled, y_scaled, pars_scaled, f_scaled = eprload(
     #          test_file,
     #          scaling='nG',
     #          plot_if_possible=False
     #      )
     #      if y_scaled is not None:
-    #          print(f"Successfully loaded and scaled: {f_scaled}")
-    #          print(f"Scaled data shape: {y_scaled.shape}")
+    #          logger.info(f"Successfully loaded and scaled: {f_scaled}")
+    #          logger.info(f"Scaled data shape: {y_scaled.shape}")
     #          # You can plot manually here if needed:
     #          # import matplotlib.pyplot as plt
     #          # plt.figure()
@@ -430,8 +430,8 @@ if __name__ == "__main__":
     #          # plt.title("Manually Plotted Scaled Data")
     #          # plt.show()
     #      else:
-    #          print("Loading/scaling failed for specific file.")
+    #          logger.warning("Loading/scaling failed for specific file.")
     # else:
-    #     print("\nSkipping Example 2: Test file path not found or not set.")
+    #     logger.info("\nSkipping Example 2: Test file path not found or not set.")
 
-    print("\neprload example finished.")
+    logger.info("\neprload example finished.")

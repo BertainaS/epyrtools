@@ -8,6 +8,10 @@ import matplotlib.pyplot as plt
 from scipy import signal
 from typing import Union, Tuple, Optional
 
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 def convspec(spectrum, step_size, width, derivative=0, alpha=1.0, phase=0.0):
     """
@@ -268,12 +272,12 @@ def demo():
     
     plt.tight_layout()
     plt.show()
-    
-    print("\nConvolution Demo:")
-    print("- convspec() applies lineshape broadening to spectra")
-    print("- Converts stick spectra to realistic lineshapes")
-    print("- Supports Gaussian, Lorentzian, and pseudo-Voigt profiles")
-    print("- Essential for EPR spectrum simulation")
+
+    logger.info("\nConvolution Demo:")
+    logger.info("- convspec() applies lineshape broadening to spectra")
+    logger.info("- Converts stick spectra to realistic lineshapes")
+    logger.info("- Supports Gaussian, Lorentzian, and pseudo-Voigt profiles")
+    logger.info("- Essential for EPR spectrum simulation")
 
 
 if __name__ == "__main__":

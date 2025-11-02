@@ -16,6 +16,10 @@ from tkinter import messagebox
 
 import pandas as pd
 
+from .logging_config import get_logger
+
+logger = get_logger(__name__)
+
 # --- Constants ---
 PLANCK = 6.62607015e-34  # J⋅s (CODATA 2018)
 NMAGN = 5.0507837461e-27  # J⋅T⁻¹ (Nuclear magneton, CODATA 2018)
@@ -293,10 +297,10 @@ class IsotopesGUI:
                 f"Checked paths:\n- {possible_paths[0]}\n- {possible_paths[1]}"
                 # Add others if you expanded possible_paths
             )
-            print(f"Error: {error_msg}")
+            logger.error(f"Error: {error_msg}")
             raise FileNotFoundError(error_msg)
 
-        print(f"Loading data from: {found_path}") # Info message
+        logger.info(f"Loading data from: {found_path}") # Info message
 
         try:
             # Column definitions for isotopedata.txt:
@@ -375,7 +379,7 @@ class IsotopesGUI:
                         isotopes.append(pd.NA)
             else:
                 # Handle case where required columns might be missing in the input file
-                 print("Warning: Missing required columns (N, Z, element, radioactive) for isotope symbol generation.")
+                 logger.warning("Warning: Missing required columns (N, Z, element, radioactive) for isotope symbol generation.")
                  data["isotope"] = pd.NA # Assign NA if cannot generate
 
 
@@ -399,7 +403,7 @@ class IsotopesGUI:
             return data
 
         except Exception as e:
-            print(f"Error reading or processing data file '{data_file}': {e}")
+            logger.error(f"Error reading or processing data file '{data_file}': {e}")
             traceback.print_exc()
             # Re-raise the exception to be caught by the caller (__init__ -> run_gui)
             raise
@@ -413,7 +417,7 @@ class IsotopesGUI:
         is_macos = platform.system() == "Darwin"
 
         if not hasattr(self, 'element_layout_data') or self.element_layout_data.empty:
-             print("Warning: No element layout data available to create periodic table.")
+             logger.warning("Warning: No element layout data available to create periodic table.")
              return # Cannot proceed without layout data
 
         for _, element_data in self.element_layout_data.iterrows():
@@ -481,7 +485,7 @@ class IsotopesGUI:
                 else:
                     has_isotopes = False # No data to check against
             except Exception as e: # Catch potential errors during lookup
-                print(f"Warning: Error checking isotopes for Z={ord_number}: {e}")
+                logger.warning(f"Warning: Error checking isotopes for Z={ord_number}: {e}")
                 has_isotopes = False
 
             final_color = bg_col_hex if has_isotopes else "#E0E0E0" # Grey out if no N>0 isotopes listed
@@ -781,7 +785,7 @@ class IsotopesGUI:
             show_nonmagnetic = self.nonmagnetic_var.get()
         except tk.TclError as e:
              # Should not happen with IntVars, but good practice
-             print(f"Error getting checkbox values: {e}")
+             logger.error(f"Error getting checkbox values: {e}")
              return
 
         if self.full_data is None or self.full_data.empty:
@@ -805,7 +809,7 @@ class IsotopesGUI:
             if "radioactive" in filtered_df.columns:
                 filtered_df = filtered_df[filtered_df["radioactive"] != "*"]
             else:
-                print("Warning: 'radioactive' column not found for filtering.")
+                logger.warning("Warning: 'radioactive' column not found for filtering.")
 
 
         if not show_nonmagnetic:
@@ -815,7 +819,7 @@ class IsotopesGUI:
                 # Also ensure spin is not the placeholder -1.0
                 filtered_df = filtered_df[(abs(filtered_df["spin"] - 0.0) > 1e-9) & (filtered_df["spin"] >= 0.0)]
             else:
-                print("Warning: 'spin' column not found for filtering.")
+                logger.warning("Warning: 'spin' column not found for filtering.")
         else:
             # If showing non-magnetic, still exclude placeholders
              if "spin" in filtered_df.columns:
@@ -924,7 +928,7 @@ class IsotopesGUI:
                  value = self.table.set(item_id, col_id)
                  data_list.append((value, item_id))
             except tk.TclError:
-                 print(f"Warning: Could not get value for item {item_id}, column {col_id}. Skipping.")
+                 logger.warning(f"Warning: Could not get value for item {item_id}, column {col_id}. Skipping.")
                  continue # Skip item if value cannot be retrieved
 
 
@@ -955,13 +959,13 @@ class IsotopesGUI:
                 data_list.sort(key=lambda t: str(t[0]).lower() if t[0] else "", reverse=reverse)
 
         except Exception as e:
-            print(f"Error during sorting column '{col_id}': {e}")
+            logger.error(f"Error during sorting column '{col_id}': {e}")
             traceback.print_exc()
             # Fallback to basic string sort if complex sort fails entirely
             try:
                  data_list.sort(key=lambda t: str(t[0]), reverse=reverse)
             except Exception as fallback_e:
-                 print(f"Fallback sort also failed: {fallback_e}")
+                 logger.error(f"Fallback sort also failed: {fallback_e}")
                  # If even basic sort fails, just leave the order as is.
 
         # Rearrange items in the Treeview
@@ -969,7 +973,7 @@ class IsotopesGUI:
              try:
                  self.table.move(item_id, "", index)
              except tk.TclError:
-                 print(f"Warning: Could not move item {item_id} during sort.")
+                 logger.warning(f"Warning: Could not move item {item_id} during sort.")
                  continue # Skip if item cannot be moved
 
 
@@ -1010,5 +1014,5 @@ def run_gui():
 if __name__ == "__main__":
     # This block only runs when the script is executed directly
     # (e.g., python isotopes_gui.py)
-    print("Running Isotopes GUI as main script...")
+    logger.info("Running Isotopes GUI as main script...")
     run_gui()

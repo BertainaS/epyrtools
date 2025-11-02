@@ -51,11 +51,11 @@ class InteractiveMeasurementTool:
     def enable(self):
         """Enable the measurement tool."""
         self.cid = self.ax.figure.canvas.mpl_connect('button_press_event', self.on_click)
-        print("\n📏 Measurement tool enabled!")
-        print("Instructions:")
-        print("  • Click two points on the plot to measure distance")
-        print("  • Right-click to clear measurements")
-        print("  • Press 'q' or close window to exit")
+        logger.info("📏 Measurement tool enabled!")
+        logger.info("Instructions:")
+        logger.info("  • Click two points on the plot to measure distance")
+        logger.info("  • Right-click to clear measurements")
+        logger.info("  • Press 'q' or close window to exit")
         
     def disable(self):
         """Disable the measurement tool."""
@@ -85,8 +85,8 @@ class InteractiveMeasurementTool:
         # Plot the point
         point_plot = self.ax.plot(x, y, 'ro', markersize=8, markeredgecolor='white', markeredgewidth=1)[0]
         self.lines.append(point_plot)
-        
-        print(f"Point {len(self.points)}: x={x:.4f}, y={y:.4e}")
+
+        logger.info(f"Point {len(self.points)}: x={x:.4f}, y={y:.4e}")
         
         # If we have two points, calculate and display distance
         if len(self.points) == 2:
@@ -130,13 +130,13 @@ class InteractiveMeasurementTool:
         self.annotations.append(annotation)
         
         # Print results to console
-        print(f"\n📐 Measurement Results:")
-        print(f"  Point 1: ({x1:.4f}, {y1:.4e})")
-        print(f"  Point 2: ({x2:.4f}, {y2:.4e})")
-        print(f"  Δx = {delta_x:.4f}")
-        print(f"  Δy = {delta_y:.4e}")
-        print(f"  Distance = {distance:.4e}")
-        print(f"\nClick two more points for another measurement, or right-click to clear.\n")
+        logger.info("📐 Measurement Results:")
+        logger.info(f"  Point 1: ({x1:.4f}, {y1:.4e})")
+        logger.info(f"  Point 2: ({x2:.4f}, {y2:.4e})")
+        logger.info(f"  Δx = {delta_x:.4f}")
+        logger.info(f"  Δy = {delta_y:.4e}")
+        logger.info(f"  Distance = {distance:.4e}")
+        logger.info("Click two more points for another measurement, or right-click to clear.")
         
     def clear_measurements(self):
         """Clear all measurements from the plot."""
@@ -150,9 +150,9 @@ class InteractiveMeasurementTool:
         self.lines.clear()
         self.annotations.clear()
         self.points.clear()
-        
+
         self.ax.figure.canvas.draw()
-        print("🧹 Measurements cleared. Click two points for a new measurement.")
+        logger.info("🧹 Measurements cleared. Click two points for a new measurement.")
 
 
 def create_interactive_plot_with_measurements(x, y, params, file_path, enable_measurements=False):
@@ -204,7 +204,7 @@ def create_interactive_plot_with_measurements(x, y, params, file_path, enable_me
         # 2D data - basic implementation
         ax.imshow(np.real(y), aspect='auto', cmap='viridis')
         ax.set_title(f"{plot_title} (2D data)")
-        print("📊 2D data plotted. Measurement tool works best with 1D data.")
+        logger.info("📊 2D data plotted. Measurement tool works best with 1D data.")
         
     plt.tight_layout()
     
@@ -216,11 +216,11 @@ def create_interactive_plot_with_measurements(x, y, params, file_path, enable_me
             measurement_tool.clear_measurements()
             
     fig.canvas.mpl_connect('key_press_event', on_key)
-    
+
     if enable_measurements:
-        print("\n⌨️  Keyboard shortcuts:")
-        print("  • 'c' - Clear measurements")
-        print("  • 'q' - Quit")
+        logger.info("⌨️  Keyboard shortcuts:")
+        logger.info("  • 'c' - Clear measurements")
+        logger.info("  • 'q' - Quit")
     
     return fig, ax
 
@@ -591,12 +591,12 @@ def cmd_config():
                 section_config = config.get_section(args.section)
                 if section_config:
                     import json
-                    print(json.dumps(section_config, indent=2))
+                    logger.info(json.dumps(section_config, indent=2))
                 else:
                     logger.error(f"Section '{args.section}' not found")
             else:
                 import json
-                print(json.dumps(config._config, indent=2))
+                logger.info(json.dumps(config._config, indent=2))
         
         elif args.action == 'set':
             # Try to parse value as JSON first
@@ -652,30 +652,30 @@ def cmd_info():
     
     import json
     from . import __version__
-    
+
     # Show version info
-    print(f"EPyR Tools Version: {__version__}")
-    print(f"Configuration file: {config.get_config_file_path()}")
-    print()
-    
+    logger.info(f"EPyR Tools Version: {__version__}")
+    logger.info(f"Configuration file: {config.get_config_file_path()}")
+    logger.info("")
+
     if args.config or args.all:
-        print("=== Configuration ===")
-        print(json.dumps(config._config, indent=2))
-        print()
-    
+        logger.info("=== Configuration ===")
+        logger.info(json.dumps(config._config, indent=2))
+        logger.info("")
+
     if args.performance or args.all:
-        print("=== Performance Information ===")
+        logger.info("=== Performance Information ===")
         from .performance import get_performance_info
         perf_info = get_performance_info()
-        print(json.dumps(perf_info, indent=2))
-        print()
-    
+        logger.info(json.dumps(perf_info, indent=2))
+        logger.info("")
+
     if args.plugins or args.all:
-        print("=== Loaded Plugins ===")
+        logger.info("=== Loaded Plugins ===")
         from .plugins import plugin_manager
         plugins_info = plugin_manager.list_plugins()
-        print(json.dumps(plugins_info, indent=2))
-        print()
+        logger.info(json.dumps(plugins_info, indent=2))
+        logger.info("")
 
 
 def cmd_isotopes():
@@ -962,36 +962,36 @@ def cmd_validate():
                     }
                     
                     fair_result = validate_fair_dataset(data_dict, file_path)
-                    
+
                     if fair_result.is_valid:
-                        print(f"✓ {file_path.name} - Valid")
+                        logger.info(f"✓ {file_path.name} - Valid")
                         valid_files += 1
                     else:
-                        print(f"⚠ {file_path.name} - Valid data but FAIR compliance issues")
+                        logger.info(f"⚠ {file_path.name} - Valid data but FAIR compliance issues")
                         valid_files += 1
-                    
-                    print(f"  Data points: {len(y)}")
-                    print(f"  X-axis range: {np.min(x) if x is not None else 'N/A'} to {np.max(x) if x is not None else 'N/A'}")
-                    print(f"  Parameters: {len(params) if params else 0} entries")
-                    print(f"  FAIR compliance: {len(fair_result.errors)} errors, {len(fair_result.warnings)} warnings")
-                    
+
+                    logger.info(f"  Data points: {len(y)}")
+                    logger.info(f"  X-axis range: {np.min(x) if x is not None else 'N/A'} to {np.max(x) if x is not None else 'N/A'}")
+                    logger.info(f"  Parameters: {len(params) if params else 0} entries")
+                    logger.info(f"  FAIR compliance: {len(fair_result.errors)} errors, {len(fair_result.warnings)} warnings")
+
                     if fair_result.errors:
                         for error in fair_result.errors[:3]:  # Show first 3 errors
-                            print(f"    Error: {error}")
+                            logger.info(f"    Error: {error}")
                         if len(fair_result.errors) > 3:
-                            print(f"    ... and {len(fair_result.errors) - 3} more errors")
+                            logger.info(f"    ... and {len(fair_result.errors) - 3} more errors")
                 else:
                     valid_files += 1
-                    print(f"✓ {file_path.name} - Valid")
+                    logger.info(f"✓ {file_path.name} - Valid")
             else:
                 logger.warning(f"Failed to extract valid data from {file_path}")
-                print(f"✗ {file_path.name} - Invalid data")
-                
+                logger.info(f"✗ {file_path.name} - Invalid data")
+
         except Exception as e:
             logger.error(f"Validation failed for {file_path}: {e}")
-            print(f"✗ {file_path.name} - Error: {e}")
-    
-    print(f"\nValidation Summary: {valid_files}/{total_files} files valid")
+            logger.info(f"✗ {file_path.name} - Error: {e}")
+
+    logger.info(f"Validation Summary: {valid_files}/{total_files} files valid")
     
     if valid_files < total_files:
         sys.exit(1)
@@ -1035,7 +1035,7 @@ def main():
     
     if not args.command:
         parser.print_help()
-        print("\nUse 'epyr <command> --help' for more information on a specific command.")
+        logger.info("Use 'epyr <command> --help' for more information on a specific command.")
         return
     
     # Dispatch to appropriate command

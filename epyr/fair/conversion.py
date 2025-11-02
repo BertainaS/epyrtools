@@ -12,6 +12,9 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 
 from epyr.eprload import eprload
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
 
 from .data_processing import append_fair_metadata
 from .exporters import save_fair as _save_fair_formats
@@ -41,9 +44,6 @@ def convert_bruker_to_fair(
     Returns:
         True if conversion successful, False otherwise.
     """
-    from ..logging_config import get_logger
-    logger = get_logger(__name__)
-    
     try:
         logger.info("Starting FAIR conversion process...")
         input_file = Path(input_file)
@@ -137,14 +137,14 @@ def save_fair(
     output_path = output_basename.parent
     output_path.mkdir(parents=True, exist_ok=True)
 
-    print(f"Saving data from '{original_file_path}' to FAIR formats...")
+    logger.info(f"Saving data from '{original_file_path}' to FAIR formats...")
 
     # Use the consolidated save function from exporters
     _save_fair_formats(
         output_basename, x, y, params, original_file_path, output_formats
     )
 
-    print("\nFAIR saving process finished.")
+    logger.info("\nFAIR saving process finished.")
 
 
 def batch_convert_directory(
@@ -179,8 +179,8 @@ def batch_convert_directory(
     else:
         output_path = None
 
-    print(f"Starting batch conversion of directory: {input_path}")
-    print(f"Looking for files with extensions: {file_extensions}")
+    logger.info(f"Starting batch conversion of directory: {input_path}")
+    logger.info(f"Looking for files with extensions: {file_extensions}")
 
     # Find all matching files
     files_to_process = []
@@ -192,16 +192,16 @@ def batch_convert_directory(
         files_to_process.extend(input_path.glob(pattern))
 
     if not files_to_process:
-        print("No matching files found.")
+        logger.info("No matching files found.")
         return
 
-    print(f"Found {len(files_to_process)} files to process.")
+    logger.info(f"Found {len(files_to_process)} files to process.")
 
     successful_conversions = 0
     failed_conversions = 0
 
     for i, file_path in enumerate(files_to_process, 1):
-        print(f"\n--- Processing {i}/{len(files_to_process)}: {file_path.name} ---")
+        logger.info(f"\n--- Processing {i}/{len(files_to_process)}: {file_path.name} ---")
 
         try:
             # Determine output directory for this file
@@ -221,12 +221,12 @@ def batch_convert_directory(
             successful_conversions += 1
 
         except Exception as e:
-            print(f"Error processing {file_path}: {type(e).__name__} - {e}")
+            logger.error(f"Error processing {file_path}: {type(e).__name__} - {e}")
             failed_conversions += 1
 
-    print(f"\n--- Batch conversion complete ---")
-    print(f"Successfully processed: {successful_conversions} files")
-    print(f"Failed to process: {failed_conversions} files")
+    logger.info(f"\n--- Batch conversion complete ---")
+    logger.info(f"Successfully processed: {successful_conversions} files")
+    logger.info(f"Failed to process: {failed_conversions} files")
 
 
 def validate_conversion(
@@ -326,10 +326,10 @@ def validate_conversion(
 
 
 if __name__ == "__main__":
-    print("--- Running Bruker to FAIR Converter ---")
-    print("This will use eprload's dialog to select a Bruker file,")
-    print("then convert it to CSV/JSON and HDF5 formats.")
-    print("-" * 50)
+    logger.info("--- Running Bruker to FAIR Converter ---")
+    logger.info("This will use eprload's dialog to select a Bruker file,")
+    logger.info("then convert it to CSV/JSON and HDF5 formats.")
+    logger.info("-" * 50)
 
     # Use file dialog to select input, save to same directory
     convert_bruker_to_fair()

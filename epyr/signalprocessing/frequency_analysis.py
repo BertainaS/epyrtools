@@ -14,6 +14,10 @@ import matplotlib.pyplot as plt
 from typing import Union, Optional, Tuple, Dict, Literal
 from scipy import signal as scipy_signal, fft
 
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
+
 try:
     from .apowin import apowin
 except ImportError:
@@ -218,31 +222,31 @@ def analyze_frequencies(time_data: np.ndarray, signal_data: np.ndarray,
     if len(time_data) < 4:
         raise ValueError("Need at least 4 data points for frequency analysis")
 
-    print(f"FFT Analysis of {len(signal_data)} data points")
+    logger.info(f"FFT Analysis of {len(signal_data)} data points")
 
     # Detect time units
     time_unit, freq_unit, dt_seconds = _detect_time_units(time_data)
     sampling_rate = 1.0 / dt_seconds
-    print(f"Time unit: {time_unit}, Frequency unit: {freq_unit}")
-    print(f"Sampling rate: {sampling_rate/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit, 1):.1f} {freq_unit}")
+    logger.debug(f"Time unit: {time_unit}, Frequency unit: {freq_unit}")
+    logger.debug(f"Sampling rate: {sampling_rate/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit, 1):.1f} {freq_unit}")
 
     # Step 1: Remove DC offset (very important for EPR signals)
     if remove_dc:
         processed_signal, dc_offset = _remove_dc_offset(signal_data)
-        print(f"Removed DC offset: {dc_offset:.6f}")
+        logger.debug(f"Removed DC offset: {dc_offset:.6f}")
     else:
         processed_signal = signal_data.copy()
-        print("DC offset not removed")
+        logger.debug("DC offset not removed")
 
     # Step 2: Apply apodization window
     windowed_signal = _apply_window(processed_signal, window, window_alpha, axis=-1)
     if window is not None:
         if window_alpha is not None:
-            print(f"Applied {window} window (alpha={window_alpha})")
+            logger.debug(f"Applied {window} window (alpha={window_alpha})")
         else:
-            print(f"Applied {window} window")
+            logger.debug(f"Applied {window} window")
     else:
-        print("No window applied (rectangular)")
+        logger.debug("No window applied (rectangular)")
 
     # Step 3: Zero padding for better frequency resolution
     if zero_padding > 1:
@@ -250,7 +254,7 @@ def analyze_frequencies(time_data: np.ndarray, signal_data: np.ndarray,
         padded_signal = np.zeros(n_padded, dtype=windowed_signal.dtype)
         padded_signal[:len(windowed_signal)] = windowed_signal
         windowed_signal = padded_signal
-        print(f"Zero padding: {len(processed_signal)} -> {n_padded} points")
+        logger.debug(f"Zero padding: {len(processed_signal)} -> {n_padded} points")
 
     # Step 4: Perform FFT
     fft_result = fft.fft(windowed_signal)
@@ -284,18 +288,18 @@ def analyze_frequencies(time_data: np.ndarray, signal_data: np.ndarray,
         dominant_frequencies_display = dominant_frequencies_display[sort_indices]
 
     # Display results
-    print(f"\nFrequency Analysis Results:")
-    print(f"Frequency resolution: {frequencies_display[1]:.6f} {freq_unit}")
-    print(f"Maximum frequency: {frequencies_display[-1]:.3f} {freq_unit}")
+    logger.info("Frequency Analysis Results:")
+    logger.info(f"Frequency resolution: {frequencies_display[1]:.6f} {freq_unit}")
+    logger.info(f"Maximum frequency: {frequencies_display[-1]:.3f} {freq_unit}")
 
     if len(dominant_frequencies_display) > 0:
-        print(f"\nDominant frequencies ({freq_unit}):")
+        logger.info(f"Dominant frequencies ({freq_unit}):")
         for i, freq in enumerate(dominant_frequencies_display[:5]):  # Top 5
             if i < len(peak_indices):
                 power_pct = power_spectrum[peak_indices[sort_indices[i]]] * 100
-                print(f"  {i+1}. {freq:.6f} {freq_unit} (power: {power_pct:.1f}%)")
+                logger.info(f"  {i+1}. {freq:.6f} {freq_unit} (power: {power_pct:.1f}%)")
     else:
-        print("No significant frequency peaks found")
+        logger.info("No significant frequency peaks found")
 
     # Step 7: Create plots
     if plot:
@@ -644,8 +648,8 @@ def analyze_frequencies_2d(time_data: Union[np.ndarray, Tuple[np.ndarray, np.nda
     if signal_data.ndim != 2:
         raise ValueError(f"signal_data must be 2D array, got shape {signal_data.shape}")
 
-    print(f"\n2D FFT Analysis - Mode: {mode}")
-    print(f"Data shape: {signal_data.shape}")
+    logger.info(f"2D FFT Analysis - Mode: {mode}")
+    logger.info(f"Data shape: {signal_data.shape}")
 
     if mode == 'row_by_row':
         return _analyze_2d_row_by_row(time_data, signal_data, window, window_alpha,
@@ -680,20 +684,20 @@ def _analyze_2d_row_by_row(time_data, signal_data, window, window_alpha,
     # Determine units
     time_unit, freq_unit, dt_seconds = _detect_time_units(time_axis)
     sampling_rate = 1.0 / dt_seconds
-    print(f"Time axis: {time_unit}, Frequency axis: {freq_unit}")
-    print(f"Processing axis: {axis} (0=columns, 1=rows)")
+    logger.debug(f"Time axis: {time_unit}, Frequency axis: {freq_unit}")
+    logger.debug(f"Processing axis: {axis} (0=columns, 1=rows)")
 
     # Transpose if processing columns
     if axis == 0:
         signal_data = signal_data.T
 
     n_traces, n_points = signal_data.shape
-    print(f"Number of traces: {n_traces}, Points per trace: {n_points}")
+    logger.info(f"Number of traces: {n_traces}, Points per trace: {n_points}")
 
     # Step 1: Remove DC offset
     if remove_dc:
         processed_signal, dc_offsets = _remove_dc_offset(signal_data, axis=1)
-        print(f"Removed DC offset (mean across traces: {np.mean(dc_offsets):.6f})")
+        logger.debug(f"Removed DC offset (mean across traces: {np.mean(dc_offsets):.6f})")
     else:
         processed_signal = signal_data.copy()
 
@@ -703,11 +707,11 @@ def _analyze_2d_row_by_row(time_data, signal_data, window, window_alpha,
     windowed_signal = _apply_window(processed_signal, window, window_alpha, axis=1)
     if window is not None:
         if window_alpha is not None:
-            print(f"Applied {window} window (alpha={window_alpha})")
+            logger.debug(f"Applied {window} window (alpha={window_alpha})")
         else:
-            print(f"Applied {window} window")
+            logger.debug(f"Applied {window} window")
     else:
-        print("No window applied")
+        logger.debug("No window applied")
 
     # Step 3: Zero padding
     time_axis_extended = time_axis.copy()
@@ -722,7 +726,7 @@ def _analyze_2d_row_by_row(time_data, signal_data, window, window_alpha,
         time_axis_extended = np.concatenate([time_axis, time_extension])
 
         windowed_signal = padded_signal
-        print(f"Zero padding: {n_points} -> {n_padded} points per trace")
+        logger.debug(f"Zero padding: {n_points} -> {n_padded} points per trace")
 
     # Store the fully processed signal before FFT
     processed_signal_final = windowed_signal.copy()
@@ -742,8 +746,8 @@ def _analyze_2d_row_by_row(time_data, signal_data, window, window_alpha,
     spectrum_magnitude = np.abs(fft_result_shifted)
     phase_spectrum = np.angle(fft_result_shifted)
 
-    print(f"\nFrequency resolution: {frequencies_display[1]:.6f} {freq_unit}")
-    print(f"Maximum frequency: {frequencies_display[-1]:.3f} {freq_unit}")
+    logger.info(f"Frequency resolution: {frequencies_display[1]:.6f} {freq_unit}")
+    logger.info(f"Maximum frequency: {frequencies_display[-1]:.3f} {freq_unit}")
 
     # Create plots if requested
     if plot_result:
@@ -795,16 +799,16 @@ def _analyze_2d_full(time_data, signal_data, window, window_alpha,
     sampling_rate1 = 1.0 / dt_seconds1
     sampling_rate2 = 1.0 / dt_seconds2
 
-    print(f"Axis 1: {time_unit1} → {freq_unit1}, sampling rate: {sampling_rate1/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit1, 1):.1f} {freq_unit1}")
-    print(f"Axis 2: {time_unit2} → {freq_unit2}, sampling rate: {sampling_rate2/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit2, 1):.1f} {freq_unit2}")
+    logger.debug(f"Axis 1: {time_unit1} → {freq_unit1}, sampling rate: {sampling_rate1/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit1, 1):.1f} {freq_unit1}")
+    logger.debug(f"Axis 2: {time_unit2} → {freq_unit2}, sampling rate: {sampling_rate2/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit2, 1):.1f} {freq_unit2}")
 
     n_points1, n_points2 = signal_data.shape
-    print(f"Data dimensions: {n_points1} x {n_points2}")
+    logger.info(f"Data dimensions: {n_points1} x {n_points2}")
 
     # Remove DC offset
     if remove_dc:
         processed_signal, dc_offset = _remove_dc_offset(signal_data)
-        print(f"Removed DC offset: {dc_offset:.6f}")
+        logger.debug(f"Removed DC offset: {dc_offset:.6f}")
     else:
         processed_signal = signal_data.copy()
 
@@ -823,10 +827,10 @@ def _analyze_2d_full(time_data, signal_data, window, window_alpha,
 
         window_2d = np.outer(window_func1, window_func2)
         windowed_signal = processed_signal * window_2d
-        print(f"Applied 2D {window} window")
+        logger.debug(f"Applied 2D {window} window")
     else:
         windowed_signal = processed_signal.copy()
-        print("No window applied")
+        logger.debug("No window applied")
 
     # Zero padding
     if zero_padding > 1:
@@ -835,7 +839,7 @@ def _analyze_2d_full(time_data, signal_data, window, window_alpha,
         padded_signal = np.zeros((n_padded1, n_padded2), dtype=windowed_signal.dtype)
         padded_signal[:n_points1, :n_points2] = windowed_signal
         windowed_signal = padded_signal
-        print(f"Zero padding: {n_points1}x{n_points2} -> {n_padded1}x{n_padded2}")
+        logger.debug(f"Zero padding: {n_points1}x{n_points2} -> {n_padded1}x{n_padded2}")
 
     # Perform 2D FFT
     fft_result = fft.fft2(windowed_signal)
@@ -855,12 +859,12 @@ def _analyze_2d_full(time_data, signal_data, window, window_alpha,
     spectrum_magnitude = np.abs(fft_result_shifted)
     phase_spectrum = np.angle(fft_result_shifted)
 
-    print(f"\nFrequency resolution:")
-    print(f"  Axis 1: {frequencies_display1[1]:.6f} {freq_unit1}")
-    print(f"  Axis 2: {frequencies_display2[1]:.6f} {freq_unit2}")
-    print(f"Maximum frequencies:")
-    print(f"  Axis 1: {frequencies_display1[-1]:.3f} {freq_unit1}")
-    print(f"  Axis 2: {frequencies_display2[-1]:.3f} {freq_unit2}")
+    logger.info("Frequency resolution:")
+    logger.info(f"  Axis 1: {frequencies_display1[1]:.6f} {freq_unit1}")
+    logger.info(f"  Axis 2: {frequencies_display2[1]:.6f} {freq_unit2}")
+    logger.info("Maximum frequencies:")
+    logger.info(f"  Axis 1: {frequencies_display1[-1]:.3f} {freq_unit1}")
+    logger.info(f"  Axis 2: {frequencies_display2[-1]:.3f} {freq_unit2}")
 
     # Create plots if requested
     if plot_result:
@@ -1024,10 +1028,10 @@ def demo():
     Simple demonstration of EPR FFT analysis.
     Shows clean frequency analysis with DC removal and windowing.
     """
-    print("EPR Signal Processing - Simplified FFT Analysis Demo")
-    print("=" * 60)
-    print("Focus on clean FFT analysis with proper DC removal")
-    print()
+    logger.info("EPR Signal Processing - Simplified FFT Analysis Demo")
+    logger.info("=" * 60)
+    logger.info("Focus on clean FFT analysis with proper DC removal")
+    logger.info("")
 
     # Create synthetic Rabi oscillation
     t = np.linspace(0, 500, 256)  # 500 ns, 256 points
@@ -1040,17 +1044,18 @@ def demo():
     clean_signal = np.sin(2 * np.pi * rabi_freq * t * 1e-3) * np.exp(-t/decay_time)
     noisy_signal = clean_signal + dc_offset + noise_level * np.random.randn(len(t))
 
-    print(f"Synthetic Rabi signal:")
-    print(f"  Target frequency: {rabi_freq} MHz")
-    print(f"  Decay time: {decay_time} ns")
-    print(f"  DC offset: {dc_offset}")
-    print(f"  Noise level: {noise_level:.1%}")
-    print(f"  Data points: {len(t)}")
+    logger.info("Synthetic Rabi signal:")
+    logger.info(f"  Target frequency: {rabi_freq} MHz")
+    logger.info(f"  Decay time: {decay_time} ns")
+    logger.info(f"  DC offset: {dc_offset}")
+    logger.info(f"  Noise level: {noise_level:.1%}")
+    logger.info(f"  Data points: {len(t)}")
 
     # Demo 1: Analysis with DC removal
-    print(f"\n" + "="*50)
-    print("DEMO 1: FFT Analysis with DC Removal")
-    print("="*50)
+    logger.info("")
+    logger.info("="*50)
+    logger.info("DEMO 1: FFT Analysis with DC Removal")
+    logger.info("="*50)
 
     result_dc = analyze_frequencies(t, noisy_signal, window='hann',
                                   remove_dc=True, zero_padding=4,
@@ -1059,25 +1064,27 @@ def demo():
     if len(result_dc['dominant_frequencies']) > 0:
         detected_freq = result_dc['dominant_frequencies'][0]
         error = abs(detected_freq - rabi_freq) / rabi_freq * 100
-        print(f"\nResults with DC removal:")
-        print(f"  Detected: {detected_freq:.3f} MHz")
-        print(f"  Error: {error:.2f}%")
+        logger.info("Results with DC removal:")
+        logger.info(f"  Detected: {detected_freq:.3f} MHz")
+        logger.info(f"  Error: {error:.2f}%")
         if error < 5:
-            print("  --> Excellent frequency detection!")
+            logger.info("  --> Excellent frequency detection!")
 
     # Demo 2: Comparison without DC removal
-    print(f"\n" + "="*50)
-    print("DEMO 2: Comparison without DC Removal")
-    print("="*50)
+    logger.info("")
+    logger.info("="*50)
+    logger.info("DEMO 2: Comparison without DC Removal")
+    logger.info("="*50)
 
     result_no_dc = analyze_frequencies(t, noisy_signal, window='hann',
                                      remove_dc=False, zero_padding=4,
                                      plot=True, freq_range=(0, 20))
 
     # Demo 3: Window comparison
-    print(f"\n" + "="*50)
-    print("DEMO 3: Window Function Effects")
-    print("="*50)
+    logger.info("")
+    logger.info("="*50)
+    logger.info("DEMO 3: Window Function Effects")
+    logger.info("="*50)
 
     windows = ['hann', 'hamming', 'blackman']
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
@@ -1104,27 +1111,29 @@ def demo():
     plt.show()
 
     # Demo 4: Power spectrum methods
-    print(f"\n" + "="*50)
-    print("DEMO 4: Power Spectrum Methods")
-    print("="*50)
+    logger.info("")
+    logger.info("="*50)
+    logger.info("DEMO 4: Power Spectrum Methods")
+    logger.info("="*50)
 
     psd_welch = power_spectrum(t, noisy_signal, method='welch', remove_dc=True, plot=True)
-    print("Welch method completed")
+    logger.info("Welch method completed")
 
     psd_periodogram = power_spectrum(t, noisy_signal, method='periodogram',
                                    remove_dc=True, plot=True)
-    print("Periodogram method completed")
+    logger.info("Periodogram method completed")
 
-    print(f"\n" + "="*60)
-    print("DEMO COMPLETED!")
-    print("="*60)
-    print("\nKey Points Demonstrated:")
-    print("  * DC offset removal is crucial for clean spectra")
-    print("  * Window functions reduce spectral leakage")
-    print("  * Zero padding improves frequency resolution")
-    print("  * Multiple methods available for power spectra")
-    print("  * Automatic time unit detection (ns → MHz)")
-    print(f"\nSimplified module ready for EPR frequency analysis!")
+    logger.info("")
+    logger.info("="*60)
+    logger.info("DEMO COMPLETED!")
+    logger.info("="*60)
+    logger.info("Key Points Demonstrated:")
+    logger.info("  * DC offset removal is crucial for clean spectra")
+    logger.info("  * Window functions reduce spectral leakage")
+    logger.info("  * Zero padding improves frequency resolution")
+    logger.info("  * Multiple methods available for power spectra")
+    logger.info("  * Automatic time unit detection (ns → MHz)")
+    logger.info("Simplified module ready for EPR frequency analysis!")
 
 
 if __name__ == "__main__":

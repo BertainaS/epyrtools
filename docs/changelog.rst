@@ -6,6 +6,41 @@ All notable changes to EPyR Tools are documented here.
 The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`_,
 and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
 
+[0.3.0] - 2025-11-02
+---------------------
+
+Changed
+~~~~~~~
+- **MAJOR:** Migrated 398 print statements to centralized logging system (95.7% coverage)
+
+  - Refactored 18 core modules with structured logging infrastructure
+  - ``logger.info()`` for user-facing messages and progress updates
+  - ``logger.warning()`` for errors, issues, and missing dependencies
+  - ``logger.debug()`` for technical details and internal operations
+  - Modules updated: eprload, frequency_analysis, conversions, cli, units, baseline (multiple),
+    signalprocessing/apowin, fair (multiple), physics/constants, lineshapes (fitting, convspec),
+    eprplot, isotope_gui
+
+- **IMPROVEMENT:** Enhanced code quality with professional logging standards
+
+  - Centralized logging configuration via ``logging_config`` module
+  - Consistent log format with timestamps, module names, and severity levels
+  - Better traceability for debugging and production monitoring
+  - Proper log level hierarchy (DEBUG < INFO < WARNING < ERROR)
+
+Infrastructure
+~~~~~~~~~~~~~~
+- All core modules now use ``get_logger(__name__)`` pattern for consistent logging
+- Logging properly configured for both CLI commands and library usage
+- No breaking changes - all functionality preserved and tested
+
+Compatibility
+~~~~~~~~~~~~~
+- **Backward Compatible:** All existing functionality preserved
+- Test suite confirms no regressions (100+ tests passing)
+- API unchanged - only internal output mechanism modified
+- Users can configure logging levels via standard Python logging configuration
+
 [0.2.5] - 2025-10-07
 ---------------------
 

@@ -21,6 +21,10 @@ try:
 except ImportError:
     HAS_H5PY = False
 
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
+
 from .data_processing import process_parameters
 
 
@@ -45,7 +49,7 @@ def save_to_csv_json(
 
     fair_meta, unmapped_meta = process_parameters(pars)
 
-    print(f"  Saving structured metadata to: {json_file}")
+    logger.info(f"  Saving structured metadata to: {json_file}")
 
     # Save metadata to JSON
     metadata_to_save = {
@@ -66,7 +70,7 @@ def save_to_csv_json(
             f"Some parameters might not be saved correctly."
         )
 
-    print(f"  Saving data to: {csv_file}")
+    logger.info(f"  Saving data to: {csv_file}")
 
     # Save data to CSV
     try:
@@ -249,7 +253,7 @@ def save_to_hdf5(
     h5_file = output_basename.with_suffix(".h5")
     fair_meta, unmapped_meta = process_parameters(pars)
 
-    print(f"  Saving structured data and metadata to: {h5_file}")
+    logger.info(f"  Saving structured data and metadata to: {h5_file}")
 
     try:
         with h5py.File(h5_file, "w") as f:
