@@ -382,17 +382,17 @@ class TestBatchConvertCommand:
             assert excinfo.value.code == 1
     
     @patch('epyr.fair.convert_bruker_to_fair')
-    def test_cmd_batch_convert_empty_dir(self, mock_convert, capsys):
+    def test_cmd_batch_convert_empty_dir(self, mock_convert, caplog):
         """Test batch convert with empty directory."""
         with tempfile.TemporaryDirectory() as temp_dir:
             with patch('sys.argv', ['epyr-batch-convert', temp_dir]):
                 with pytest.raises(SystemExit) as excinfo:
                     cli.cmd_batch_convert()
-                
+
                 assert excinfo.value.code == 1
-            
-            captured = capsys.readouterr()
-            assert "No files found" in captured.out
+
+            # Check that error message was logged
+            assert any("No .dsc or .spc files found" in record.message for record in caplog.records)
 
 
 class TestBaselineCommand:

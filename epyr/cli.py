@@ -412,60 +412,142 @@ def cmd_batch_convert():
     parser.add_argument('-o', '--output-dir', help='Output directory (default: input_dir/converted)')
     parser.add_argument('-f', '--formats', default='csv,json',
                        help='Output formats: csv,json,hdf5')
-    parser.add_argument('--pattern', default='*.dsc',
-                       help='File pattern to match (default: *.dsc)')
+    parser.add_argument('--save-jpg', action='store_true', default=True,
+                       help='Save JPG figures of loaded data (default: True)')
+    parser.add_argument('--no-jpg', dest='save_jpg', action='store_false',
+                       help='Do not save JPG figures')
     parser.add_argument('-j', '--jobs', type=int, default=1,
                        help='Number of parallel jobs (default: 1)')
     parser.add_argument('-v', '--verbose', action='store_true')
-    
+
     args = parser.parse_args()
-    
+
     if args.verbose:
         from .logging_config import setup_logging
         setup_logging('DEBUG')
-    
+
     input_dir = Path(args.input_dir)
     if not input_dir.exists():
         logger.error(f"Input directory not found: {input_dir}")
         sys.exit(1)
-    
+
     output_dir = Path(args.output_dir) if args.output_dir else input_dir / 'converted'
     output_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Find files to convert
-    files = list(input_dir.glob(args.pattern))
+
+    # Find files to convert - search for .dsc and .spc files (case insensitive)
+    files = []
+    for pattern in ['*.dsc', '*.DSC', '*.spc', '*.SPC']:
+        files.extend(input_dir.glob(pattern))
+
+    # Remove duplicates (in case of case-insensitive filesystems)
+    files = list(set(files))
+    files.sort()  # Sort for consistent ordering
+
     if not files:
-        logger.error(f"No files found matching pattern: {args.pattern}")
+        logger.error(f"No .dsc or .spc files found in {input_dir}")
         sys.exit(1)
-    
-    logger.info(f"Found {len(files)} files to convert")
-    
+
+    logger.info(f"Found {len(files)} file(s) to convert")
+
     formats = [f.strip().lower() for f in args.formats.split(',')]
-    
+
     # Convert files
     success_count = 0
+    failed_count = 0
+
     for i, file_path in enumerate(files, 1):
+        logger.info(f"[{i}/{len(files)}] Processing {file_path.name}")
+
         try:
-            logger.info(f"[{i}/{len(files)}] Converting {file_path.name}")
-            
+            # Try to load the file first
+            x, y, params, loaded_path = eprload(str(file_path), plot_if_possible=False)
+
+            if x is None or y is None:
+                logger.warning(f"Failed to load {file_path.name} - skipping")
+                failed_count += 1
+                continue
+
+            logger.info(f"Successfully loaded {file_path.name}")
+
+            # Perform conversion
             from .fair import convert_bruker_to_fair
-            success = convert_bruker_to_fair(
+            conversion_success = convert_bruker_to_fair(
                 str(file_path),
                 output_dir=str(output_dir),
                 formats=formats
             )
-            
-            if success:
-                success_count += 1
-            else:
-                logger.warning(f"Failed to convert {file_path.name}")
-                
+
+            if not conversion_success:
+                logger.warning(f"Conversion failed for {file_path.name}")
+                failed_count += 1
+                continue
+
+            # Generate JPG figure if requested
+            if args.save_jpg:
+                try:
+                    import matplotlib
+                    matplotlib.use('Agg')  # Non-interactive backend
+                    import matplotlib.pyplot as plt
+
+                    fig, ax = plt.subplots(figsize=(10, 6))
+
+                    # Handle 1D and 2D data
+                    if y.ndim == 1:
+                        # 1D data
+                        absc = x if x is not None and hasattr(x, '__len__') else np.arange(len(y))
+
+                        if np.isrealobj(y):
+                            ax.plot(absc, y, 'b-', linewidth=1.5)
+                        else:
+                            ax.plot(absc, np.real(y), 'b-', linewidth=1.5, label='real')
+                            ax.plot(absc, np.imag(y), 'r--', linewidth=1.5, label='imag')
+                            ax.legend()
+
+                        # Set labels
+                        x_label = params.get("XAXIS_NAME", "Field") if params else "Field"
+                        x_unit = params.get("XAXIS_UNIT", "G") if params else "G"
+                        if x_unit:
+                            x_label += f" ({x_unit})"
+
+                        ax.set_xlabel(x_label)
+                        ax.set_ylabel("Intensity (a.u.)")
+                        ax.grid(True, linestyle=":", alpha=0.6)
+
+                    else:
+                        # 2D data
+                        im = ax.imshow(np.real(y), aspect='auto', cmap='viridis')
+                        plt.colorbar(im, ax=ax, label='Intensity (a.u.)')
+                        ax.set_xlabel('Point index')
+                        ax.set_ylabel('Scan index')
+
+                    ax.set_title(file_path.name)
+                    plt.tight_layout()
+
+                    # Save JPG
+                    jpg_path = output_dir / f"{file_path.stem}.jpg"
+                    plt.savefig(jpg_path, dpi=150, format='jpg', bbox_inches='tight')
+                    plt.close(fig)
+
+                    logger.info(f"Saved figure to {jpg_path.name}")
+
+                except Exception as e:
+                    logger.warning(f"Failed to create JPG for {file_path.name}: {e}")
+                    if args.verbose:
+                        logger.debug("Full traceback:", exc_info=True)
+
+            success_count += 1
+            logger.info(f"Successfully converted {file_path.name}")
+
         except Exception as e:
-            logger.error(f"Error converting {file_path.name}: {e}")
+            logger.error(f"Error processing {file_path.name}: {e}")
             if args.verbose:
                 logger.debug("Full traceback:", exc_info=True)
-    
-    logger.info(f"Batch conversion completed: {success_count}/{len(files)} files converted")
+            failed_count += 1
+
+    logger.info(f"\nBatch conversion completed:")
+    logger.info(f"  Successfully converted: {success_count}/{len(files)}")
+    logger.info(f"  Failed: {failed_count}/{len(files)}")
+    logger.info(f"  Output directory: {output_dir}")
 
 
 def cmd_config():

@@ -373,7 +373,10 @@ def _plot_data(
         print(f"Warning: Cannot plot data with {y.ndim} dimensions.")
         return  # Don't show empty plot
 
-    plt.tight_layout()
+    # Apply tight_layout only for 1D plots (colorbar in 2D causes layout engine conflict)
+    if y.ndim == 1:
+        plt.tight_layout()
+
     if save_if_possible:
         # Save the figure if requested
         print(file_name)
