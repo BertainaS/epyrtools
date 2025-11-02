@@ -1,6 +1,6 @@
 import pytest
 
-import epyr.constants as constants
+from epyr import constants
 
 
 class TestConstants:

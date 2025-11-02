@@ -3,6 +3,7 @@ import re
 import sys
 import warnings
 from pathlib import Path
+from typing import List, Union
 
 import numpy as np
 
@@ -155,10 +156,10 @@ def parse_field_params(parameters: dict) -> dict:
 
 def get_matrix(
     data_file_path: Path,
-    dimensions: list[int],
+    dimensions: List[int],
     number_format_code: str,
     byte_order: str,
-    is_complex: bool | np.ndarray,
+    is_complex: Union[bool, np.ndarray],
 ) -> np.ndarray:
     """
     Reads binary data from a file into a NumPy array.

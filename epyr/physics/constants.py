@@ -5,7 +5,7 @@ Constants available in both SI and CGS units.
 """
 
 import numpy as np
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Union
 
 
 # ============================================================================
@@ -108,7 +108,7 @@ EVOLT_CGS = EVOLT * 1e7  # erg
 # BACKWARD COMPATIBILITY FUNCTIONS
 # ============================================================================
 
-def gfree(return_uncertainty: bool = False) -> float | Tuple[float, float]:
+def gfree(return_uncertainty: bool = False) -> Union[float, Tuple[float, float]]:
     """
     Free electron g-factor (dimensionless).
 
@@ -132,7 +132,7 @@ def gfree(return_uncertainty: bool = False) -> float | Tuple[float, float]:
     return GFREE
 
 
-def bmagn(return_uncertainty: bool = False) -> float | Tuple[float, float]:
+def bmagn(return_uncertainty: bool = False) -> Union[float, Tuple[float, float]]:
     """
     Bohr magneton in SI units (J T⁻¹).
 
@@ -200,7 +200,7 @@ def clight() -> float:
     return CLIGHT
 
 
-def boltzm(return_uncertainty: bool = False) -> float | Tuple[float, float]:
+def boltzm(return_uncertainty: bool = False) -> Union[float, Tuple[float, float]]:
     """
     Boltzmann constant in SI units (J⋅K⁻¹).
 
@@ -223,7 +223,7 @@ def boltzm(return_uncertainty: bool = False) -> float | Tuple[float, float]:
     return BOLTZM
 
 
-def avogadro(return_uncertainty: bool = False) -> float | Tuple[float, float]:
+def avogadro(return_uncertainty: bool = False) -> Union[float, Tuple[float, float]]:
     """
     Avogadro constant in SI units (mol⁻¹).
 
@@ -246,7 +246,7 @@ def avogadro(return_uncertainty: bool = False) -> float | Tuple[float, float]:
     return AVOGADRO
 
 
-def nmagn(return_uncertainty: bool = False) -> float | Tuple[float, float]:
+def nmagn(return_uncertainty: bool = False) -> Union[float, Tuple[float, float]]:
     """
     Nuclear magneton in SI units (J⋅T⁻¹).
 
@@ -270,7 +270,7 @@ def nmagn(return_uncertainty: bool = False) -> float | Tuple[float, float]:
     return NMAGN
 
 
-def echarge(return_uncertainty: bool = False) -> float | Tuple[float, float]:
+def echarge(return_uncertainty: bool = False) -> Union[float, Tuple[float, float]]:
     """
     Elementary charge in SI units (C).
 
@@ -293,7 +293,7 @@ def echarge(return_uncertainty: bool = False) -> float | Tuple[float, float]:
     return ECHARGE
 
 
-def evolt(return_uncertainty: bool = False) -> float | Tuple[float, float]:
+def evolt(return_uncertainty: bool = False) -> Union[float, Tuple[float, float]]:
     """
     Electron volt in SI units (J).
 

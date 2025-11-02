@@ -6,26 +6,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from epyr.plot import EPRPlotConfig, plot_2d_spectral_map
+from epyr import eprplot
+from epyr.eprplot import plot_2d_map
 
 
 class TestEPRPlotting:
     """Test suite for EPR plotting functions."""
 
-    def test_epr_plot_config_creation(self):
-        """Test EPRPlotConfig class initialization."""
-        config = EPRPlotConfig()
-
-        # Check that default constants are set
-        assert hasattr(config, "DEFAULT_FIGSIZE_WATERFALL")
-        assert hasattr(config, "DEFAULT_FIGSIZE_2D")
-        assert hasattr(config, "DEFAULT_CMAP")
-        assert hasattr(config, "DEFAULT_SHADING")
-
-        # Test that default values are reasonable
-        assert config.DEFAULT_FIGSIZE_WATERFALL == (10, 8)
-        assert config.DEFAULT_FIGSIZE_2D == (10, 8)
-        assert config.DEFAULT_CMAP == "viridis"
+    def test_eprplot_module_exists(self):
+        """Test that eprplot module has expected functions."""
+        # Check that module has core plotting functions
+        assert hasattr(eprplot, "plot_1d")
+        assert hasattr(eprplot, "plot_2d_map")
+        assert hasattr(eprplot, "plot_2d_waterfall")
+        assert callable(eprplot.plot_1d)
+        assert callable(eprplot.plot_2d_map)
 
     @patch("matplotlib.pyplot.show")
     def test_plot_2d_map_basic(self, mock_show, sample_2d_data):
@@ -33,7 +28,7 @@ class TestEPRPlotting:
         x_axis, y_axis, z_data = sample_2d_data
 
         # Test basic 2D plot
-        fig, ax = plot_2d_spectral_map(x_axis, y_axis, z_data)
+        fig, ax = plot_2d_map(x_axis, y_axis, z_data)
 
         # Check that figure and axis were created
         assert fig is not None
@@ -53,12 +48,12 @@ class TestEPRPlotting:
 
         # Test with custom units - check if function supports these parameters
         try:
-            fig, ax = plot_2d_spectral_map(
+            fig, ax = plot_2d_map(
                 x_axis, y_axis, z_data, x_unit="mT", y_unit="GHz"
             )
         except TypeError:
             # Function may not support these parameters
-            fig, ax = plot_2d_spectral_map(x_axis, y_axis, z_data)
+            fig, ax = plot_2d_map(x_axis, y_axis, z_data)
 
         # Check labels include units
         xlabel = ax.get_xlabel()
@@ -78,7 +73,7 @@ class TestEPRPlotting:
 
         for cmap in colormaps:
             try:
-                fig, ax = plot_2d_spectral_map(x_axis, y_axis, z_data)
+                fig, ax = plot_2d_map(x_axis, y_axis, z_data)
 
                 # Check that colorbar was created
                 assert len(fig.axes) >= 2  # Main plot + colorbar
@@ -98,10 +93,10 @@ class TestEPRPlotting:
 
         # Complex data test - function may not support it
         try:
-            fig, ax = plot_2d_spectral_map(x_axis, y_axis, z_complex)
+            fig, ax = plot_2d_map(x_axis, y_axis, z_complex)
         except (TypeError, ValueError):
             # Function may not handle complex data, use real part
-            fig, ax = plot_2d_spectral_map(x_axis, y_axis, z_real)
+            fig, ax = plot_2d_map(x_axis, y_axis, z_real)
 
         assert fig is not None
         assert ax is not None
@@ -116,29 +111,27 @@ class TestEPRPlotting:
         z_data = np.random.random((5, 10))  # Correct shape (ny, nx)
 
         # Test correct input
-        fig, ax = plot_2d_spectral_map(x_axis, y_axis, z_data)
+        fig, ax = plot_2d_map(x_axis, y_axis, z_data)
         plt.close(fig)
 
         # Test mismatched dimensions - may not be implemented
         try:
             z_wrong = np.random.random((3, 8))  # Wrong shape
             with pytest.raises((ValueError, IndexError)):
-                plot_2d_spectral_map(x_axis, y_axis, z_wrong)
+                plot_2d_map(x_axis, y_axis, z_wrong)
         except TypeError:
             # Function signature may be different
             pass
 
-    def test_plot_config_integration(self, sample_2d_data):
-        """Test integration of EPRPlotConfig with plotting functions."""
+    def test_plot_module_integration(self, sample_2d_data):
+        """Test integration of eprplot module with plotting functions."""
         x_axis, y_axis, z_data = sample_2d_data
 
-        config = EPRPlotConfig()
-
         with patch("matplotlib.pyplot.show"):
-            # Test that config constants can be used
-            fig, ax = plot_2d_spectral_map(x_axis, y_axis, z_data)
+            # Test that plotting works
+            fig, ax = plot_2d_map(x_axis, y_axis, z_data)
 
-            # Check figure properties - should use defaults
+            # Check figure properties
             figsize = fig.get_size_inches()
             assert len(figsize) == 2  # Should have width and height
 
@@ -152,7 +145,7 @@ class TestEPRPlotting:
         y_small = np.array([1, 2])
         z_small = np.array([[1, 2], [3, 4]])
 
-        fig, ax = plot_2d_spectral_map(x_small, y_small, z_small)
+        fig, ax = plot_2d_map(x_small, y_small, z_small)
         assert fig is not None
         plt.close(fig)
 
@@ -162,7 +155,7 @@ class TestEPRPlotting:
         z_single = np.array([[1]])
 
         try:
-            fig, ax = plot_2d_spectral_map(x_single, y_single, z_single)
+            fig, ax = plot_2d_map(x_single, y_single, z_single)
             plt.close(fig)
         except (ValueError, IndexError, TypeError):
             # Expected for degenerate cases or unsupported parameters
@@ -175,7 +168,7 @@ class TestEPRPlotting:
 
         # Test with different styling parameters - basic version
         try:
-            fig, ax = plot_2d_spectral_map(x_axis, y_axis, z_data)
+            fig, ax = plot_2d_map(x_axis, y_axis, z_data)
         except Exception:
             pytest.skip("Styling parameters not supported")
 
@@ -190,7 +183,7 @@ class TestEPRPlotting:
         x_axis, y_axis, z_data = sample_2d_data
 
         with patch("matplotlib.pyplot.show"):
-            result = plot_2d_spectral_map(x_axis, y_axis, z_data)
+            result = plot_2d_map(x_axis, y_axis, z_data)
 
             # Should return figure and axis objects
             assert len(result) == 2
@@ -214,7 +207,7 @@ class TestEPRPlotting:
             tmp_path = Path(tmp.name)
 
         try:
-            fig, ax = plot_2d_spectral_map(x_axis, y_axis, z_data)
+            fig, ax = plot_2d_map(x_axis, y_axis, z_data)
 
             # Test saving
             fig.savefig(tmp_path, dpi=150, bbox_inches="tight")
@@ -257,7 +250,7 @@ class TestPlotUtilities:
         with patch("matplotlib.pyplot.show"):
             # Should handle NaN gracefully
             try:
-                fig, ax = plot_2d_spectral_map(x_axis, y_axis, z_with_nan)
+                fig, ax = plot_2d_map(x_axis, y_axis, z_with_nan)
                 plt.close(fig)
             except (ValueError, RuntimeError, TypeError):
                 # Some plotting functions may not handle NaN
@@ -277,7 +270,7 @@ class TestPlotUtilities:
 
             with patch("matplotlib.pyplot.show"):
                 try:
-                    fig, ax = plot_2d_spectral_map(x_range, y_range, z_test)
+                    fig, ax = plot_2d_map(x_range, y_range, z_test)
 
                     # Check that axis limits are reasonable
                     xlim = ax.get_xlim()
