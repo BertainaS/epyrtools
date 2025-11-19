@@ -30,8 +30,9 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
         par_extension = par_extension.upper()
         spc_extension = spc_extension.upper()
 
-    par_file = full_base_name.with_suffix(par_extension)
-    spc_file = full_base_name.with_suffix(spc_extension)
+    # Use string concatenation instead of with_suffix() to handle filenames with multiple dots
+    par_file = Path(str(full_base_name) + par_extension)
+    spc_file = Path(str(full_base_name) + spc_extension)
 
     # Read parameter file
     parameters = read_par_file(par_file)

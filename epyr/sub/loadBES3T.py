@@ -30,8 +30,9 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
         dsc_extension = dsc_extension.upper()
         dta_extension = dta_extension.upper()
 
-    dsc_file = full_base_name.with_suffix(dsc_extension)
-    dta_file = full_base_name.with_suffix(dta_extension)
+    # Use string concatenation instead of with_suffix() to handle filenames with multiple dots
+    dsc_file = Path(str(full_base_name) + dsc_extension)
+    dta_file = Path(str(full_base_name) + dta_extension)
 
     # Read descriptor file
     parameters = read_dsc_file(dsc_file)
@@ -120,7 +121,8 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
             companion_suffix = f".{axis}GF"
             if file_extension.isupper():
                 companion_suffix = companion_suffix.upper()
-            companion_file = full_base_name.with_suffix(companion_suffix)
+            # Use string concatenation instead of with_suffix() to handle filenames with multiple dots
+            companion_file = Path(str(full_base_name) + companion_suffix)
 
             fmt_key = f"{axis}FMT"
             data_format_char = parameters.get(fmt_key, "D").upper()  # Default double
