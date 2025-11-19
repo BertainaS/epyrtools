@@ -2,17 +2,17 @@
 
 import os
 import sys
-import tkinter as tk
 import warnings
 from pathlib import Path
-from tkinter import filedialog
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+import tkinter as tk
+from tkinter import filedialog
 
 from .logging_config import get_logger
-from .performance import OptimizedLoader, get_global_cache, MemoryMonitor
+from .performance import MemoryMonitor, OptimizedLoader, get_global_cache
 
 logger = get_logger(__name__)
 
@@ -31,10 +31,10 @@ except ImportError:
 
 def _select_file_dialog(initial_dir: Path) -> Optional[Path]:
     """Open file dialog to select EPR data file.
-    
+
     Args:
         initial_dir: Initial directory for file dialog
-        
+
     Returns:
         Selected file path or None if cancelled
     """
@@ -50,46 +50,86 @@ def _select_file_dialog(initial_dir: Path) -> Optional[Path]:
         ],
     )
     root.destroy()  # Close the hidden window
-    
+
     if not ui_file_path:
         logger.info("File selection cancelled by user")
         return None
     return Path(ui_file_path)
 
 
+def _find_file_with_extension(file_path: Path) -> Optional[Path]:
+    """Find file, trying known EPR extensions if needed.
+
+    Args:
+        file_path: Path to search for
+
+    Returns:
+        Found file path or None if not found
+    """
+    # First, check if file exists as-is
+    if file_path.is_file():
+        return file_path
+
+    # If not, try adding known extensions
+    # Use string concatenation to avoid with_suffix() issues with multiple dots
+    base_str = str(file_path)
+    for ext in [".dta", ".DTA", ".dsc", ".DSC", ".spc", ".SPC", ".par", ".PAR"]:
+        potential_file = Path(base_str + ext)
+        if potential_file.is_file():
+            logger.info(f"Found file with extension '{ext}': {potential_file.name}")
+            return potential_file
+
+    return None
+
+
+def _get_file_extension(file_path: Path) -> str:
+    """Get file extension, handling filenames with multiple dots.
+
+    Args:
+        file_path: Path to extract extension from
+
+    Returns:
+        File extension (e.g., '.dta', '.DSC')
+    """
+    # Get the filename and check known extensions
+    filename = file_path.name
+    for ext in [".dta", ".DTA", ".dsc", ".DSC", ".spc", ".SPC", ".par", ".PAR"]:
+        if filename.endswith(ext):
+            return ext
+
+    # If no known extension found, return empty string
+    return ""
+
+
 def _determine_file_format(file_path: Path) -> Tuple[Path, str]:
     """Determine EPR file format and ensure extension exists.
-    
+
     Args:
         file_path: Path to the data file
-        
+
     Returns:
         Tuple of (validated_file_path, file_format)
-        
-    Raises:
-        ValueError: If file format is unsupported
-    """
-    full_base_name = file_path.with_suffix("")
-    file_extension = file_path.suffix
 
-    # Handle case where extension might be missing
+    Raises:
+        ValueError: If file format is unsupported or file not found
+    """
+    # Try to find the file with or without extension
+    found_file = _find_file_with_extension(file_path)
+
+    if found_file is None:
+        raise FileNotFoundError(
+            f"Could not find EPR data file '{file_path}' with any supported extension "
+            f"(.dta, .dsc, .spc, .par)"
+        )
+
+    file_path = found_file
+    file_extension = _get_file_extension(file_path)
+
     if not file_extension:
-        found_ext = None
-        for ext in [".dta", ".DTA", ".dsc", ".DSC", ".spc", ".SPC", ".par", ".PAR"]:
-            potential_file = full_base_name.with_suffix(ext)
-            if potential_file.is_file():
-                found_ext = ext
-                file_path = potential_file
-                break
-        if found_ext:
-            file_extension = found_ext
-            logger.warning(
-                f"No extension given, assuming '{found_ext}' based on existing file."
-            )
-        else:
-            raise ValueError(
-                f"File '{full_base_name}' lacks a recognized extension (.dta, .dsc, .spc, .par)."
-            )
+        raise ValueError(
+            f"File '{file_path}' does not have a recognized EPR extension "
+            f"(.dta, .dsc, .spc, .par)"
+        )
 
     # Determine format based on extension (case-insensitive)
     ext_upper = file_extension.upper()
@@ -101,16 +141,16 @@ def _determine_file_format(file_path: Path) -> Tuple[Path, str]:
         raise ValueError(
             f"Unsupported file extension '{file_extension}'. Only Bruker formats (.dta, .dsc, .spc, .par) supported."
         )
-        
+
     return file_path, file_format
 
 
 def _validate_scaling(scaling: str) -> None:
     """Validate scaling parameter string.
-    
+
     Args:
         scaling: Scaling string to validate
-        
+
     Raises:
         ValueError: If scaling contains invalid characters
     """
@@ -124,23 +164,34 @@ def _validate_scaling(scaling: str) -> None:
             )
 
 
-def _load_data_by_format(file_path: Path, file_format: str, scaling: str) -> Tuple[Optional[np.ndarray], Optional[Union[np.ndarray, List[np.ndarray]]], Optional[Dict[str, Any]]]:
+def _load_data_by_format(file_path: Path, file_format: str, scaling: str) -> Tuple[
+    Optional[np.ndarray],
+    Optional[Union[np.ndarray, List[np.ndarray]]],
+    Optional[Dict[str, Any]],
+]:
     """Load data using appropriate format loader.
-    
+
     Args:
         file_path: Path to the data file
         file_format: Format type ("BrukerBES3T" or "BrukerESP")
         scaling: Scaling parameter string
-        
+
     Returns:
         Tuple of (y_data, x_data, parameters)
-        
+
     Raises:
         Various exceptions from loading functions
     """
-    full_base_name = file_path.with_suffix("")
-    file_extension = file_path.suffix
-    
+    # Get extension without using with_suffix() to handle multiple dots correctly
+    file_extension = _get_file_extension(file_path)
+
+    # Remove extension from filename to get base name
+    file_str = str(file_path)
+    if file_extension and file_str.endswith(file_extension):
+        full_base_name = Path(file_str[: -len(file_extension)])
+    else:
+        full_base_name = file_path
+
     if file_format == "BrukerBES3T":
         return loadBES3T.load(full_base_name, file_extension, scaling)
     elif file_format == "BrukerESP":
@@ -149,7 +200,13 @@ def _load_data_by_format(file_path: Path, file_format: str, scaling: str) -> Tup
         raise ValueError(f"Unknown file format: {file_format}")
 
 
-def eprload(file_name=None, scaling="", plot_if_possible=False, save_if_possible=False, return_type="default"):
+def eprload(
+    file_name=None,
+    scaling="",
+    plot_if_possible=False,
+    save_if_possible=False,
+    return_type="default",
+):
     """
     Load experimental EPR data from Bruker BES3T or ESP formats.
 
@@ -200,27 +257,26 @@ def eprload(file_name=None, scaling="", plot_if_possible=False, save_if_possible
         file_path = _select_file_dialog(file_name)
         if file_path is None:
             return None, None, None, None
-    elif file_name.is_file():
-        file_path = file_name
     else:
-        raise FileNotFoundError(f"The file or directory '{file_name}' does not exist!")
+        # Use file_name as-is, _determine_file_format will try to find it with extensions
+        file_path = file_name
 
     # --- Determine File Format and Validate ---
     try:
         file_path, file_format = _determine_file_format(file_path)
         _validate_scaling(scaling)
-    except ValueError as e:
+    except (ValueError, FileNotFoundError) as e:
         logger.error(str(e))
         return None, None, None, None
 
     # --- Load Data ---
     loaded_file_path = str(file_path.resolve())
-    
+
     # Check memory usage before loading
     if not MemoryMonitor.check_memory_limit():
         logger.warning("Memory usage high, optimizing before loading")
         MemoryMonitor.optimize_memory()
-    
+
     # Check cache first for potentially cached data
     cache = get_global_cache()
     cache_key = file_path.resolve()
@@ -392,7 +448,9 @@ if __name__ == "__main__":
     logger.info("This will open a file dialog to select a Bruker EPR file.")
 
     # Example 1: Load data using file dialog and plot
-    logger.info("\n--- Example 1: Load with dialog, default scaling, plotting enabled ---")
+    logger.info(
+        "\n--- Example 1: Load with dialog, default scaling, plotting enabled ---"
+    )
     x_data, y_data, parameters, file = eprload()  # plot_if_possible is True by default
 
     if y_data is not None:
