@@ -89,23 +89,33 @@ The 2D FFT capabilities enable analysis of:
 """
 
 # Import apodization windows
-from .apowin import apowin, window_comparison, frequency_response_demo, apply_window_demo
+from .apowin import (
+    apowin,
+    apply_window_demo,
+    frequency_response_demo,
+    window_comparison,
+)
 
 # Import frequency analysis tools
 from .frequency_analysis import (
-    analyze_frequencies, analyze_frequencies_2d, power_spectrum, spectrogram_analysis
+    analyze_frequencies,
+    analyze_frequencies_2d,
+    power_spectrum,
+    spectrogram_analysis,
 )
 
 __all__ = [
     # Apodization windows
-    'apowin', 'window_comparison', 'frequency_response_demo', 'apply_window_demo',
-
+    "apowin",
+    "window_comparison",
+    "frequency_response_demo",
+    "apply_window_demo",
     # Frequency analysis (FFT-based functions)
-    'analyze_frequencies',      # 1D FFT analysis
-    'analyze_frequencies_2d',   # 2D FFT analysis (row-by-row or full 2D)
-    'power_spectrum',           # Power spectral density
-    'spectrogram_analysis'      # Time-frequency analysis
+    "analyze_frequencies",  # 1D FFT analysis
+    "analyze_frequencies_2d",  # 2D FFT analysis (row-by-row or full 2D)
+    "power_spectrum",  # Power spectral density
+    "spectrogram_analysis",  # Time-frequency analysis
 ]
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 __author__ = "EPyR Tools Development Team"

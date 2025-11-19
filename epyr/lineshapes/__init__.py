@@ -21,73 +21,83 @@ Author: EPyR Tools Development Team
 License: MIT
 """
 
-from .gaussian import gaussian, gaussian_absorption, gaussian_dispersion, gaussian_derivative
-from .lorentzian import lorentzian, lorentzian_absorption, lorentzian_dispersion, lorentzian_derivative
-from .voigtian import voigtian
-from .lshape import lshape, pseudo_voigt
 from .convspec import convspec
-from .lineshape_class import (
-    Lineshape, create_gaussian, create_lorentzian, 
-    create_voigt, create_pseudo_voigt
+from .gaussian import (
+    gaussian,
+    gaussian_absorption,
+    gaussian_derivative,
+    gaussian_dispersion,
 )
+from .lineshape_class import (
+    Lineshape,
+    create_gaussian,
+    create_lorentzian,
+    create_pseudo_voigt,
+    create_voigt,
+)
+from .lorentzian import (
+    lorentzian,
+    lorentzian_absorption,
+    lorentzian_derivative,
+    lorentzian_dispersion,
+)
+from .lshape import lshape, pseudo_voigt
+from .voigtian import voigtian
 
 # Version info
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 __author__ = "EPyR Tools Development Team"
 
 # Import fitting functionality
-from .fitting import fit_epr_signal, fit_multiple_shapes, FitResult
+from .fitting import FitResult, fit_epr_signal, fit_multiple_shapes
 
 # Main functions for easy access
 __all__ = [
     # Main class
-    'Lineshape',
-
+    "Lineshape",
     # Individual lineshape functions
-    'gaussian',
-    'lorentzian',
-    'voigtian',
-    'lshape',
-    'pseudo_voigt',
-    'convspec',
-
+    "gaussian",
+    "lorentzian",
+    "voigtian",
+    "lshape",
+    "pseudo_voigt",
+    "convspec",
     # Factory functions
-    'create_gaussian',
-    'create_lorentzian',
-    'create_voigt',
-    'create_pseudo_voigt',
-
+    "create_gaussian",
+    "create_lorentzian",
+    "create_voigt",
+    "create_pseudo_voigt",
     # Convenience functions
-    'gaussian_absorption',
-    'gaussian_dispersion',
-    'gaussian_derivative',
-    'lorentzian_absorption',
-    'lorentzian_dispersion',
-    'lorentzian_derivative',
-
+    "gaussian_absorption",
+    "gaussian_dispersion",
+    "gaussian_derivative",
+    "lorentzian_absorption",
+    "lorentzian_dispersion",
+    "lorentzian_derivative",
     # Fitting functionality
-    'fit_epr_signal',
-    'fit_multiple_shapes',
-    'FitResult',
+    "fit_epr_signal",
+    "fit_multiple_shapes",
+    "FitResult",
 ]
 
+
 # Module-level convenience function
-def create_lineshape(shape_type='gaussian', **kwargs):
+def create_lineshape(shape_type="gaussian", **kwargs):
     """
     Create a lineshape function with specified type.
-    
+
     Parameters:
     -----------
     shape_type : str
         Type of lineshape ('gaussian', 'lorentzian', 'voigt', 'pseudo_voigt')
-    **kwargs : 
+    **kwargs :
         Arguments passed to lineshape function
-        
+
     Returns:
     --------
     function
         Configured lineshape function
-        
+
     Examples:
     ---------
     >>> # Create a Gaussian lineshape
@@ -96,21 +106,23 @@ def create_lineshape(shape_type='gaussian', **kwargs):
     >>> y = gauss_func(x, center=0)
     """
     shape_map = {
-        'gaussian': gaussian,
-        'lorentzian': lorentzian,
-        'voigt': voigtian,
-        'pseudo_voigt': pseudo_voigt,
-        'general': lshape
+        "gaussian": gaussian,
+        "lorentzian": lorentzian,
+        "voigt": voigtian,
+        "pseudo_voigt": pseudo_voigt,
+        "general": lshape,
     }
-    
+
     if shape_type not in shape_map:
-        raise ValueError(f"Unknown shape_type: {shape_type}. Choose from {list(shape_map.keys())}")
-    
+        raise ValueError(
+            f"Unknown shape_type: {shape_type}. Choose from {list(shape_map.keys())}"
+        )
+
     shape_func = shape_map[shape_type]
-    
+
     # Return a partial function with preset kwargs
     def configured_lineshape(x, center, **extra_kwargs):
         combined_kwargs = {**kwargs, **extra_kwargs}
         return shape_func(x, center, **combined_kwargs)
-    
+
     return configured_lineshape
