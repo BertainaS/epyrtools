@@ -66,6 +66,7 @@ def fit_epr_signal(x_data: np.ndarray,
                    bounds: Optional[Dict[str, Tuple[float, float]]] = None,
                    derivative: int = 0,
                    fit_phase: bool = False,
+                   fit_baseline: bool = False,
                    plot: bool = True,
                    **fit_kwargs) -> FitResult:
     """
@@ -88,6 +89,7 @@ def fit_epr_signal(x_data: np.ndarray,
         Expected keys depend on shape_type and fit_phase:
         - Basic: {'center', 'width', 'amplitude'}
         - With phase: add 'phase'
+        - With baseline: add 'baseline_slope', 'baseline_offset'
         - Voigt: {'center', 'gaussian_width', 'lorentzian_width', 'amplitude'}
         - Pseudo-Voigt: {'center', 'width', 'amplitude', 'alpha'}
     bounds : dict, optional
@@ -96,6 +98,11 @@ def fit_epr_signal(x_data: np.ndarray,
         Derivative order to use (0, 1, 2). This is a FIXED parameter, not fitted.
     fit_phase : bool, default=False
         Whether to fit the phase parameter (absorption/dispersion mixing)
+    fit_baseline : bool, default=False
+        Whether to include an affine baseline (a*x + b) in the fit model.
+        When True, two additional parameters are fitted:
+        - baseline_slope (a): slope of the linear baseline
+        - baseline_offset (b): constant offset of the baseline
     plot : bool, default=True
         Whether to create a plot of the results
     **fit_kwargs : dict
@@ -118,6 +125,9 @@ def fit_epr_signal(x_data: np.ndarray,
     >>>
     >>> # Fit 1st derivative with phase adjustment
     >>> result = fit_epr_signal(x, y, 'gaussian', derivative=1, fit_phase=True)
+    >>>
+    >>> # Fit with linear baseline correction
+    >>> result = fit_epr_signal(x, y, 'gaussian', fit_baseline=True)
     >>>
     >>> # Fit with custom initial parameters including phase
     >>> initial = {'center': 3500, 'width': 10, 'amplitude': 1000, 'phase': 0.1}
@@ -151,11 +161,15 @@ def fit_epr_signal(x_data: np.ndarray,
         raise ValueError("derivative must be 0, 1, or 2")
 
     # Get fitting function and parameter info
-    fit_func, param_names, param_bounds = _get_fit_function(shape_type, derivative, fit_phase)
+    fit_func, param_names, param_bounds = _get_fit_function(
+        shape_type, derivative, fit_phase, fit_baseline
+    )
 
     # Estimate initial parameters if not provided
     if initial_params is None:
-        initial_params = _estimate_initial_params(x_clean, y_clean, shape_type, fit_phase)
+        initial_params = _estimate_initial_params(
+            x_clean, y_clean, shape_type, fit_phase, fit_baseline
+        )
 
     # Validate and complete initial parameters
     initial_params = _validate_initial_params(initial_params, param_names, x_clean, y_clean)
@@ -230,16 +244,30 @@ def fit_epr_signal(x_data: np.ndarray,
         )
 
 
-def _get_fit_function(shape_type: str, derivative: int, fit_phase: bool) -> Tuple[callable, List[str], Dict[str, Tuple[float, float]]]:
-    """Get the appropriate fitting function and parameter information"""
+def _get_fit_function(
+    shape_type: str, derivative: int, fit_phase: bool, fit_baseline: bool = False
+) -> Tuple[callable, List[str], Dict[str, Tuple[float, float]]]:
+    """Get the appropriate fitting function and parameter information.
+
+    Parameters
+    ----------
+    shape_type : str
+        Lineshape type ('gaussian', 'lorentzian', 'voigt', 'pseudo_voigt')
+    derivative : int
+        Derivative order (0, 1, 2)
+    fit_phase : bool
+        Whether to include phase as a fitted parameter
+    fit_baseline : bool
+        Whether to include an affine baseline (a*x + b) in the model
+    """
 
     if shape_type == 'gaussian':
         if fit_phase:
-            def fit_func(x, center, width, amplitude, phase):
+            def _lineshape(x, center, width, amplitude, phase):
                 return amplitude * gaussian(x, center, width, derivative=derivative, phase=phase)
             param_names = ['center', 'width', 'amplitude', 'phase']
         else:
-            def fit_func(x, center, width, amplitude):
+            def _lineshape(x, center, width, amplitude):
                 return amplitude * gaussian(x, center, width, derivative=derivative)
             param_names = ['center', 'width', 'amplitude']
 
@@ -252,11 +280,11 @@ def _get_fit_function(shape_type: str, derivative: int, fit_phase: bool) -> Tupl
 
     elif shape_type == 'lorentzian':
         if fit_phase:
-            def fit_func(x, center, width, amplitude, phase):
+            def _lineshape(x, center, width, amplitude, phase):
                 return amplitude * lorentzian(x, center, width, derivative=derivative, phase=phase)
             param_names = ['center', 'width', 'amplitude', 'phase']
         else:
-            def fit_func(x, center, width, amplitude):
+            def _lineshape(x, center, width, amplitude):
                 return amplitude * lorentzian(x, center, width, derivative=derivative)
             param_names = ['center', 'width', 'amplitude']
 
@@ -269,12 +297,12 @@ def _get_fit_function(shape_type: str, derivative: int, fit_phase: bool) -> Tupl
 
     elif shape_type == 'voigt':
         if fit_phase:
-            def fit_func(x, center, gaussian_width, lorentzian_width, amplitude, phase):
+            def _lineshape(x, center, gaussian_width, lorentzian_width, amplitude, phase):
                 return amplitude * voigtian(x, center, (gaussian_width, lorentzian_width),
                                           derivative=derivative, phase=phase)
             param_names = ['center', 'gaussian_width', 'lorentzian_width', 'amplitude', 'phase']
         else:
-            def fit_func(x, center, gaussian_width, lorentzian_width, amplitude):
+            def _lineshape(x, center, gaussian_width, lorentzian_width, amplitude):
                 return amplitude * voigtian(x, center, (gaussian_width, lorentzian_width),
                                           derivative=derivative)
             param_names = ['center', 'gaussian_width', 'lorentzian_width', 'amplitude']
@@ -292,14 +320,14 @@ def _get_fit_function(shape_type: str, derivative: int, fit_phase: bool) -> Tupl
             warnings.warn("pseudo_voigt does not support derivatives. Using derivative=0.")
 
         if fit_phase:
-            def fit_func(x, center, width, amplitude, alpha, phase):
+            def _lineshape(x, center, width, amplitude, alpha, phase):
                 # Pseudo-voigt doesn't have native phase support, approximate with cos/sin mix
                 abs_part = amplitude * pseudo_voigt(x, center, width, eta=alpha)
                 disp_part = amplitude * np.gradient(pseudo_voigt(x, center, width, eta=alpha), x[1]-x[0])
                 return np.cos(phase) * abs_part + np.sin(phase) * disp_part
             param_names = ['center', 'width', 'amplitude', 'alpha', 'phase']
         else:
-            def fit_func(x, center, width, amplitude, alpha):
+            def _lineshape(x, center, width, amplitude, alpha):
                 return amplitude * pseudo_voigt(x, center, width, eta=alpha)
             param_names = ['center', 'width', 'amplitude', 'alpha']
 
@@ -315,10 +343,34 @@ def _get_fit_function(shape_type: str, derivative: int, fit_phase: bool) -> Tupl
         raise ValueError(f"Unsupported shape_type: {shape_type}. "
                         "Choose from: 'gaussian', 'lorentzian', 'voigt', 'pseudo_voigt'")
 
+    # Wrap with affine baseline if requested
+    if fit_baseline:
+        n_lineshape_params = len(param_names)
+        param_names = param_names + ['baseline_slope', 'baseline_offset']
+        param_bounds['baseline_slope'] = (-np.inf, np.inf)
+        param_bounds['baseline_offset'] = (-np.inf, np.inf)
+
+        _inner = _lineshape
+
+        def fit_func(x, *args):
+            lineshape_args = args[:n_lineshape_params]
+            baseline_slope = args[n_lineshape_params]
+            baseline_offset = args[n_lineshape_params + 1]
+            return _inner(x, *lineshape_args) + baseline_slope * x + baseline_offset
+
+    else:
+        fit_func = _lineshape
+
     return fit_func, param_names, param_bounds
 
 
-def _estimate_initial_params(x: np.ndarray, y: np.ndarray, shape_type: str, fit_phase: bool = False) -> Dict[str, float]:
+def _estimate_initial_params(
+    x: np.ndarray,
+    y: np.ndarray,
+    shape_type: str,
+    fit_phase: bool = False,
+    fit_baseline: bool = False,
+) -> Dict[str, float]:
     """Estimate initial parameters from data"""
 
     # Basic estimates
@@ -392,6 +444,20 @@ def _estimate_initial_params(x: np.ndarray, y: np.ndarray, shape_type: str, fit_
         else:
             initial_params['phase'] = 0.0
 
+    # Estimate affine baseline parameters from data edges
+    if fit_baseline:
+        # Use a linear regression on the edge regions (first and last 10% of data)
+        n_edge = max(2, len(x) // 10)
+        x_edges = np.concatenate([x[:n_edge], x[-n_edge:]])
+        y_edges = np.concatenate([y[:n_edge], y[-n_edge:]])
+        if len(x_edges) >= 2:
+            coeffs = np.polyfit(x_edges, y_edges, 1)
+            initial_params['baseline_slope'] = coeffs[0]
+            initial_params['baseline_offset'] = coeffs[1]
+        else:
+            initial_params['baseline_slope'] = 0.0
+            initial_params['baseline_offset'] = 0.0
+
     return initial_params
 
 
@@ -415,6 +481,8 @@ def _validate_initial_params(initial_params: Dict[str, float],
             elif name == 'alpha':
                 validated[name] = 0.5
             elif name == 'phase':
+                validated[name] = 0.0
+            elif name in ('baseline_slope', 'baseline_offset'):
                 validated[name] = 0.0
             else:
                 validated[name] = 1.0
@@ -457,6 +525,21 @@ def _setup_bounds(param_names: List[str],
         elif 'width' in name:
             if upper == np.inf:
                 upper = x.max() - x.min()
+        elif name == 'baseline_slope':
+            # Slope bounded by data range ratio
+            y_range = np.max(y) - np.min(y) if np.max(y) != np.min(y) else 1.0
+            x_range = x.max() - x.min() if x.max() != x.min() else 1.0
+            max_slope = 10 * y_range / x_range
+            if lower == -np.inf:
+                lower = -max_slope
+            if upper == np.inf:
+                upper = max_slope
+        elif name == 'baseline_offset':
+            y_range = np.max(y) - np.min(y) if np.max(y) != np.min(y) else 1.0
+            if lower == -np.inf:
+                lower = np.min(y) - 10 * y_range
+            if upper == np.inf:
+                upper = np.max(y) + 10 * y_range
 
         # Ensure initial value is within bounds
         init_val = initial_params[name]
@@ -584,6 +667,7 @@ def fit_multiple_shapes(x_data: np.ndarray,
                        shapes: List[str] = None,
                        derivative: int = 0,
                        fit_phase: bool = False,
+                       fit_baseline: bool = False,
                        plot: bool = True) -> Dict[str, FitResult]:
     """
     Fit EPR signal with multiple lineshape types and compare results.
@@ -598,6 +682,8 @@ def fit_multiple_shapes(x_data: np.ndarray,
         Derivative order to use (0, 1, 2). Fixed parameter.
     fit_phase : bool, default=False
         Whether to fit the phase parameter
+    fit_baseline : bool, default=False
+        Whether to include an affine baseline (a*x + b) in the fit model
     plot : bool
         Whether to create comparison plot
 
@@ -615,7 +701,8 @@ def fit_multiple_shapes(x_data: np.ndarray,
     for shape in shapes:
         try:
             result = fit_epr_signal(x_data, y_data, shape, derivative=derivative,
-                                  fit_phase=fit_phase, plot=False)
+                                  fit_phase=fit_phase, fit_baseline=fit_baseline,
+                                  plot=False)
             results[shape] = result
         except Exception as e:
             logger.warning(f"Failed to fit {shape}: {e}")
