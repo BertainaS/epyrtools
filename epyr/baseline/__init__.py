@@ -49,32 +49,43 @@ from ..logging_config import get_logger
 
 logger = get_logger(__name__)
 
-# Import core correction functions
-from .correction import (
-    baseline_polynomial_1d,
-    baseline_polynomial_2d,
-    baseline_stretched_exponential_1d,
-    baseline_bi_exponential_1d
-)
-
 # Import automatic selection
 from .auto import (
+    auto_baseline_with_recommendations,
     baseline_auto_1d,
     compare_models_detailed,
     get_model_recommendations,
-    auto_baseline_with_recommendations
+)
+
+# Import core correction functions
+from .correction import (
+    baseline_bi_exponential_1d,
+    baseline_polynomial_1d,
+    baseline_polynomial_2d,
+    baseline_stretched_exponential_1d,
+)
+
+# Import interactive components
+from .interactive import (
+    RegionSelector,
+    close_selector_window,
+    interactive_select_regions_1d,
+    interactive_select_regions_2d,
+    is_interactive_available,
+    jupyter_help,
+    setup_interactive_backend,
 )
 
 # Import mathematical models
 from .models import (
-    stretched_exponential_1d,
+    MODEL_INFO,
     bi_exponential_1d,
-    polynomial_1d,
-    polynomial_2d,
     exponential_1d,
     get_model_function,
     list_available_models,
-    MODEL_INFO
+    polynomial_1d,
+    polynomial_2d,
+    stretched_exponential_1d,
 )
 
 # Import region selection utilities
@@ -84,18 +95,7 @@ from .selection import (
     get_baseline_regions_1d,
     get_baseline_regions_2d,
     validate_regions_1d,
-    validate_regions_2d
-)
-
-# Import interactive components
-from .interactive import (
-    RegionSelector,
-    interactive_select_regions_1d,
-    interactive_select_regions_2d,
-    close_selector_window,
-    jupyter_help,
-    is_interactive_available,
-    setup_interactive_backend
+    validate_regions_2d,
 )
 
 # Package metadata
@@ -105,52 +105,46 @@ __author__ = "EPyR Tools Development Team"
 # Define comprehensive public API
 __all__ = [
     # Core correction functions (most commonly used)
-    'baseline_polynomial_1d',
-    'baseline_polynomial_2d', 
-    'baseline_stretched_exponential_1d',
-    'baseline_bi_exponential_1d',
-    'baseline_auto_1d',
-    
+    "baseline_polynomial_1d",
+    "baseline_polynomial_2d",
+    "baseline_stretched_exponential_1d",
+    "baseline_bi_exponential_1d",
+    "baseline_auto_1d",
     # Mathematical models
-    'stretched_exponential_1d',
-    'bi_exponential_1d',
-    'polynomial_1d',
-    'polynomial_2d',
-    'exponential_1d',
-    
+    "stretched_exponential_1d",
+    "bi_exponential_1d",
+    "polynomial_1d",
+    "polynomial_2d",
+    "exponential_1d",
     # Region selection
-    'create_region_mask_1d',
-    'create_region_mask_2d',
-    'RegionSelector',
-    
+    "create_region_mask_1d",
+    "create_region_mask_2d",
+    "RegionSelector",
     # Interactive tools
-    'interactive_select_regions_1d',
-    'interactive_select_regions_2d',
-    'close_selector_window',
-    'jupyter_help',
-    'is_interactive_available',
-    'setup_interactive_backend',
-    
+    "interactive_select_regions_1d",
+    "interactive_select_regions_2d",
+    "close_selector_window",
+    "jupyter_help",
+    "is_interactive_available",
+    "setup_interactive_backend",
     # Advanced features
-    'compare_models_detailed',
-    'get_model_recommendations',
-    'auto_baseline_with_recommendations',
-    'get_model_function',
-    'list_available_models',
-    
+    "compare_models_detailed",
+    "get_model_recommendations",
+    "auto_baseline_with_recommendations",
+    "get_model_function",
+    "list_available_models",
     # Utilities
-    'get_baseline_regions_1d',
-    'get_baseline_regions_2d',
-    'validate_regions_1d',
-    'validate_regions_2d',
-    'MODEL_INFO',
-    
+    "get_baseline_regions_1d",
+    "get_baseline_regions_2d",
+    "validate_regions_1d",
+    "validate_regions_2d",
+    "MODEL_INFO",
     # Backend control
-    'setup_inline_backend',
-    'setup_widget_backend', 
-    'setup_notebook_backend',
-    'configure',
-    'get_configuration'
+    "setup_inline_backend",
+    "setup_widget_backend",
+    "setup_notebook_backend",
+    "configure",
+    "get_configuration",
 ]
 
 
@@ -230,45 +224,48 @@ def demo():
     logger.info("=" * 50)
 
     try:
-        import numpy as np
         import matplotlib.pyplot as plt
+        import numpy as np
 
         # Create synthetic test data
         logger.info("📊 Creating synthetic EPR-like data...")
 
         # 1. CW EPR spectrum with polynomial baseline
         x_cw = np.linspace(3300, 3400, 200)
-        signal_cw = 50 * np.exp(-((x_cw - 3350) / 10)**2)  # Gaussian signal
+        signal_cw = 50 * np.exp(-(((x_cw - 3350) / 10) ** 2))  # Gaussian signal
         baseline_cw = 0.1 * x_cw**2 - 680 * x_cw + 1150000  # Quadratic drift
         noise_cw = 5 * np.random.normal(size=len(x_cw))
         y_cw = signal_cw + baseline_cw + noise_cw
 
         logger.info("   Testing polynomial correction on synthetic CW EPR...")
-        corrected_cw, fitted_baseline = baseline_polynomial_1d(None, y_cw, None, order=2)
+        corrected_cw, fitted_baseline = baseline_polynomial_1d(
+            None, y_cw, None, order=2
+        )
 
         # 2. T2 relaxation data with stretched exponential baseline
         x_t2 = np.linspace(0, 2000, 150)
-        baseline_t2 = 1000 * np.exp(-((x_t2 / 500)**1.2)) + 50
+        baseline_t2 = 1000 * np.exp(-((x_t2 / 500) ** 1.2)) + 50
         noise_t2 = 20 * np.random.normal(size=len(x_t2))
         y_t2 = baseline_t2 + noise_t2
 
-        logger.info("   Testing stretched exponential correction on synthetic T2 data...")
+        logger.info(
+            "   Testing stretched exponential correction on synthetic T2 data..."
+        )
         corrected_t2, fitted_t2 = baseline_stretched_exponential_1d(None, y_t2, None)
 
         # 3. Automatic model selection
         logger.info("   Testing automatic model selection...")
 
-        test_data = [
-            ("CW EPR", None, y_cw),
-            ("T2 relaxation", None, y_t2)
-        ]
+        test_data = [("CW EPR", None, y_cw), ("T2 relaxation", None, y_t2)]
 
         for name, x_data, y_data in test_data:
             try:
                 corrected_auto, baseline_auto, info = baseline_auto_1d(
                     x_data, y_data, None, verbose=False
                 )
-                logger.info(f"   ✅ {name}: Best model = {info['best_model']} (R² = {info['parameters']['r2']:.3f})")
+                logger.info(
+                    f"   ✅ {name}: Best model = {info['best_model']} (R² = {info['parameters']['r2']:.3f})"
+                )
             except Exception as e:
                 logger.info(f"   ⚠️  {name}: {e}")
 
@@ -293,12 +290,13 @@ bi_exp_baseline_1d = baseline_bi_exponential_1d
 
 # Module-level configuration
 _DEFAULT_SETTINGS = {
-    'polynomial_order': 2,
-    'beta_range': (0.01, 5.0),
-    'selection_criterion': 'aic',
-    'center_fraction': 0.3,
-    'interactive_backend': 'manual'  # 'auto', 'widget', 'notebook', 'inline', or 'manual'
+    "polynomial_order": 2,
+    "beta_range": (0.01, 5.0),
+    "selection_criterion": "aic",
+    "center_fraction": 0.3,
+    "interactive_backend": "manual",  # 'auto', 'widget', 'notebook', 'inline', or 'manual'
 }
+
 
 def configure(**kwargs):
     """
@@ -319,6 +317,7 @@ def configure(**kwargs):
 
     logger.info(f"✅ Baseline correction settings updated: {_DEFAULT_SETTINGS}")
 
+
 def get_configuration():
     """Get current default settings."""
     return _DEFAULT_SETTINGS.copy()
@@ -328,9 +327,10 @@ def setup_inline_backend():
     """Set up inline backend for static plots in Jupyter."""
     try:
         from IPython import get_ipython
+
         ipython = get_ipython()
         if ipython is not None:
-            ipython.magic('matplotlib inline')
+            ipython.magic("matplotlib inline")
             logger.info("✅ Switched to inline backend (static plots)")
         else:
             logger.warning("⚠️  Not in Jupyter environment")
@@ -342,9 +342,10 @@ def setup_widget_backend():
     """Set up widget backend for interactive plots in Jupyter."""
     try:
         from IPython import get_ipython
+
         ipython = get_ipython()
         if ipython is not None:
-            ipython.magic('matplotlib widget')
+            ipython.magic("matplotlib widget")
             logger.info("✅ Switched to widget backend (interactive plots)")
         else:
             logger.warning("⚠️  Not in Jupyter environment")
@@ -356,9 +357,10 @@ def setup_notebook_backend():
     """Set up notebook backend for interactive plots in Jupyter."""
     try:
         from IPython import get_ipython
+
         ipython = get_ipython()
         if ipython is not None:
-            ipython.magic('matplotlib notebook')
+            ipython.magic("matplotlib notebook")
             logger.info("✅ Switched to notebook backend (interactive plots)")
         else:
             logger.warning("⚠️  Not in Jupyter environment")
@@ -370,7 +372,8 @@ def setup_notebook_backend():
 # Note: Changed to 'manual' by default to let users choose their preferred backend
 try:
     from IPython import get_ipython
-    if get_ipython() is not None and _DEFAULT_SETTINGS['interactive_backend'] == 'auto':
+
+    if get_ipython() is not None and _DEFAULT_SETTINGS["interactive_backend"] == "auto":
         setup_interactive_backend()
 except ImportError:
     pass  # Not in Jupyter environment

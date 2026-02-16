@@ -19,9 +19,13 @@ from .conversion import (
     save_fair,
 )
 from .data_processing import append_fair_metadata, extract_axis_info, process_parameters
-from .exporters import save_to_csv_json, save_to_hdf5
+from .exporters import save_to_csv, save_to_csv_json, save_to_hdf5, save_to_jpg, save_to_json
 from .parameter_mapping import BRUKER_PARAM_MAP
-from .validation import validate_fair_dataset, ValidationResult, create_validation_report
+from .validation import (
+    ValidationResult,
+    create_validation_report,
+    validate_fair_dataset,
+)
 
 # Re-export for backward compatibility
 __all__ = [
@@ -31,10 +35,13 @@ __all__ = [
     "batch_convert_directory",
     "process_parameters",
     "extract_axis_info",
+    "save_to_csv",
+    "save_to_json",
     "save_to_csv_json",
     "save_to_hdf5",
+    "save_to_jpg",
     "BRUKER_PARAM_MAP",
     "validate_fair_dataset",
-    "ValidationResult", 
+    "ValidationResult",
     "create_validation_report",
 ]

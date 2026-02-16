@@ -48,9 +48,7 @@ class TestEPRPlotting:
 
         # Test with custom units - check if function supports these parameters
         try:
-            fig, ax = plot_2d_map(
-                x_axis, y_axis, z_data, x_unit="mT", y_unit="GHz"
-            )
+            fig, ax = plot_2d_map(x_axis, y_axis, z_data, x_unit="mT", y_unit="GHz")
         except TypeError:
             # Function may not support these parameters
             fig, ax = plot_2d_map(x_axis, y_axis, z_data)

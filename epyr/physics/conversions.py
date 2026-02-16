@@ -5,18 +5,20 @@ Provides simple, direct conversion functions between common EPR units:
 MHz, mT, cm-1, and related energy/field conversions.
 """
 
+from typing import List, Optional, Tuple, Union
+
 import numpy as np
-from typing import Union, Optional, List, Tuple
-from .constants import (
-    gfree, bmagn, planck, clight, boltzm, evolt
-)
+
 from ..logging_config import get_logger
+from .constants import bmagn, boltzm, clight, evolt, gfree, planck
 
 logger = get_logger(__name__)
 
 
-def mhz_to_mt(frequency_mhz: Union[float, np.ndarray],
-              g_factor: Optional[Union[float, np.ndarray]] = None) -> Union[float, np.ndarray]:
+def mhz_to_mt(
+    frequency_mhz: Union[float, np.ndarray],
+    g_factor: Optional[Union[float, np.ndarray]] = None,
+) -> Union[float, np.ndarray]:
     """
     Convert frequency in MHz to magnetic field in mT.
 
@@ -63,8 +65,10 @@ def mhz_to_mt(frequency_mhz: Union[float, np.ndarray],
     return field_mt
 
 
-def mt_to_mhz(field_mt: Union[float, np.ndarray],
-              g_factor: Optional[Union[float, np.ndarray]] = None) -> Union[float, np.ndarray]:
+def mt_to_mhz(
+    field_mt: Union[float, np.ndarray],
+    g_factor: Optional[Union[float, np.ndarray]] = None,
+) -> Union[float, np.ndarray]:
     """
     Convert magnetic field in mT to frequency in MHz.
 
@@ -111,7 +115,9 @@ def mt_to_mhz(field_mt: Union[float, np.ndarray],
     return frequency_mhz
 
 
-def cm_inv_to_mhz(wavenumber_cm_inv: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
+def cm_inv_to_mhz(
+    wavenumber_cm_inv: Union[float, np.ndarray],
+) -> Union[float, np.ndarray]:
     """
     Convert wavenumber in cm^-1 to frequency in MHz.
 
@@ -185,8 +191,10 @@ def mhz_to_cm_inv(frequency_mhz: Union[float, np.ndarray]) -> Union[float, np.nd
     return wavenumber_cm_inv
 
 
-def frequency_field_conversion_table(frequencies_ghz: Optional[List[float]] = None,
-                                   g_factors: Optional[List[float]] = None) -> None:
+def frequency_field_conversion_table(
+    frequencies_ghz: Optional[List[float]] = None,
+    g_factors: Optional[List[float]] = None,
+) -> None:
     """
     Print a conversion table between frequency and magnetic field.
 
@@ -240,7 +248,9 @@ def energy_conversion_table(energies_cm_inv: Optional[List[float]] = None) -> No
 
     logger.info("Energy Unit Conversion Table")
     logger.info("=" * 70)
-    logger.info(f"{'cm^-1':<10} {'MHz':<15} {'GHz':<10} {'eV':<12} {'K':<10} {'meV':<8}")
+    logger.info(
+        f"{'cm^-1':<10} {'MHz':<15} {'GHz':<10} {'eV':<12} {'K':<10} {'meV':<8}"
+    )
     logger.info("-" * 70)
 
     for wn in energies_cm_inv:
@@ -254,8 +264,10 @@ def energy_conversion_table(energies_cm_inv: Optional[List[float]] = None) -> No
         energy_mev = energy_ev * 1000  # eV to meV
         temp_k = energy_j / boltzm()  # J to K
 
-        logger.info(f"{wn:<10.0f} {freq_mhz:<15.3e} {freq_ghz:<10.3f} "
-                    f"{energy_ev:<12.6f} {temp_k:<10.3f} {energy_mev:<8.3f}")
+        logger.info(
+            f"{wn:<10.0f} {freq_mhz:<15.3e} {freq_ghz:<10.3f} "
+            f"{energy_ev:<12.6f} {temp_k:<10.3f} {energy_mev:<8.3f}"
+        )
 
     logger.info("-" * 70)
 
@@ -304,8 +316,10 @@ def conversion_examples():
     # Example 5: Field sweep range
     logger.info("5. Typical EPR field sweep (g = 2.002)")
     center_field = 340  # mT
-    sweep_width = 20   # mT
-    fields = np.array([center_field - sweep_width/2, center_field, center_field + sweep_width/2])
+    sweep_width = 20  # mT
+    fields = np.array(
+        [center_field - sweep_width / 2, center_field, center_field + sweep_width / 2]
+    )
     freqs = mt_to_mhz(fields, g_factor=2.002)
 
     logger.info(f"   Field range: {fields[0]:.1f} - {fields[2]:.1f} mT")

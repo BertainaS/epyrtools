@@ -28,25 +28,19 @@ logger = get_logger(__name__)
 from .data_processing import process_parameters
 
 
-def save_to_csv_json(
+def save_to_json(
     output_basename: Path,
-    x: Union[np.ndarray, List[np.ndarray], None],
-    y: np.ndarray,
     pars: Dict[str, Any],
     original_file_path: str,
 ) -> None:
-    """Save data to CSV and structured metadata to JSON.
+    """Save structured metadata to JSON file.
 
     Args:
         output_basename: Base path for output files (without extension)
-        x: Abscissa data array(s) or None
-        y: Intensity data array
         pars: Raw parameters dictionary
         original_file_path: Path to original data file
     """
     json_file = output_basename.with_suffix(".json")
-    csv_file = output_basename.with_suffix(".csv")
-
     fair_meta, unmapped_meta = process_parameters(pars)
 
     logger.info(f"  Saving structured metadata to: {json_file}")
@@ -69,6 +63,26 @@ def save_to_csv_json(
             f"Error serializing metadata to JSON for {json_file}: {e}. "
             f"Some parameters might not be saved correctly."
         )
+
+
+def save_to_csv(
+    output_basename: Path,
+    x: Union[np.ndarray, List[np.ndarray], None],
+    y: np.ndarray,
+    pars: Dict[str, Any],
+    original_file_path: str,
+) -> None:
+    """Save data to CSV file.
+
+    Args:
+        output_basename: Base path for output files (without extension)
+        x: Abscissa data array(s) or None
+        y: Intensity data array
+        pars: Raw parameters dictionary
+        original_file_path: Path to original data file
+    """
+    csv_file = output_basename.with_suffix(".csv")
+    fair_meta, unmapped_meta = process_parameters(pars)
 
     logger.info(f"  Saving data to: {csv_file}")
 
@@ -196,6 +210,29 @@ def save_to_csv_json(
         warnings.warn(f"An unexpected error occurred while writing CSV {csv_file}: {e}")
 
 
+def save_to_csv_json(
+    output_basename: Path,
+    x: Union[np.ndarray, List[np.ndarray], None],
+    y: np.ndarray,
+    pars: Dict[str, Any],
+    original_file_path: str,
+) -> None:
+    """Save data to CSV and structured metadata to JSON.
+
+    This function is maintained for backward compatibility and calls
+    save_to_csv() and save_to_json() separately.
+
+    Args:
+        output_basename: Base path for output files (without extension)
+        x: Abscissa data array(s) or None
+        y: Intensity data array
+        pars: Raw parameters dictionary
+        original_file_path: Path to original data file
+    """
+    save_to_json(output_basename, pars, original_file_path)
+    save_to_csv(output_basename, x, y, pars, original_file_path)
+
+
 def _try_set_h5_attr(h5_object, key: str, value: Any):
     """Helper to safely set HDF5 attributes, converting to string on type error."""
     try:
@@ -259,17 +296,17 @@ def save_to_hdf5(
         with h5py.File(h5_file, "w") as f:
             # Store global metadata
             f.attrs["original_file"] = original_file_path
-            f.attrs[
-                "description"
-            ] = "FAIR representation of EPR data converted from Bruker format."
+            f.attrs["description"] = (
+                "FAIR representation of EPR data converted from Bruker format."
+            )
             f.attrs["conversion_timestamp"] = datetime.now().isoformat()
             f.attrs["converter_script_version"] = "epyr_fair_converter_v1.0"
 
             # Store structured FAIR metadata
             param_grp = f.create_group("metadata/parameters_fair")
-            param_grp.attrs[
-                "description"
-            ] = "Mapped parameters with units and descriptions."
+            param_grp.attrs["description"] = (
+                "Mapped parameters with units and descriptions."
+            )
 
             for fair_key, info in fair_meta.items():
                 item_grp = param_grp.create_group(fair_key)
@@ -280,9 +317,9 @@ def save_to_hdf5(
             # Store unmapped parameters
             if unmapped_meta:
                 unmap_grp = f.create_group("metadata/parameters_original")
-                unmap_grp.attrs[
-                    "description"
-                ] = "Parameters from the original file not found in the FAIR mapping."
+                unmap_grp.attrs["description"] = (
+                    "Parameters from the original file not found in the FAIR mapping."
+                )
                 for key, value in unmapped_meta.items():
                     _try_set_h5_attr(unmap_grp, key, value)
 
@@ -397,13 +434,89 @@ def save_to_hdf5(
         )
 
 
+def save_to_jpg(
+    output_basename: Path,
+    x: Union[np.ndarray, List[np.ndarray], None],
+    y: np.ndarray,
+    pars: Dict[str, Any],
+    original_file_path: str,
+) -> None:
+    """Save EPR data visualization to JPG file(s).
+
+    For 1D data, generates a single plot.
+    For 2D data, generates both map and waterfall plots.
+
+    Args:
+        output_basename: Base path for output files (without extension)
+        x: Abscissa data array(s) or None
+        y: Intensity data array
+        pars: Raw parameters dictionary
+        original_file_path: Path to original data file
+    """
+    try:
+        import matplotlib
+        matplotlib.use("Agg")  # Non-interactive backend
+        import matplotlib.pyplot as plt
+        from ..eprplot import plot_1d, plot_2d_map, plot_2d_waterfall
+    except ImportError as e:
+        warnings.warn(f"Could not import plotting modules: {e}. Skipping JPG export.")
+        return
+
+    try:
+        file_name = Path(original_file_path).name
+
+        if y.ndim == 1:
+            # 1D data - single plot
+            logger.info(f"  Saving 1D plot to: {output_basename}.jpg")
+            fig, ax = plot_1d(x, y, pars, title=file_name)
+            plt.savefig(
+                output_basename.with_suffix(".jpg"),
+                dpi=150,
+                format="jpg",
+                bbox_inches="tight",
+            )
+            plt.close(fig)
+
+        elif y.ndim == 2:
+            # 2D data - both map and waterfall plots
+            logger.info(f"  Saving 2D map plot to: {output_basename}_map.jpg")
+            fig_map, ax_map = plot_2d_map(x, y, pars, title=f"{file_name} - Map")
+            plt.savefig(
+                str(output_basename) + "_map.jpg",
+                dpi=150,
+                format="jpg",
+                bbox_inches="tight",
+            )
+            plt.close(fig_map)
+
+            logger.info(f"  Saving 2D waterfall plot to: {output_basename}_waterfall.jpg")
+            fig_waterfall, ax_waterfall = plot_2d_waterfall(
+                x, y, pars, title=f"{file_name} - Waterfall"
+            )
+            plt.savefig(
+                str(output_basename) + "_waterfall.jpg",
+                dpi=150,
+                format="jpg",
+                bbox_inches="tight",
+            )
+            plt.close(fig_waterfall)
+
+        else:
+            warnings.warn(
+                f"Cannot create JPG for {y.ndim}D data. Only 1D and 2D supported."
+            )
+
+    except Exception as e:
+        warnings.warn(f"Failed to create JPG for {original_file_path}: {e}")
+
+
 def save_fair(
     output_basename: Path,
     x: Union[np.ndarray, List[np.ndarray], None],
     y: np.ndarray,
     pars: Dict[str, Any],
     original_file_path: str,
-    formats: List[str] = ["csv_json", "hdf5"],
+    formats: List[str] = ["csv", "json"],
 ) -> None:
     """Save EPR data in specified FAIR formats.
 
@@ -413,10 +526,26 @@ def save_fair(
         y: Intensity data array
         pars: Raw parameters dictionary
         original_file_path: Path to original data file
-        formats: List of output formats ('csv_json', 'hdf5')
+        formats: List of output formats. Options: 'csv', 'json', 'hdf5', 'jpg', 'csv_json'
+            - 'csv': Save data to CSV file only
+            - 'json': Save metadata to JSON file only
+            - 'hdf5': Save data and metadata to HDF5 file
+            - 'jpg': Save visualization plots (1D: single plot, 2D: map + waterfall)
+            - 'csv_json': Save both CSV and JSON (backward compatibility)
     """
+    # Handle individual formats
+    if "csv" in formats:
+        save_to_csv(output_basename, x, y, pars, original_file_path)
+
+    if "json" in formats:
+        save_to_json(output_basename, pars, original_file_path)
+
+    # Handle backward compatibility format
     if "csv_json" in formats:
         save_to_csv_json(output_basename, x, y, pars, original_file_path)
 
     if "hdf5" in formats:
         save_to_hdf5(output_basename, x, y, pars, original_file_path)
+
+    if "jpg" in formats:
+        save_to_jpg(output_basename, x, y, pars, original_file_path)

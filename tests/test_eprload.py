@@ -135,9 +135,7 @@ class TestEPRLoad:
             # Test invalid return_type
             mock_load.return_value = (complex_y.copy(), real_x, {"MWFQ": 9.4e9})
             with pytest.raises(ValueError, match="Invalid return_type"):
-                eprload(
-                    str(test_file), plot_if_possible=False, return_type="invalid"
-                )
+                eprload(str(test_file), plot_if_possible=False, return_type="invalid")
 
     def test_return_type_with_real_data(self, temp_data_files):
         """Test that return_type works correctly with already-real data."""

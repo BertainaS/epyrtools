@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 
 from epyr.eprload import eprload
+
 from ..logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -37,7 +38,13 @@ def convert_bruker_to_fair(
         input_file: Path to Bruker data file (.dta, .dsc, .spc, .par).
         output_dir: Directory to save converted files. If None, saves in
             same directory as input file.
-        formats: List of formats to generate. Options: 'csv', 'json', 'hdf5'.
+        formats: List of formats to generate. Options: 'csv', 'json', 'hdf5', 'jpg'.
+            Each format can be specified independently:
+            - 'csv': Export data to CSV file
+            - 'json': Export metadata to JSON file
+            - 'hdf5': Export data and metadata to HDF5 file
+            - 'jpg': Export visualization (1D: single plot, 2D: map + waterfall)
+            Multiple formats can be combined (e.g., ['csv', 'json', 'hdf5', 'jpg']).
         include_metadata: Whether to include metadata in output files.
         scaling: Scaling options passed to eprload (e.g., 'nPGT').
 
@@ -47,7 +54,7 @@ def convert_bruker_to_fair(
     try:
         logger.info("Starting FAIR conversion process...")
         input_file = Path(input_file)
-        
+
         if not input_file.exists():
             logger.error(f"Input file not found: {input_file}")
             return False
@@ -84,26 +91,15 @@ def convert_bruker_to_fair(
 
         logger.info("Processing parameters and generating outputs...")
 
-        # Convert formats list to legacy format for compatibility
-        output_formats = []
-        if 'csv' in formats and 'json' in formats:
-            output_formats.append('csv_json')
-        elif 'csv' in formats:
-            output_formats.append('csv')
-        elif 'json' in formats:
-            output_formats.append('json')
-        
-        if 'hdf5' in formats:
-            output_formats.append('hdf5')
-
         # Use the consolidated save function from exporters
+        # Formats are now passed directly (csv, json, hdf5)
         _save_fair_formats(
-            output_basename, x, y, pars, original_file_path_str, output_formats
+            output_basename, x, y, pars, original_file_path_str, formats
         )
 
         logger.info("FAIR conversion process finished.")
         return True
-        
+
     except Exception as e:
         logger.error(f"Conversion failed: {e}")
         return False
@@ -115,7 +111,7 @@ def save_fair(
     y: np.ndarray,
     params: Dict[str, Any],
     original_file_path: str,
-    output_formats: List[str] = ["csv_json", "hdf5"],
+    output_formats: List[str] = ["csv", "json"],
 ) -> None:
     """Save already-loaded EPR data to one or more FAIR formats.
 
@@ -128,7 +124,13 @@ def save_fair(
         y: Ordinate data array.
         params: Dictionary of parameters from the original file.
         original_file_path: Full path of the original loaded file.
-        output_formats: List of formats to save. Options: 'csv_json', 'hdf5'.
+        output_formats: List of formats to save. Options: 'csv', 'json', 'hdf5', 'jpg'.
+            Each format can be specified independently:
+            - 'csv': Export data to CSV file
+            - 'json': Export metadata to JSON file
+            - 'hdf5': Export data and metadata to HDF5 file
+            - 'jpg': Export visualization (1D: single plot, 2D: map + waterfall)
+            - 'csv_json': Export both CSV and JSON (backward compatibility)
 
     Returns:
         None. Files are saved to disk.
@@ -152,7 +154,7 @@ def batch_convert_directory(
     output_directory: Optional[Union[str, Path]] = None,
     file_extensions: List[str] = [".dsc", ".spc", ".par"],
     scaling: str = "",
-    output_formats: List[str] = ["csv_json", "hdf5"],
+    output_formats: List[str] = ["csv", "json"],
     recursive: bool = False,
 ) -> None:
     """Convert all Bruker EPR files in a directory to FAIR formats.
@@ -163,7 +165,9 @@ def batch_convert_directory(
             alongside original files.
         file_extensions: List of file extensions to process.
         scaling: Scaling options passed to eprload.
-        output_formats: List of formats to generate.
+        output_formats: List of formats to generate. Options: 'csv', 'json', 'hdf5', 'jpg'.
+            Each format can be specified independently. For 2D data, 'jpg' creates both
+            map and waterfall visualizations.
         recursive: If True, search subdirectories recursively.
 
     Returns:
@@ -201,7 +205,9 @@ def batch_convert_directory(
     failed_conversions = 0
 
     for i, file_path in enumerate(files_to_process, 1):
-        logger.info(f"\n--- Processing {i}/{len(files_to_process)}: {file_path.name} ---")
+        logger.info(
+            f"\n--- Processing {i}/{len(files_to_process)}: {file_path.name} ---"
+        )
 
         try:
             # Determine output directory for this file

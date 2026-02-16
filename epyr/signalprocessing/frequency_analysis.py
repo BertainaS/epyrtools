@@ -9,10 +9,12 @@ Comprehensive FFT-based frequency analysis with support for:
 Includes DC offset removal and apodization windows for clean spectral analysis.
 """
 
-import numpy as np
+from typing import Dict, Literal, Optional, Tuple, Union
+
 import matplotlib.pyplot as plt
-from typing import Union, Optional, Tuple, Dict, Literal
-from scipy import signal as scipy_signal, fft
+import numpy as np
+from scipy import fft
+from scipy import signal as scipy_signal
 
 from ..logging_config import get_logger
 
@@ -28,6 +30,7 @@ except ImportError:
 # ============================================================================
 # Helper Functions for Common Operations
 # ============================================================================
+
 
 def _detect_time_units(time_data: np.ndarray) -> Tuple[str, str, float]:
     """
@@ -47,15 +50,15 @@ def _detect_time_units(time_data: np.ndarray) -> Tuple[str, str, float]:
     dt_original = np.mean(np.diff(time_data))
 
     if time_range > 100:  # > 100 units, likely nanoseconds
-        return 'ns', 'MHz', dt_original * 1e-9
+        return "ns", "MHz", dt_original * 1e-9
     elif time_range > 1.0:  # 1-100 units, likely microseconds
-        return 'μs', 'MHz', dt_original * 1e-6
+        return "μs", "MHz", dt_original * 1e-6
     elif time_range > 0.01:  # 0.01-1 units, likely milliseconds
-        return 'ms', 'kHz', dt_original * 1e-3
+        return "ms", "kHz", dt_original * 1e-3
     elif time_range > 1e-6:  # 1e-6 to 0.01, likely seconds
-        return 's', 'Hz', dt_original
+        return "s", "Hz", dt_original
     else:  # Very small values, normalized time
-        return 'arb', 'Hz', dt_original
+        return "arb", "Hz", dt_original
 
 
 def _convert_to_display_freq(frequencies_hz: np.ndarray, freq_unit: str) -> np.ndarray:
@@ -74,15 +77,17 @@ def _convert_to_display_freq(frequencies_hz: np.ndarray, freq_unit: str) -> np.n
     np.ndarray
         Frequencies in display units
     """
-    if freq_unit == 'MHz':
+    if freq_unit == "MHz":
         return frequencies_hz / 1e6
-    elif freq_unit == 'kHz':
+    elif freq_unit == "kHz":
         return frequencies_hz / 1e3
     else:  # Hz
         return frequencies_hz
 
 
-def _remove_dc_offset(signal: np.ndarray, axis: Optional[int] = None) -> Tuple[np.ndarray, Union[float, np.ndarray]]:
+def _remove_dc_offset(
+    signal: np.ndarray, axis: Optional[int] = None
+) -> Tuple[np.ndarray, Union[float, np.ndarray]]:
     """
     Remove DC offset from signal.
 
@@ -106,8 +111,12 @@ def _remove_dc_offset(signal: np.ndarray, axis: Optional[int] = None) -> Tuple[n
         return signal - dc_offset, dc_offset
 
 
-def _apply_window(signal: np.ndarray, window: Optional[str], window_alpha: Optional[float],
-                 axis: int = -1) -> np.ndarray:
+def _apply_window(
+    signal: np.ndarray,
+    window: Optional[str],
+    window_alpha: Optional[float],
+    axis: int = -1,
+) -> np.ndarray:
     """
     Apply apodization window to signal.
 
@@ -131,7 +140,7 @@ def _apply_window(signal: np.ndarray, window: Optional[str], window_alpha: Optio
         return signal.copy()
 
     # Set default alpha for Kaiser and Gaussian
-    if window in ['kaiser', 'gaussian'] and window_alpha is None:
+    if window in ["kaiser", "gaussian"] and window_alpha is None:
         window_alpha = 6.0
 
     # Get window size
@@ -155,11 +164,17 @@ def _apply_window(signal: np.ndarray, window: Optional[str], window_alpha: Optio
         raise ValueError("Only 1D and 2D signals supported")
 
 
-def analyze_frequencies(time_data: np.ndarray, signal_data: np.ndarray,
-                       window: Optional[str] = 'hann', window_alpha: Optional[float] = None,
-                       zero_padding: int = 2, remove_dc: bool = True,
-                       plot: bool = True, freq_range: Optional[Tuple[float, float]] = None,
-                       **plot_kwargs) -> Dict:
+def analyze_frequencies(
+    time_data: np.ndarray,
+    signal_data: np.ndarray,
+    window: Optional[str] = "hann",
+    window_alpha: Optional[float] = None,
+    zero_padding: int = 2,
+    remove_dc: bool = True,
+    plot: bool = True,
+    freq_range: Optional[Tuple[float, float]] = None,
+    **plot_kwargs,
+) -> Dict:
     """
     FFT-based frequency analysis of time-domain EPR signals.
 
@@ -228,7 +243,9 @@ def analyze_frequencies(time_data: np.ndarray, signal_data: np.ndarray,
     time_unit, freq_unit, dt_seconds = _detect_time_units(time_data)
     sampling_rate = 1.0 / dt_seconds
     logger.debug(f"Time unit: {time_unit}, Frequency unit: {freq_unit}")
-    logger.debug(f"Sampling rate: {sampling_rate/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit, 1):.1f} {freq_unit}")
+    logger.debug(
+        f"Sampling rate: {sampling_rate/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit, 1):.1f} {freq_unit}"
+    )
 
     # Step 1: Remove DC offset (very important for EPR signals)
     if remove_dc:
@@ -252,7 +269,7 @@ def analyze_frequencies(time_data: np.ndarray, signal_data: np.ndarray,
     if zero_padding > 1:
         n_padded = len(windowed_signal) * zero_padding
         padded_signal = np.zeros(n_padded, dtype=windowed_signal.dtype)
-        padded_signal[:len(windowed_signal)] = windowed_signal
+        padded_signal[: len(windowed_signal)] = windowed_signal
         windowed_signal = padded_signal
         logger.debug(f"Zero padding: {len(processed_signal)} -> {n_padded} points")
 
@@ -269,7 +286,7 @@ def analyze_frequencies(time_data: np.ndarray, signal_data: np.ndarray,
     frequencies_display = _convert_to_display_freq(frequencies_hz_pos, freq_unit)
 
     # Step 5: Calculate power and phase spectra
-    power_spectrum = np.abs(fft_positive)**2
+    power_spectrum = np.abs(fft_positive) ** 2
     phase_spectrum = np.angle(fft_positive)
 
     # Normalize power spectrum
@@ -297,38 +314,57 @@ def analyze_frequencies(time_data: np.ndarray, signal_data: np.ndarray,
         for i, freq in enumerate(dominant_frequencies_display[:5]):  # Top 5
             if i < len(peak_indices):
                 power_pct = power_spectrum[peak_indices[sort_indices[i]]] * 100
-                logger.info(f"  {i+1}. {freq:.6f} {freq_unit} (power: {power_pct:.1f}%)")
+                logger.info(
+                    f"  {i+1}. {freq:.6f} {freq_unit} (power: {power_pct:.1f}%)"
+                )
     else:
         logger.info("No significant frequency peaks found")
 
     # Step 7: Create plots
     if plot:
-        _plot_fft_analysis(time_data, signal_data, processed_signal, windowed_signal,
-                          frequencies_display, power_spectrum, phase_spectrum,
-                          dominant_frequencies_display, time_unit, freq_unit,
-                          freq_range, remove_dc, **plot_kwargs)
+        _plot_fft_analysis(
+            time_data,
+            signal_data,
+            processed_signal,
+            windowed_signal,
+            frequencies_display,
+            power_spectrum,
+            phase_spectrum,
+            dominant_frequencies_display,
+            time_unit,
+            freq_unit,
+            freq_range,
+            remove_dc,
+            **plot_kwargs,
+        )
 
     # Return results
     results = {
-        'frequencies': frequencies_display,
-        'power_spectrum': power_spectrum,
-        'phase_spectrum': phase_spectrum,
-        'dominant_frequencies': dominant_frequencies_display,
-        'time_data': time_data,
-        'processed_signal': processed_signal,
-        'sampling_rate': sampling_rate,
-        'time_unit': time_unit,
-        'freq_unit': freq_unit,
-        'dc_removed': remove_dc
+        "frequencies": frequencies_display,
+        "power_spectrum": power_spectrum,
+        "phase_spectrum": phase_spectrum,
+        "dominant_frequencies": dominant_frequencies_display,
+        "time_data": time_data,
+        "processed_signal": processed_signal,
+        "sampling_rate": sampling_rate,
+        "time_unit": time_unit,
+        "freq_unit": freq_unit,
+        "dc_removed": remove_dc,
     }
 
     return results
 
 
-def power_spectrum(time_data: np.ndarray, signal_data: np.ndarray,
-                  method: str = 'welch', window: str = 'hann',
-                  nperseg: Optional[int] = None, overlap: float = 0.5,
-                  remove_dc: bool = True, plot: bool = True) -> Dict:
+def power_spectrum(
+    time_data: np.ndarray,
+    signal_data: np.ndarray,
+    method: str = "welch",
+    window: str = "hann",
+    nperseg: Optional[int] = None,
+    overlap: float = 0.5,
+    remove_dc: bool = True,
+    plot: bool = True,
+) -> Dict:
     """
     Calculate power spectral density using Welch or periodogram methods.
 
@@ -365,18 +401,23 @@ def power_spectrum(time_data: np.ndarray, signal_data: np.ndarray,
     _, freq_unit, dt_seconds = _detect_time_units(time_data)
     sampling_rate = 1.0 / dt_seconds
 
-    if method == 'welch':
+    if method == "welch":
         if nperseg is None:
             nperseg = len(signal_data) // 4
         noverlap = int(nperseg * overlap)
 
-        frequencies_hz, psd = scipy_signal.welch(signal_data, sampling_rate,
-                                       window=window, nperseg=nperseg,
-                                       noverlap=noverlap)
+        frequencies_hz, psd = scipy_signal.welch(
+            signal_data,
+            sampling_rate,
+            window=window,
+            nperseg=nperseg,
+            noverlap=noverlap,
+        )
 
-    elif method == 'periodogram':
-        frequencies_hz, psd = scipy_signal.periodogram(signal_data, sampling_rate,
-                                             window=window)
+    elif method == "periodogram":
+        frequencies_hz, psd = scipy_signal.periodogram(
+            signal_data, sampling_rate, window=window
+        )
     else:
         raise ValueError(f"Unknown method: {method}")
 
@@ -389,20 +430,30 @@ def power_spectrum(time_data: np.ndarray, signal_data: np.ndarray,
     if plot:
         plt.figure(figsize=(10, 6))
         plt.semilogy(frequencies, psd, linewidth=2)
-        plt.xlabel(f'Frequency ({freq_unit})')
-        plt.ylabel('Power Spectral Density')
-        plt.title(f'Power Spectrum ({method.capitalize()} Method)')
+        plt.xlabel(f"Frequency ({freq_unit})")
+        plt.ylabel("Power Spectral Density")
+        plt.title(f"Power Spectrum ({method.capitalize()} Method)")
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
         plt.show()
 
-    return {'frequencies': frequencies, 'psd': psd, 'method': method, 'freq_unit': freq_unit}
+    return {
+        "frequencies": frequencies,
+        "psd": psd,
+        "method": method,
+        "freq_unit": freq_unit,
+    }
 
 
-def spectrogram_analysis(time_data: np.ndarray, signal_data: np.ndarray,
-                        window: str = 'hann', nperseg: Optional[int] = None,
-                        overlap: float = 0.8, remove_dc: bool = True,
-                        plot: bool = True) -> Dict:
+def spectrogram_analysis(
+    time_data: np.ndarray,
+    signal_data: np.ndarray,
+    window: str = "hann",
+    nperseg: Optional[int] = None,
+    overlap: float = 0.8,
+    remove_dc: bool = True,
+    plot: bool = True,
+) -> Dict:
     """
     Time-frequency analysis using spectrogram.
 
@@ -442,78 +493,107 @@ def spectrogram_analysis(time_data: np.ndarray, signal_data: np.ndarray,
 
     noverlap = int(nperseg * overlap)
 
-    frequencies_hz, times_s, Sxx = scipy_signal.spectrogram(signal_data, sampling_rate,
-                                                window=window, nperseg=nperseg,
-                                                noverlap=noverlap)
+    frequencies_hz, times_s, Sxx = scipy_signal.spectrogram(
+        signal_data, sampling_rate, window=window, nperseg=nperseg, noverlap=noverlap
+    )
 
     # Convert to display units
     frequencies = _convert_to_display_freq(frequencies_hz, freq_unit)
 
     # Convert time to original units
     time_offset = np.min(time_data)
-    if time_unit == 'ns':
+    if time_unit == "ns":
         times = times_s / 1e-9 + time_offset
-    elif time_unit == 'μs':
+    elif time_unit == "μs":
         times = times_s / 1e-6 + time_offset
-    elif time_unit == 'ms':
+    elif time_unit == "ms":
         times = times_s / 1e-3 + time_offset
     else:
         times = times_s + time_offset
 
     if plot:
         plt.figure(figsize=(12, 8))
-        plt.pcolormesh(times, frequencies, 10*np.log10(Sxx + 1e-10), shading='gouraud')
-        plt.colorbar(label='Power (dB)')
-        plt.xlabel(f'Time ({time_unit})')
-        plt.ylabel(f'Frequency ({freq_unit})')
-        plt.title('Spectrogram - Time-Frequency Analysis')
+        plt.pcolormesh(
+            times, frequencies, 10 * np.log10(Sxx + 1e-10), shading="gouraud"
+        )
+        plt.colorbar(label="Power (dB)")
+        plt.xlabel(f"Time ({time_unit})")
+        plt.ylabel(f"Frequency ({freq_unit})")
+        plt.title("Spectrogram - Time-Frequency Analysis")
         plt.tight_layout()
         plt.show()
 
-    return {'times': times, 'frequencies': frequencies, 'spectrogram': Sxx,
-            'time_unit': time_unit, 'freq_unit': freq_unit}
+    return {
+        "times": times,
+        "frequencies": frequencies,
+        "spectrogram": Sxx,
+        "time_unit": time_unit,
+        "freq_unit": freq_unit,
+    }
 
 
-def _plot_fft_analysis(time_data, signal_data, processed_signal, windowed_signal,
-                      frequencies, power_spectrum, phase_spectrum,
-                      dominant_frequencies, time_unit, freq_unit,
-                      freq_range, dc_removed, **plot_kwargs):
+def _plot_fft_analysis(
+    time_data,
+    signal_data,
+    processed_signal,
+    windowed_signal,
+    frequencies,
+    power_spectrum,
+    phase_spectrum,
+    dominant_frequencies,
+    time_unit,
+    freq_unit,
+    freq_range,
+    dc_removed,
+    **plot_kwargs,
+):
     """Helper function to create comprehensive FFT analysis plots."""
 
-    figsize = plot_kwargs.get('figsize', (14, 10))
+    figsize = plot_kwargs.get("figsize", (14, 10))
     fig, axes = plt.subplots(2, 2, figsize=figsize)
 
     # Time domain - original and processed signal
-    axes[0,0].plot(time_data, signal_data, 'b-', alpha=0.7, label='Original signal')
+    axes[0, 0].plot(time_data, signal_data, "b-", alpha=0.7, label="Original signal")
     if dc_removed:
-        axes[0,0].plot(time_data, processed_signal, 'r-', linewidth=2,
-                      alpha=0.8, label='DC removed')
+        axes[0, 0].plot(
+            time_data,
+            processed_signal,
+            "r-",
+            linewidth=2,
+            alpha=0.8,
+            label="DC removed",
+        )
 
-    axes[0,0].set_xlabel(f'Time ({time_unit})')
-    axes[0,0].set_ylabel('Signal Amplitude')
-    axes[0,0].set_title('Time Domain Signal')
-    axes[0,0].legend()
-    axes[0,0].grid(True, alpha=0.3)
+    axes[0, 0].set_xlabel(f"Time ({time_unit})")
+    axes[0, 0].set_ylabel("Signal Amplitude")
+    axes[0, 0].set_title("Time Domain Signal")
+    axes[0, 0].legend()
+    axes[0, 0].grid(True, alpha=0.3)
 
     # Power spectrum (log scale)
-    axes[0,1].semilogy(frequencies, power_spectrum, 'b-', linewidth=2)
+    axes[0, 1].semilogy(frequencies, power_spectrum, "b-", linewidth=2)
 
     # Mark dominant frequencies
     for i, freq in enumerate(dominant_frequencies[:5]):
         if i < len(dominant_frequencies):
-            axes[0,1].axvline(freq, color='red', linestyle='--', alpha=0.7,
-                            label=f'Peak {i+1}: {freq:.3f}' if i < 3 else '')
+            axes[0, 1].axvline(
+                freq,
+                color="red",
+                linestyle="--",
+                alpha=0.7,
+                label=f"Peak {i+1}: {freq:.3f}" if i < 3 else "",
+            )
 
-    axes[0,1].set_xlabel(f'Frequency ({freq_unit})')
-    axes[0,1].set_ylabel('Normalized Power')
-    axes[0,1].set_title('Power Spectrum (Log Scale)')
-    axes[0,1].grid(True, alpha=0.3)
+    axes[0, 1].set_xlabel(f"Frequency ({freq_unit})")
+    axes[0, 1].set_ylabel("Normalized Power")
+    axes[0, 1].set_title("Power Spectrum (Log Scale)")
+    axes[0, 1].grid(True, alpha=0.3)
 
     if freq_range:
-        axes[0,1].set_xlim(freq_range)
+        axes[0, 1].set_xlim(freq_range)
 
     if len(dominant_frequencies) > 0:
-        axes[0,1].legend()
+        axes[0, 1].legend()
 
     # Processed signal ready for FFT (windowed + zero-padded)
     # Create time axis for the windowed signal (including zero padding)
@@ -525,52 +605,62 @@ def _plot_fft_analysis(time_data, signal_data, processed_signal, windowed_signal
     time_start = time_data[0]
     time_windowed = time_start + np.arange(n_windowed) * dt_original
 
-    axes[1,0].plot(time_windowed, windowed_signal, 'purple', linewidth=2)
-    axes[1,0].set_xlabel(f'Time ({time_unit})')
-    axes[1,0].set_ylabel('Signal Amplitude')
-    axes[1,0].set_title('Signal Sent to FFT (Windowed + Zero-Padded)')
-    axes[1,0].grid(True, alpha=0.3)
+    axes[1, 0].plot(time_windowed, windowed_signal, "purple", linewidth=2)
+    axes[1, 0].set_xlabel(f"Time ({time_unit})")
+    axes[1, 0].set_ylabel("Signal Amplitude")
+    axes[1, 0].set_title("Signal Sent to FFT (Windowed + Zero-Padded)")
+    axes[1, 0].grid(True, alpha=0.3)
 
     # Add vertical line to show original data length
     if n_windowed > n_original:
         time_end_original = time_data[-1]
-        axes[1,0].axvline(time_end_original, color='red', linestyle='--', alpha=0.5,
-                         label=f'Original data end')
-        axes[1,0].legend()
+        axes[1, 0].axvline(
+            time_end_original,
+            color="red",
+            linestyle="--",
+            alpha=0.5,
+            label=f"Original data end",
+        )
+        axes[1, 0].legend()
 
     # Power spectrum (linear scale)
-    axes[1,1].plot(frequencies, power_spectrum, 'b-', linewidth=2)
+    axes[1, 1].plot(frequencies, power_spectrum, "b-", linewidth=2)
 
     # Mark dominant frequencies
     for i, freq in enumerate(dominant_frequencies[:5]):
         if i < len(dominant_frequencies):
-            axes[1,1].axvline(freq, color='red', linestyle='--', alpha=0.7)
+            axes[1, 1].axvline(freq, color="red", linestyle="--", alpha=0.7)
 
-    axes[1,1].set_xlabel(f'Frequency ({freq_unit})')
-    axes[1,1].set_ylabel('Normalized Power')
-    axes[1,1].set_title('Power Spectrum (Linear Scale)')
-    axes[1,1].grid(True, alpha=0.3)
+    axes[1, 1].set_xlabel(f"Frequency ({freq_unit})")
+    axes[1, 1].set_ylabel("Normalized Power")
+    axes[1, 1].set_title("Power Spectrum (Linear Scale)")
+    axes[1, 1].grid(True, alpha=0.3)
 
     if freq_range:
-        axes[1,1].set_xlim(freq_range)
+        axes[1, 1].set_xlim(freq_range)
 
     # Style all subplots
     for ax in axes.flat:
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
 
     plt.tight_layout()
     plt.show()
 
 
-def analyze_frequencies_2d(time_data: Union[np.ndarray, Tuple[np.ndarray, np.ndarray]],
-                          signal_data: np.ndarray,
-                          mode: Literal['row_by_row', 'full_2d'] = 'row_by_row',
-                          window: Optional[str] = 'hann', window_alpha: Optional[float] = None,
-                          zero_padding: int = 2, remove_dc: bool = True,
-                          axis: int = 1, plot_result: bool = False,
-                          freq_range: Optional[Tuple[float, float]] = None,
-                          **plot_kwargs) -> Tuple:
+def analyze_frequencies_2d(
+    time_data: Union[np.ndarray, Tuple[np.ndarray, np.ndarray]],
+    signal_data: np.ndarray,
+    mode: Literal["row_by_row", "full_2d"] = "row_by_row",
+    window: Optional[str] = "hann",
+    window_alpha: Optional[float] = None,
+    zero_padding: int = 2,
+    remove_dc: bool = True,
+    axis: int = 1,
+    plot_result: bool = False,
+    freq_range: Optional[Tuple[float, float]] = None,
+    **plot_kwargs,
+) -> Tuple:
     """
     FFT-based frequency analysis of 2D time-domain EPR signals.
 
@@ -651,23 +741,49 @@ def analyze_frequencies_2d(time_data: Union[np.ndarray, Tuple[np.ndarray, np.nda
     logger.info(f"2D FFT Analysis - Mode: {mode}")
     logger.info(f"Data shape: {signal_data.shape}")
 
-    if mode == 'row_by_row':
-        return _analyze_2d_row_by_row(time_data, signal_data, window, window_alpha,
-                                     zero_padding, remove_dc, axis, plot_result,
-                                     freq_range, **plot_kwargs)
+    if mode == "row_by_row":
+        return _analyze_2d_row_by_row(
+            time_data,
+            signal_data,
+            window,
+            window_alpha,
+            zero_padding,
+            remove_dc,
+            axis,
+            plot_result,
+            freq_range,
+            **plot_kwargs,
+        )
 
-    elif mode == 'full_2d':
-        return _analyze_2d_full(time_data, signal_data, window, window_alpha,
-                               zero_padding, remove_dc, plot_result,
-                               freq_range, **plot_kwargs)
+    elif mode == "full_2d":
+        return _analyze_2d_full(
+            time_data,
+            signal_data,
+            window,
+            window_alpha,
+            zero_padding,
+            remove_dc,
+            plot_result,
+            freq_range,
+            **plot_kwargs,
+        )
 
     else:
         raise ValueError(f"Unknown mode: {mode}. Use 'row_by_row' or 'full_2d'")
 
 
-def _analyze_2d_row_by_row(time_data, signal_data, window, window_alpha,
-                           zero_padding, remove_dc, axis, plot_result,
-                           freq_range, **plot_kwargs):
+def _analyze_2d_row_by_row(
+    time_data,
+    signal_data,
+    window,
+    window_alpha,
+    zero_padding,
+    remove_dc,
+    axis,
+    plot_result,
+    freq_range,
+    **plot_kwargs,
+):
     """Row-by-row 1D FFT processing for 2D data"""
 
     # Extract time axis
@@ -697,7 +813,9 @@ def _analyze_2d_row_by_row(time_data, signal_data, window, window_alpha,
     # Step 1: Remove DC offset
     if remove_dc:
         processed_signal, dc_offsets = _remove_dc_offset(signal_data, axis=1)
-        logger.debug(f"Removed DC offset (mean across traces: {np.mean(dc_offsets):.6f})")
+        logger.debug(
+            f"Removed DC offset (mean across traces: {np.mean(dc_offsets):.6f})"
+        )
     else:
         processed_signal = signal_data.copy()
 
@@ -751,11 +869,23 @@ def _analyze_2d_row_by_row(time_data, signal_data, window, window_alpha,
 
     # Create plots if requested
     if plot_result:
-        _plot_2d_row_by_row(time_axis, time_axis_extended, other_axis,
-                           signal_data, dc_removed_signal, processed_signal_final,
-                           frequencies_display, spectrum_magnitude,
-                           time_unit, freq_unit, freq_range, axis,
-                           n_points, phase_spectrum, **plot_kwargs)
+        _plot_2d_row_by_row(
+            time_axis,
+            time_axis_extended,
+            other_axis,
+            signal_data,
+            dc_removed_signal,
+            processed_signal_final,
+            frequencies_display,
+            spectrum_magnitude,
+            time_unit,
+            freq_unit,
+            freq_range,
+            axis,
+            n_points,
+            phase_spectrum,
+            **plot_kwargs,
+        )
 
     # Transpose back if needed
     if axis == 0:
@@ -765,28 +895,39 @@ def _analyze_2d_row_by_row(time_data, signal_data, window, window_alpha,
 
     # Create info dictionary
     info = {
-        'mode': 'row_by_row',
-        'axis': axis,
-        'time_unit': time_unit,
-        'freq_unit': freq_unit,
-        'sampling_rate': sampling_rate,
-        'time_data': time_axis,
-        'dc_removed': remove_dc,
-        'window': window,
-        'zero_padding': zero_padding,
-        'phase_spectrum': phase_spectrum
+        "mode": "row_by_row",
+        "axis": axis,
+        "time_unit": time_unit,
+        "freq_unit": freq_unit,
+        "sampling_rate": sampling_rate,
+        "time_data": time_axis,
+        "dc_removed": remove_dc,
+        "window": window,
+        "zero_padding": zero_padding,
+        "phase_spectrum": phase_spectrum,
     }
 
     return frequencies_display, other_axis, spectrum_magnitude, info
 
 
-def _analyze_2d_full(time_data, signal_data, window, window_alpha,
-                    zero_padding, remove_dc, plot_result, freq_range, **plot_kwargs):
+def _analyze_2d_full(
+    time_data,
+    signal_data,
+    window,
+    window_alpha,
+    zero_padding,
+    remove_dc,
+    plot_result,
+    freq_range,
+    **plot_kwargs,
+):
     """Full 2D FFT processing for HYSCORE-type measurements"""
 
     # Extract time axes
     if not isinstance(time_data, (tuple, list)):
-        raise ValueError("For full 2D FFT, time_data must be tuple of (time_axis1, time_axis2)")
+        raise ValueError(
+            "For full 2D FFT, time_data must be tuple of (time_axis1, time_axis2)"
+        )
 
     time_axis1, time_axis2 = time_data
     time_axis1 = np.asarray(time_axis1)
@@ -799,8 +940,12 @@ def _analyze_2d_full(time_data, signal_data, window, window_alpha,
     sampling_rate1 = 1.0 / dt_seconds1
     sampling_rate2 = 1.0 / dt_seconds2
 
-    logger.debug(f"Axis 1: {time_unit1} → {freq_unit1}, sampling rate: {sampling_rate1/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit1, 1):.1f} {freq_unit1}")
-    logger.debug(f"Axis 2: {time_unit2} → {freq_unit2}, sampling rate: {sampling_rate2/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit2, 1):.1f} {freq_unit2}")
+    logger.debug(
+        f"Axis 1: {time_unit1} → {freq_unit1}, sampling rate: {sampling_rate1/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit1, 1):.1f} {freq_unit1}"
+    )
+    logger.debug(
+        f"Axis 2: {time_unit2} → {freq_unit2}, sampling rate: {sampling_rate2/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit2, 1):.1f} {freq_unit2}"
+    )
 
     n_points1, n_points2 = signal_data.shape
     logger.info(f"Data dimensions: {n_points1} x {n_points2}")
@@ -814,7 +959,7 @@ def _analyze_2d_full(time_data, signal_data, window, window_alpha,
 
     # Apply 2D window function
     if window is not None:
-        if window in ['kaiser', 'gaussian'] and window_alpha is None:
+        if window in ["kaiser", "gaussian"] and window_alpha is None:
             window_alpha = 6.0
 
         # Create 2D window as outer product of 1D windows
@@ -839,7 +984,9 @@ def _analyze_2d_full(time_data, signal_data, window, window_alpha,
         padded_signal = np.zeros((n_padded1, n_padded2), dtype=windowed_signal.dtype)
         padded_signal[:n_points1, :n_points2] = windowed_signal
         windowed_signal = padded_signal
-        logger.debug(f"Zero padding: {n_points1}x{n_points2} -> {n_padded1}x{n_padded2}")
+        logger.debug(
+            f"Zero padding: {n_points1}x{n_points2} -> {n_padded1}x{n_padded2}"
+        )
 
     # Perform 2D FFT
     fft_result = fft.fft2(windowed_signal)
@@ -868,156 +1015,237 @@ def _analyze_2d_full(time_data, signal_data, window, window_alpha,
 
     # Create plots if requested
     if plot_result:
-        _plot_2d_full(time_axis1, time_axis2, signal_data, processed_signal,
-                     frequencies_display1, frequencies_display2, spectrum_magnitude,
-                     time_unit1, time_unit2, freq_unit1, freq_unit2,
-                     freq_range, phase_spectrum, **plot_kwargs)
+        _plot_2d_full(
+            time_axis1,
+            time_axis2,
+            signal_data,
+            processed_signal,
+            frequencies_display1,
+            frequencies_display2,
+            spectrum_magnitude,
+            time_unit1,
+            time_unit2,
+            freq_unit1,
+            freq_unit2,
+            freq_range,
+            phase_spectrum,
+            **plot_kwargs,
+        )
 
     # Create info dictionary
     info = {
-        'mode': 'full_2d',
-        'time_unit': (time_unit1, time_unit2),
-        'freq_unit': (freq_unit1, freq_unit2),
-        'sampling_rate': (sampling_rate1, sampling_rate2),
-        'time_data': (time_axis1, time_axis2),
-        'dc_removed': remove_dc,
-        'window': window,
-        'zero_padding': zero_padding,
-        'phase_spectrum': phase_spectrum
+        "mode": "full_2d",
+        "time_unit": (time_unit1, time_unit2),
+        "freq_unit": (freq_unit1, freq_unit2),
+        "sampling_rate": (sampling_rate1, sampling_rate2),
+        "time_data": (time_axis1, time_axis2),
+        "dc_removed": remove_dc,
+        "window": window,
+        "zero_padding": zero_padding,
+        "phase_spectrum": phase_spectrum,
     }
 
     return frequencies_display1, frequencies_display2, spectrum_magnitude, info
 
 
-def _plot_2d_row_by_row(time_axis, time_axis_extended, other_axis,
-                       signal_data, dc_removed_signal, processed_signal_final,
-                       frequencies, spectrum_magnitude, time_unit, freq_unit,
-                       freq_range, axis, n_points_original, phase_spectrum=None,
-                       **plot_kwargs):
+def _plot_2d_row_by_row(
+    time_axis,
+    time_axis_extended,
+    other_axis,
+    signal_data,
+    dc_removed_signal,
+    processed_signal_final,
+    frequencies,
+    spectrum_magnitude,
+    time_unit,
+    freq_unit,
+    freq_range,
+    axis,
+    n_points_original,
+    phase_spectrum=None,
+    **plot_kwargs,
+):
     """4-panel plot: Original signal, FFT linear, FFT log, Phase"""
 
-    figsize = plot_kwargs.get('figsize', (20, 10))
+    figsize = plot_kwargs.get("figsize", (20, 10))
     fig, axes = plt.subplots(2, 2, figsize=figsize)
 
     # Panel 1 (top-left): Original 2D signal
-    im1 = axes[0, 0].imshow(signal_data, aspect='auto', cmap='RdBu_r',
-                            extent=[time_axis[0], time_axis[-1],
-                                   other_axis[0], other_axis[-1]],
-                            origin='lower')
-    axes[0, 0].set_xlabel(f'Time ({time_unit})')
-    axes[0, 0].set_ylabel('Trace Index')
-    axes[0, 0].set_title('Original Signal')
-    plt.colorbar(im1, ax=axes[0, 0], label='Amplitude')
+    im1 = axes[0, 0].imshow(
+        signal_data,
+        aspect="auto",
+        cmap="RdBu_r",
+        extent=[time_axis[0], time_axis[-1], other_axis[0], other_axis[-1]],
+        origin="lower",
+    )
+    axes[0, 0].set_xlabel(f"Time ({time_unit})")
+    axes[0, 0].set_ylabel("Trace Index")
+    axes[0, 0].set_title("Original Signal")
+    plt.colorbar(im1, ax=axes[0, 0], label="Amplitude")
 
     # Panel 2 (top-right): Magnitude spectrum (linear scale)
-    im2 = axes[0, 1].imshow(spectrum_magnitude, aspect='auto', cmap='hot',
-                            extent=[frequencies[0], frequencies[-1],
-                                   other_axis[0], other_axis[-1]],
-                            origin='lower')
-    axes[0, 1].set_xlabel(f'Frequency ({freq_unit})')
-    axes[0, 1].set_ylabel('Trace Index')
-    axes[0, 1].set_title('FFT Magnitude (linear scale)')
+    im2 = axes[0, 1].imshow(
+        spectrum_magnitude,
+        aspect="auto",
+        cmap="hot",
+        extent=[frequencies[0], frequencies[-1], other_axis[0], other_axis[-1]],
+        origin="lower",
+    )
+    axes[0, 1].set_xlabel(f"Frequency ({freq_unit})")
+    axes[0, 1].set_ylabel("Trace Index")
+    axes[0, 1].set_title("FFT Magnitude (linear scale)")
     if freq_range:
         axes[0, 1].set_xlim(freq_range)
-    plt.colorbar(im2, ax=axes[0, 1], label='Magnitude')
+    plt.colorbar(im2, ax=axes[0, 1], label="Magnitude")
 
     # Panel 3 (bottom-left): Magnitude spectrum (log scale)
     magnitude_log = np.log10(spectrum_magnitude + 1e-10)
-    im3 = axes[1, 0].imshow(magnitude_log, aspect='auto', cmap='hot',
-                            extent=[frequencies[0], frequencies[-1],
-                                   other_axis[0], other_axis[-1]],
-                            origin='lower')
-    axes[1, 0].set_xlabel(f'Frequency ({freq_unit})')
-    axes[1, 0].set_ylabel('Trace Index')
-    axes[1, 0].set_title('FFT Magnitude (log scale)')
+    im3 = axes[1, 0].imshow(
+        magnitude_log,
+        aspect="auto",
+        cmap="hot",
+        extent=[frequencies[0], frequencies[-1], other_axis[0], other_axis[-1]],
+        origin="lower",
+    )
+    axes[1, 0].set_xlabel(f"Frequency ({freq_unit})")
+    axes[1, 0].set_ylabel("Trace Index")
+    axes[1, 0].set_title("FFT Magnitude (log scale)")
     if freq_range:
         axes[1, 0].set_xlim(freq_range)
-    plt.colorbar(im3, ax=axes[1, 0], label='log10(Magnitude)')
+    plt.colorbar(im3, ax=axes[1, 0], label="log10(Magnitude)")
 
     # Panel 4 (bottom-right): Phase spectrum
     if phase_spectrum is not None:
-        im4 = axes[1, 1].imshow(phase_spectrum, aspect='auto', cmap='twilight',
-                                extent=[frequencies[0], frequencies[-1],
-                                       other_axis[0], other_axis[-1]],
-                                origin='lower', vmin=-np.pi, vmax=np.pi)
-        axes[1, 1].set_xlabel(f'Frequency ({freq_unit})')
-        axes[1, 1].set_ylabel('Trace Index')
-        axes[1, 1].set_title('Phase Spectrum')
+        im4 = axes[1, 1].imshow(
+            phase_spectrum,
+            aspect="auto",
+            cmap="twilight",
+            extent=[frequencies[0], frequencies[-1], other_axis[0], other_axis[-1]],
+            origin="lower",
+            vmin=-np.pi,
+            vmax=np.pi,
+        )
+        axes[1, 1].set_xlabel(f"Frequency ({freq_unit})")
+        axes[1, 1].set_ylabel("Trace Index")
+        axes[1, 1].set_title("Phase Spectrum")
         if freq_range:
             axes[1, 1].set_xlim(freq_range)
-        plt.colorbar(im4, ax=axes[1, 1], label='Phase (rad)')
+        plt.colorbar(im4, ax=axes[1, 1], label="Phase (rad)")
     else:
-        axes[1, 1].text(0.5, 0.5, 'Phase spectrum\nnot available',
-                       ha='center', va='center', transform=axes[1, 1].transAxes)
-        axes[1, 1].set_title('Phase Spectrum')
+        axes[1, 1].text(
+            0.5,
+            0.5,
+            "Phase spectrum\nnot available",
+            ha="center",
+            va="center",
+            transform=axes[1, 1].transAxes,
+        )
+        axes[1, 1].set_title("Phase Spectrum")
 
     plt.tight_layout()
     plt.show()
 
 
-def _plot_2d_full(time_axis1, time_axis2, signal_data, processed_signal,
-                 frequencies1, frequencies2, spectrum_magnitude,
-                 time_unit1, time_unit2, freq_unit1, freq_unit2,
-                 freq_range, phase_spectrum=None, **plot_kwargs):
+def _plot_2d_full(
+    time_axis1,
+    time_axis2,
+    signal_data,
+    processed_signal,
+    frequencies1,
+    frequencies2,
+    spectrum_magnitude,
+    time_unit1,
+    time_unit2,
+    freq_unit1,
+    freq_unit2,
+    freq_range,
+    phase_spectrum=None,
+    **plot_kwargs,
+):
     """4-panel plot: Original signal, FFT linear, FFT log, Phase"""
 
-    figsize = plot_kwargs.get('figsize', (20, 10))
+    figsize = plot_kwargs.get("figsize", (20, 10))
     fig, axes = plt.subplots(2, 2, figsize=figsize)
 
     # Panel 1 (top-left): Original 2D time-domain signal
-    im1 = axes[0, 0].imshow(signal_data, aspect='auto', cmap='RdBu_r',
-                            extent=[time_axis2[0], time_axis2[-1],
-                                   time_axis1[0], time_axis1[-1]],
-                            origin='lower')
-    axes[0, 0].set_xlabel(f'Time 2 ({time_unit2})')
-    axes[0, 0].set_ylabel(f'Time 1 ({time_unit1})')
-    axes[0, 0].set_title('Original Signal')
-    plt.colorbar(im1, ax=axes[0, 0], label='Amplitude')
+    im1 = axes[0, 0].imshow(
+        signal_data,
+        aspect="auto",
+        cmap="RdBu_r",
+        extent=[time_axis2[0], time_axis2[-1], time_axis1[0], time_axis1[-1]],
+        origin="lower",
+    )
+    axes[0, 0].set_xlabel(f"Time 2 ({time_unit2})")
+    axes[0, 0].set_ylabel(f"Time 1 ({time_unit1})")
+    axes[0, 0].set_title("Original Signal")
+    plt.colorbar(im1, ax=axes[0, 0], label="Amplitude")
 
     # Panel 2 (top-right): 2D Magnitude spectrum (linear scale)
-    im2 = axes[0, 1].imshow(spectrum_magnitude, aspect='auto', cmap='hot',
-                            extent=[frequencies2[0], frequencies2[-1],
-                                   frequencies1[0], frequencies1[-1]],
-                            origin='lower')
-    axes[0, 1].set_xlabel(f'Frequency 2 ({freq_unit2})')
-    axes[0, 1].set_ylabel(f'Frequency 1 ({freq_unit1})')
-    axes[0, 1].set_title('FFT Magnitude (linear scale)')
+    im2 = axes[0, 1].imshow(
+        spectrum_magnitude,
+        aspect="auto",
+        cmap="hot",
+        extent=[frequencies2[0], frequencies2[-1], frequencies1[0], frequencies1[-1]],
+        origin="lower",
+    )
+    axes[0, 1].set_xlabel(f"Frequency 2 ({freq_unit2})")
+    axes[0, 1].set_ylabel(f"Frequency 1 ({freq_unit1})")
+    axes[0, 1].set_title("FFT Magnitude (linear scale)")
     if freq_range:
         axes[0, 1].set_xlim(freq_range)
         axes[0, 1].set_ylim(freq_range)
-    plt.colorbar(im2, ax=axes[0, 1], label='Magnitude')
+    plt.colorbar(im2, ax=axes[0, 1], label="Magnitude")
 
     # Panel 3 (bottom-left): 2D Magnitude spectrum (log scale)
     magnitude_log = np.log10(spectrum_magnitude + 1e-10)
-    im3 = axes[1, 0].imshow(magnitude_log, aspect='auto', cmap='hot',
-                            extent=[frequencies2[0], frequencies2[-1],
-                                   frequencies1[0], frequencies1[-1]],
-                            origin='lower')
-    axes[1, 0].set_xlabel(f'Frequency 2 ({freq_unit2})')
-    axes[1, 0].set_ylabel(f'Frequency 1 ({freq_unit1})')
-    axes[1, 0].set_title('FFT Magnitude (log scale)')
+    im3 = axes[1, 0].imshow(
+        magnitude_log,
+        aspect="auto",
+        cmap="hot",
+        extent=[frequencies2[0], frequencies2[-1], frequencies1[0], frequencies1[-1]],
+        origin="lower",
+    )
+    axes[1, 0].set_xlabel(f"Frequency 2 ({freq_unit2})")
+    axes[1, 0].set_ylabel(f"Frequency 1 ({freq_unit1})")
+    axes[1, 0].set_title("FFT Magnitude (log scale)")
     if freq_range:
         axes[1, 0].set_xlim(freq_range)
         axes[1, 0].set_ylim(freq_range)
-    plt.colorbar(im3, ax=axes[1, 0], label='log10(Magnitude)')
+    plt.colorbar(im3, ax=axes[1, 0], label="log10(Magnitude)")
 
     # Panel 4 (bottom-right): 2D Phase spectrum
     if phase_spectrum is not None:
-        im4 = axes[1, 1].imshow(phase_spectrum, aspect='auto', cmap='twilight',
-                                extent=[frequencies2[0], frequencies2[-1],
-                                       frequencies1[0], frequencies1[-1]],
-                                origin='lower', vmin=-np.pi, vmax=np.pi)
-        axes[1, 1].set_xlabel(f'Frequency 2 ({freq_unit2})')
-        axes[1, 1].set_ylabel(f'Frequency 1 ({freq_unit1})')
-        axes[1, 1].set_title('Phase Spectrum')
+        im4 = axes[1, 1].imshow(
+            phase_spectrum,
+            aspect="auto",
+            cmap="twilight",
+            extent=[
+                frequencies2[0],
+                frequencies2[-1],
+                frequencies1[0],
+                frequencies1[-1],
+            ],
+            origin="lower",
+            vmin=-np.pi,
+            vmax=np.pi,
+        )
+        axes[1, 1].set_xlabel(f"Frequency 2 ({freq_unit2})")
+        axes[1, 1].set_ylabel(f"Frequency 1 ({freq_unit1})")
+        axes[1, 1].set_title("Phase Spectrum")
         if freq_range:
             axes[1, 1].set_xlim(freq_range)
             axes[1, 1].set_ylim(freq_range)
-        plt.colorbar(im4, ax=axes[1, 1], label='Phase (rad)')
+        plt.colorbar(im4, ax=axes[1, 1], label="Phase (rad)")
     else:
-        axes[1, 1].text(0.5, 0.5, 'Phase spectrum\nnot available',
-                       ha='center', va='center', transform=axes[1, 1].transAxes)
-        axes[1, 1].set_title('Phase Spectrum')
+        axes[1, 1].text(
+            0.5,
+            0.5,
+            "Phase spectrum\nnot available",
+            ha="center",
+            va="center",
+            transform=axes[1, 1].transAxes,
+        )
+        axes[1, 1].set_title("Phase Spectrum")
 
     plt.tight_layout()
     plt.show()
@@ -1041,7 +1269,7 @@ def demo():
     dc_offset = 0.1  # Add DC offset to demonstrate removal
 
     # Clean Rabi signal with DC offset and noise
-    clean_signal = np.sin(2 * np.pi * rabi_freq * t * 1e-3) * np.exp(-t/decay_time)
+    clean_signal = np.sin(2 * np.pi * rabi_freq * t * 1e-3) * np.exp(-t / decay_time)
     noisy_signal = clean_signal + dc_offset + noise_level * np.random.randn(len(t))
 
     logger.info("Synthetic Rabi signal:")
@@ -1053,16 +1281,22 @@ def demo():
 
     # Demo 1: Analysis with DC removal
     logger.info("")
-    logger.info("="*50)
+    logger.info("=" * 50)
     logger.info("DEMO 1: FFT Analysis with DC Removal")
-    logger.info("="*50)
+    logger.info("=" * 50)
 
-    result_dc = analyze_frequencies(t, noisy_signal, window='hann',
-                                  remove_dc=True, zero_padding=4,
-                                  plot=True, freq_range=(0, 20))
+    result_dc = analyze_frequencies(
+        t,
+        noisy_signal,
+        window="hann",
+        remove_dc=True,
+        zero_padding=4,
+        plot=True,
+        freq_range=(0, 20),
+    )
 
-    if len(result_dc['dominant_frequencies']) > 0:
-        detected_freq = result_dc['dominant_frequencies'][0]
+    if len(result_dc["dominant_frequencies"]) > 0:
+        detected_freq = result_dc["dominant_frequencies"][0]
         error = abs(detected_freq - rabi_freq) / rabi_freq * 100
         logger.info("Results with DC removal:")
         logger.info(f"  Detected: {detected_freq:.3f} MHz")
@@ -1072,39 +1306,51 @@ def demo():
 
     # Demo 2: Comparison without DC removal
     logger.info("")
-    logger.info("="*50)
+    logger.info("=" * 50)
     logger.info("DEMO 2: Comparison without DC Removal")
-    logger.info("="*50)
+    logger.info("=" * 50)
 
-    result_no_dc = analyze_frequencies(t, noisy_signal, window='hann',
-                                     remove_dc=False, zero_padding=4,
-                                     plot=True, freq_range=(0, 20))
+    result_no_dc = analyze_frequencies(
+        t,
+        noisy_signal,
+        window="hann",
+        remove_dc=False,
+        zero_padding=4,
+        plot=True,
+        freq_range=(0, 20),
+    )
 
     # Demo 3: Window comparison
     logger.info("")
-    logger.info("="*50)
+    logger.info("=" * 50)
     logger.info("DEMO 3: Window Function Effects")
-    logger.info("="*50)
+    logger.info("=" * 50)
 
-    windows = ['hann', 'hamming', 'blackman']
+    windows = ["hann", "hamming", "blackman"]
     fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
     for i, window in enumerate(windows):
-        result = analyze_frequencies(t, noisy_signal, window=window,
-                                   remove_dc=True, plot=False)
+        result = analyze_frequencies(
+            t, noisy_signal, window=window, remove_dc=True, plot=False
+        )
 
-        axes[i].semilogy(result['frequencies'], result['power_spectrum'])
-        axes[i].set_title(f'{window.capitalize()} Window')
+        axes[i].semilogy(result["frequencies"], result["power_spectrum"])
+        axes[i].set_title(f"{window.capitalize()} Window")
         axes[i].set_xlabel(f'Frequency ({result["freq_unit"]})')
-        axes[i].set_ylabel('Power')
+        axes[i].set_ylabel("Power")
         axes[i].grid(True, alpha=0.3)
         axes[i].set_xlim(0, 20)
 
         # Mark dominant frequency
-        if len(result['dominant_frequencies']) > 0:
-            peak_freq = result['dominant_frequencies'][0]
-            axes[i].axvline(peak_freq, color='red', linestyle='--', alpha=0.7,
-                           label=f'{peak_freq:.2f} MHz')
+        if len(result["dominant_frequencies"]) > 0:
+            peak_freq = result["dominant_frequencies"][0]
+            axes[i].axvline(
+                peak_freq,
+                color="red",
+                linestyle="--",
+                alpha=0.7,
+                label=f"{peak_freq:.2f} MHz",
+            )
             axes[i].legend()
 
     plt.tight_layout()
@@ -1112,21 +1358,24 @@ def demo():
 
     # Demo 4: Power spectrum methods
     logger.info("")
-    logger.info("="*50)
+    logger.info("=" * 50)
     logger.info("DEMO 4: Power Spectrum Methods")
-    logger.info("="*50)
+    logger.info("=" * 50)
 
-    psd_welch = power_spectrum(t, noisy_signal, method='welch', remove_dc=True, plot=True)
+    psd_welch = power_spectrum(
+        t, noisy_signal, method="welch", remove_dc=True, plot=True
+    )
     logger.info("Welch method completed")
 
-    psd_periodogram = power_spectrum(t, noisy_signal, method='periodogram',
-                                   remove_dc=True, plot=True)
+    psd_periodogram = power_spectrum(
+        t, noisy_signal, method="periodogram", remove_dc=True, plot=True
+    )
     logger.info("Periodogram method completed")
 
     logger.info("")
-    logger.info("="*60)
+    logger.info("=" * 60)
     logger.info("DEMO COMPLETED!")
-    logger.info("="*60)
+    logger.info("=" * 60)
     logger.info("Key Points Demonstrated:")
     logger.info("  * DC offset removal is crucial for clean spectra")
     logger.info("  * Window functions reduce spectral leakage")

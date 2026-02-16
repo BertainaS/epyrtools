@@ -7,11 +7,12 @@ This module provides matplotlib-based interactive widgets for selecting
 baseline regions in Jupyter notebooks and desktop environments.
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.widgets import RectangleSelector, SpanSelector
+from typing import List, Optional, Tuple
+
 import matplotlib
-from typing import List, Tuple, Optional
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.widgets import RectangleSelector, SpanSelector
 
 from ..logging_config import get_logger
 
@@ -21,29 +22,29 @@ logger = get_logger(__name__)
 def _get_widget_props_param():
     """Get the correct parameter name for matplotlib widget properties based on version."""
     # Matplotlib 3.5+ uses 'props' instead of 'rectprops'
-    version = tuple(map(int, matplotlib.__version__.split('.')[:2]))
+    version = tuple(map(int, matplotlib.__version__.split(".")[:2]))
     if version >= (3, 5):
-        return 'props'
+        return "props"
     else:
-        return 'rectprops'
+        return "rectprops"
 
 
 class RegionSelector:
     """
     Interactive region selector for baseline correction.
-    
+
     This class provides matplotlib-based interactive region selection
     for both 1D and 2D EPR data. It handles matplotlib version compatibility
     and provides multiple methods to close selection windows.
     """
-    
+
     def __init__(self):
         self.regions = []
         self.current_selector = None
         self.fig = None
         self.ax = None
         self.selection_done = False
-    
+
     def _on_select_1d(self, xmin, xmax):
         """Callback for 1D region selection."""
         self.regions.append((xmin, xmax))
@@ -51,7 +52,7 @@ class RegionSelector:
 
     def _on_key_press(self, event):
         """Handle key press events."""
-        if event.key == 'enter' or event.key == 'escape':
+        if event.key == "enter" or event.key == "escape":
             self.selection_done = True
             plt.close(self.fig)
             logger.info("✅ Region selection completed!")
@@ -62,96 +63,104 @@ class RegionSelector:
         if self.fig:
             plt.close(self.fig)
         logger.info("✅ Region selection completed!")
-    
+
     def _on_select_2d(self, eclick, erelease):
         """Callback for 2D region selection."""
         x1, y1 = eclick.xdata, eclick.ydata
         x2, y2 = erelease.xdata, erelease.ydata
         region = ((min(x1, x2), max(x1, x2)), (min(y1, y2), max(y1, y2)))
         self.regions.append(region)
-        logger.info(f"Selected region: x={region[0][0]:.2f}-{region[0][1]:.2f}, y={region[1][0]:.2f}-{region[1][1]:.2f}")
-    
-    def select_regions_1d(self, x, y, title="Select regions to EXCLUDE from baseline fitting"):
+        logger.info(
+            f"Selected region: x={region[0][0]:.2f}-{region[0][1]:.2f}, y={region[1][0]:.2f}-{region[1][1]:.2f}"
+        )
+
+    def select_regions_1d(
+        self, x, y, title="Select regions to EXCLUDE from baseline fitting"
+    ):
         """
         Interactive selection of 1D regions.
-        
+
         Args:
             x: X-axis data
             y: Y-axis data
             title: Plot title with instructions
-            
+
         Returns:
             list: Selected regions as [(x1, x2), ...]
         """
         self.regions = []
-        
+
         self.fig, self.ax = plt.subplots(figsize=(12, 6))
-        self.ax.plot(x, y, 'b-', alpha=0.7)
-        self.ax.set_title(f"{title}\nClick and drag to select regions.\nPress ENTER or ESC when done, or run selector.finish_selection()")
+        self.ax.plot(x, y, "b-", alpha=0.7)
+        self.ax.set_title(
+            f"{title}\nClick and drag to select regions.\nPress ENTER or ESC when done, or run selector.finish_selection()"
+        )
         self.ax.grid(True, alpha=0.3)
-        
+
         # Add keyboard event handling
-        self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
-        
+        self.fig.canvas.mpl_connect("key_press_event", self._on_key_press)
+
         # Create span selector - handle matplotlib version compatibility
         props_param = _get_widget_props_param()
         selector_kwargs = {
-            'useblit': True,
-            props_param: dict(alpha=0.3, facecolor='red')
+            "useblit": True,
+            props_param: dict(alpha=0.3, facecolor="red"),
         }
         self.current_selector = SpanSelector(
-            self.ax, self._on_select_1d, 'horizontal',
-            **selector_kwargs
+            self.ax, self._on_select_1d, "horizontal", **selector_kwargs
         )
-        
+
         plt.show()
         return self.regions
-    
-    def select_regions_2d(self, x, y, z, title="Select regions to EXCLUDE from baseline fitting"):
+
+    def select_regions_2d(
+        self, x, y, z, title="Select regions to EXCLUDE from baseline fitting"
+    ):
         """
         Interactive selection of 2D regions.
-        
+
         Args:
             x: X-axis coordinates (1D array or meshgrid)
-            y: Y-axis coordinates (1D array or meshgrid)  
+            y: Y-axis coordinates (1D array or meshgrid)
             z: 2D data array
             title: Plot title with instructions
-            
+
         Returns:
             list: Selected regions as [((x1,x2), (y1,y2)), ...]
         """
         self.regions = []
-        
+
         self.fig, self.ax = plt.subplots(figsize=(10, 8))
-        
+
         # Handle coordinate arrays
         if isinstance(x, np.ndarray) and x.ndim == 1:
             X, Y = np.meshgrid(x, y)
         else:
             X, Y = x, y
-            
-        im = self.ax.pcolormesh(X, Y, z, shading='auto', cmap='viridis')
+
+        im = self.ax.pcolormesh(X, Y, z, shading="auto", cmap="viridis")
         self.fig.colorbar(im, ax=self.ax)
-        
-        self.ax.set_title(f"{title}\nClick and drag to select rectangular regions.\nPress ENTER or ESC when done, or run selector.finish_selection()")
-        
+
+        self.ax.set_title(
+            f"{title}\nClick and drag to select rectangular regions.\nPress ENTER or ESC when done, or run selector.finish_selection()"
+        )
+
         # Add keyboard event handling
-        self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
-        
+        self.fig.canvas.mpl_connect("key_press_event", self._on_key_press)
+
         # Create rectangle selector - handle matplotlib version compatibility
         props_param = _get_widget_props_param()
         selector_kwargs = {
-            'useblit': True, 
-            'button': [1], 
-            'minspanx': 5, 
-            'minspany': 5,
-            props_param: dict(alpha=0.3, facecolor='red', edgecolor='red', linewidth=2)
+            "useblit": True,
+            "button": [1],
+            "minspanx": 5,
+            "minspany": 5,
+            props_param: dict(alpha=0.3, facecolor="red", edgecolor="red", linewidth=2),
         }
         self.current_selector = RectangleSelector(
-            self.ax, self._on_select_2d,
-            **selector_kwargs
+            self.ax, self._on_select_2d, **selector_kwargs
         )
-        
+
         plt.show()
         return self.regions
 
@@ -160,15 +169,17 @@ class RegionSelector:
 _current_selector = None
 
 
-def interactive_select_regions_1d(x, y, title="Select regions to EXCLUDE from baseline fitting"):
+def interactive_select_regions_1d(
+    x, y, title="Select regions to EXCLUDE from baseline fitting"
+):
     """
     Convenience function for interactive 1D region selection.
-    
+
     Args:
         x: X-axis data
-        y: Y-axis data  
+        y: Y-axis data
         title: Plot title
-        
+
     Returns:
         list: Selected regions as [(x1, x2), ...]
     """
@@ -177,16 +188,18 @@ def interactive_select_regions_1d(x, y, title="Select regions to EXCLUDE from ba
     return _current_selector.select_regions_1d(x, y, title)
 
 
-def interactive_select_regions_2d(x, y, z, title="Select regions to EXCLUDE from baseline fitting"):
+def interactive_select_regions_2d(
+    x, y, z, title="Select regions to EXCLUDE from baseline fitting"
+):
     """
     Convenience function for interactive 2D region selection.
-    
+
     Args:
         x: X-axis coordinates
         y: Y-axis coordinates
         z: 2D data array
         title: Plot title
-        
+
     Returns:
         list: Selected regions as [((x1,x2), (y1,y2)), ...]
     """
@@ -205,10 +218,10 @@ def close_selector_window():
         global _current_selector
         if _current_selector is not None:
             _current_selector.finish_selection()
-        plt.close('all')
+        plt.close("all")
         logger.info("✅ All selector windows closed")
     except Exception as e:
-        plt.close('all')
+        plt.close("all")
         logger.info(f"✅ Windows closed (with warning: {e})")
 
 
@@ -260,25 +273,28 @@ def jupyter_help():
 def is_interactive_available():
     """
     Check if interactive selection is available in the current environment.
-    
+
     Returns:
         bool: True if interactive selection should work
     """
     try:
         # Check if we're in a notebook
         from IPython import get_ipython
+
         ipython = get_ipython()
-        
+
         if ipython is None:
             return True  # Assume desktop matplotlib works
-        
+
         # Check for notebook backends
         backend = matplotlib.get_backend().lower()
-        if 'inline' in backend:
-            logger.warning("⚠️  Warning: Inline backend detected. Interactive selection may not work.")
+        if "inline" in backend:
+            logger.warning(
+                "⚠️  Warning: Inline backend detected. Interactive selection may not work."
+            )
             logger.warning("   Try: %matplotlib widget or %matplotlib notebook")
             return False
-        elif 'widget' in backend or 'nbagg' in backend:
+        elif "widget" in backend or "nbagg" in backend:
             return True
         else:
             return True  # Assume it works
@@ -292,24 +308,27 @@ def setup_interactive_backend():
     """
     try:
         from IPython import get_ipython
+
         ipython = get_ipython()
-        
+
         if ipython is not None:
             # We're in Jupyter
             current_backend = matplotlib.get_backend().lower()
-            if 'inline' in current_backend:
+            if "inline" in current_backend:
                 logger.info("🔧 Setting up interactive backend...")
                 try:
-                    ipython.magic('matplotlib widget')
+                    ipython.magic("matplotlib widget")
                     logger.info("✅ Switched to widget backend")
                 except:
                     try:
-                        ipython.magic('matplotlib notebook')
+                        ipython.magic("matplotlib notebook")
                         logger.info("✅ Switched to notebook backend")
                     except:
                         logger.warning("⚠️  Could not switch to interactive backend")
                         logger.warning("   Try running: %matplotlib widget")
         else:
-            logger.info("✅ Desktop matplotlib detected, interactive selection should work")
+            logger.info(
+                "✅ Desktop matplotlib detected, interactive selection should work"
+            )
     except ImportError:
         logger.info("✅ Desktop environment, interactive selection should work")

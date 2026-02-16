@@ -5,22 +5,23 @@ Provides comprehensive fitting capabilities for EPR signals using various linesh
 Integrates with the eprload function and lineshapes module for complete analysis workflow.
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
-from typing import Optional, Dict, Any, Tuple, Union, List
-from dataclasses import dataclass
 import warnings
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import curve_fit
 
 from ..logging_config import get_logger
 
 logger = get_logger(__name__)
 
 from .gaussian import gaussian
-from .lorentzian import lorentzian
-from .voigtian import voigtian
-from .lshape import pseudo_voigt
 from .lineshape_class import Lineshape
+from .lorentzian import lorentzian
+from .lshape import pseudo_voigt
+from .voigtian import voigtian
 
 
 @dataclass

@@ -4,8 +4,9 @@ All values from 2022 CODATA recommendations with proper units and uncertainties
 Constants available in both SI and CGS units.
 """
 
+from typing import Optional, Tuple, Union
+
 import numpy as np
-from typing import Tuple, Optional, Union
 
 from ..logging_config import get_logger
 
@@ -111,6 +112,7 @@ EVOLT_CGS = EVOLT * 1e7  # erg
 # ============================================================================
 # BACKWARD COMPATIBILITY FUNCTIONS
 # ============================================================================
+
 
 def gfree(return_uncertainty: bool = False) -> Union[float, Tuple[float, float]]:
     """
@@ -324,6 +326,7 @@ def evolt(return_uncertainty: bool = False) -> Union[float, Tuple[float, float]]
 # EPR-SPECIFIC FUNCTIONS
 # ============================================================================
 
+
 def gamma_hz(g_factor: Optional[float] = None) -> float:
     """
     Calculate gyromagnetic ratio in Hz/T for any g-factor.
@@ -362,7 +365,9 @@ def gamma_hz(g_factor: Optional[float] = None) -> float:
     return g_factor * BMAGN / PLANCK
 
 
-def magnetic_field_to_frequency(B_tesla: float, g_factor: Optional[float] = None) -> float:
+def magnetic_field_to_frequency(
+    B_tesla: float, g_factor: Optional[float] = None
+) -> float:
     """
     Convert magnetic field to resonance frequency.
 
@@ -390,7 +395,9 @@ def magnetic_field_to_frequency(B_tesla: float, g_factor: Optional[float] = None
     return gamma_hz(g_factor) * B_tesla
 
 
-def frequency_to_magnetic_field(freq_hz: float, g_factor: Optional[float] = None) -> float:
+def frequency_to_magnetic_field(
+    freq_hz: float, g_factor: Optional[float] = None
+) -> float:
     """
     Convert frequency to magnetic field.
 
@@ -465,6 +472,7 @@ def wavelength_to_frequency(wavelength_m: float) -> float:
 # ============================================================================
 # PHYSICAL CONSTANTS SUMMARY
 # ============================================================================
+
 
 def constants_summary():
     """Print summary of all physical constants with units and values."""
