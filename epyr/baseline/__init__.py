@@ -99,7 +99,7 @@ from .selection import (
 )
 
 # Package metadata
-__version__ = "2.0.0"
+__version__ = "0.3.5"
 __author__ = "EPyR Tools Development Team"
 
 # Define comprehensive public API

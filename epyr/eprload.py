@@ -12,7 +12,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 from .logging_config import get_logger
-from .performance import MemoryMonitor, OptimizedLoader, get_global_cache
+from .performance import MemoryMonitor, get_global_cache
 
 logger = get_logger(__name__)
 

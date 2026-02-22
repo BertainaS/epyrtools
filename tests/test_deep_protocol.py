@@ -387,7 +387,7 @@ class TestLineshapesDeep(TestProtocol):
 
         if protocol_level == "smoke":
             # Basic function call
-            result = voigtian(B, center=0, sigma=2, gamma=2)
+            result = voigtian(B, 0, (2, 2))
             assert len(result) == len(B)
             assert np.all(np.isfinite(result))
 
@@ -396,18 +396,18 @@ class TestLineshapesDeep(TestProtocol):
             ratios = [(1, 1), (2, 1), (1, 2), (3, 3)]
 
             for sigma, gamma in ratios:
-                result = voigtian(B, center=0, sigma=sigma, gamma=gamma)
+                result = voigtian(B, 0, (sigma, gamma))
                 assert len(result) == len(B)
                 assert np.all(np.isfinite(result))
                 assert np.max(result) > 0
 
         elif protocol_level == "deep":
             # Test limiting cases
-            # When sigma >> gamma, should approach Gaussian
-            voigt_gauss_like = voigtian(B, center=0, sigma=5, gamma=0.1)
+            # When gaussian_fwhm >> lorentzian_fwhm, should approach Gaussian
+            voigt_gauss_like = voigtian(B, 0, (5, 0.1))
             pure_gauss = gaussian(
-                B, center=0, width=5 * np.sqrt(2 * np.log(2))
-            )  # Convert sigma to HWHM
+                B, center=0, width=5
+            )  # Same FWHM as voigtian gaussian_fwhm
 
             # Should be reasonably similar (not exact due to convolution)
             correlation = np.corrcoef(voigt_gauss_like, pure_gauss)[0, 1]
@@ -416,7 +416,7 @@ class TestLineshapesDeep(TestProtocol):
             ), f"Voigt-Gaussian correlation too low: {correlation}"
 
             # When gamma >> sigma, should approach Lorentzian
-            voigt_lorentz_like = voigtian(B, center=0, sigma=0.1, gamma=5)
+            voigt_lorentz_like = voigtian(B, 0, (0.1, 5))
             pure_lorentz = lorentzian(B, center=0, width=5, phase=0)
 
             correlation = np.corrcoef(voigt_lorentz_like, pure_lorentz)[0, 1]
@@ -427,12 +427,12 @@ class TestLineshapesDeep(TestProtocol):
         elif protocol_level == "scientific":
             # Test convolution accuracy
             # Voigt should be broader than both parent functions
-            sigma, gamma = 2.0, 2.0
+            gauss_fwhm, lorentz_fwhm = 2.0, 2.0
             center = 0
 
-            voigt = voigtian(B, center=center, sigma=sigma, gamma=gamma)
-            gauss = gaussian(B, center=center, width=sigma * np.sqrt(2 * np.log(2)))
-            lorentz = lorentzian(B, center=center, width=gamma, phase=0)
+            voigt = voigtian(B, center, (gauss_fwhm, lorentz_fwhm))
+            gauss = gaussian(B, center=center, width=gauss_fwhm)
+            lorentz = lorentzian(B, center=center, width=lorentz_fwhm, phase=0)
 
             # Voigt FWHM should be between parent FWHMs
             def estimate_fwhm(profile, field):
@@ -530,7 +530,7 @@ class TestPerformanceBenchmarks(TestProtocol):
         func_map = {
             "gaussian": lambda B: gaussian(B, center=0, width=5),
             "lorentzian": lambda B: lorentzian(B, center=0, width=5),
-            "voigtian": lambda B: voigtian(B, center=0, sigma=3, gamma=3),
+            "voigtian": lambda B: voigtian(B, 0, (3, 3)),
         }
 
         func = func_map[function_name]

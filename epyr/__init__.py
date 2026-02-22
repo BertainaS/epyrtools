@@ -11,15 +11,6 @@ from .baseline import setup_inline_backend, setup_notebook_backend, setup_widget
 from .config import config
 from .logging_config import get_logger, setup_logging
 
-# Import specific, useful components from the old baseline_correction module
-# Keep this for backward compatibility during transition
-try:
-    from .baseline_correction import *
-except ImportError:
-    # Old baseline_correction.py might be removed/renamed
-    pass
-
-
 from . import eprplot as plot  # Alias for backward compatibility
 from . import lineshapes, signalprocessing
 from .eprload import *

@@ -89,7 +89,7 @@ def plot_1d(
     if title:
         ax.set_title(title)
 
-    plt.tight_layout()
+    fig.tight_layout()
     return fig, ax
 
 
@@ -289,7 +289,7 @@ def plot_2d_waterfall(
     if title:
         ax.set_title(title)
 
-    plt.tight_layout()
+    fig.tight_layout()
     return fig, ax
 
 

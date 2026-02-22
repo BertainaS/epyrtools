@@ -5,6 +5,7 @@ Provides comprehensive fitting capabilities for EPR signals using various linesh
 Integrates with the eprload function and lineshapes module for complete analysis workflow.
 """
 
+import math
 import warnings
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -682,9 +683,19 @@ def _setup_bounds(param_names: List[str],
         # Ensure initial value is within bounds
         init_val = initial_params[name]
         if init_val <= lower:
-            lower = init_val * 0.1 if init_val > 0 else init_val * 10
+            if init_val > 0:
+                lower = init_val * 0.1
+            elif init_val < 0:
+                lower = init_val * 10
+            else:
+                lower = -1.0
         if init_val >= upper:
-            upper = init_val * 10 if init_val > 0 else init_val * 0.1
+            if init_val > 0:
+                upper = init_val * 10
+            elif init_val < 0:
+                upper = init_val * 0.1
+            else:
+                upper = 1.0
 
         lower_bounds.append(lower)
         upper_bounds.append(upper)
@@ -716,7 +727,6 @@ def _format_significant_figures(value: float, n_sig: int) -> str:
         return "-" + _format_significant_figures(-value, n_sig)
 
     # Find the order of magnitude
-    import math
     order = math.floor(math.log10(abs(value)))
 
     # Scale the number to have the first significant digit in the ones place

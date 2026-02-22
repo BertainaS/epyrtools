@@ -325,7 +325,7 @@ class TestLineshapesComprehensive:
         # Test voigtian function variations
         sigma_gamma_pairs = [(1, 1), (2, 3), (3, 2), (1, 5), (5, 1)]
         for sigma, gamma in sigma_gamma_pairs:
-            result = voigtian(B, center=0, sigma=sigma, gamma=gamma)
+            result = voigtian(B, 0, (sigma, gamma))
             assert len(result) == len(B)
             assert np.all(np.isfinite(result))
 
@@ -421,10 +421,10 @@ class TestErrorHandling:
             lorentzian(B, center=0, width=-3)  # Negative width
 
         with pytest.raises((ValueError, TypeError)):
-            voigtian(B, center=0, sigma=-1, gamma=2)  # Negative sigma
+            voigtian(B, 0, (-1, 2))  # Negative sigma
 
         with pytest.raises((ValueError, TypeError)):
-            voigtian(B, center=0, sigma=2, gamma=-1)  # Negative gamma
+            voigtian(B, 0, (2, -1))  # Negative gamma
 
     def test_array_input_validation(self):
         """Test validation of array inputs."""

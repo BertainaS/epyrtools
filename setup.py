@@ -98,9 +98,10 @@ setup(
         "dev": [
             "pytest>=6.0.0",
             "pytest-cov>=2.10.0",
-            "black>=21.0.0",
-            "flake8>=3.8.0",
-            "mypy>=0.812",
+            "pytest-benchmark>=4.0.0",
+            "black>=23.0.0",
+            "flake8>=6.0.0",
+            "mypy>=1.0.0",
             "pre-commit>=2.10.0",
         ],
         "docs": [
@@ -113,9 +114,10 @@ setup(
             # Include all optional dependencies
             "pytest>=6.0.0",
             "pytest-cov>=2.10.0",
-            "black>=21.0.0",
-            "flake8>=3.8.0",
-            "mypy>=0.812",
+            "pytest-benchmark>=4.0.0",
+            "black>=23.0.0",
+            "flake8>=6.0.0",
+            "mypy>=1.0.0",
             "pre-commit>=2.10.0",
             "sphinx>=6.0.0",
             "sphinx-rtd-theme>=1.3.0",
