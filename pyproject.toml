@@ -71,6 +71,7 @@ all = [
 
 [project.urls]
 Homepage = "https://github.com/BertainaS/epyrtools"
+Documentation = "https://epyrtools.readthedocs.io/"
 Repository = "https://github.com/BertainaS/epyrtools.git"
 Issues = "https://github.com/BertainaS/epyrtools/issues"
 Laboratory = "https://www.im2np.fr/fr/equipe-magnetisme-mag"
