@@ -1,0 +1,137 @@
+Version 0.3.5
+=============
+
+**Release Date:** February 22, 2026
+
+**Status:** Stable release
+
+Overview
+--------
+
+EPyR Tools v0.3.5 delivers major improvements to lineshape derivative fitting
+and visualization defaults. The Voigt and pseudo-Voigt profiles now use
+analytical derivatives, making ``fit_epr_signal()`` reliable for first and
+second derivative EPR spectra. Plotting functions have been refined with
+thinner lines, better color scales, and compatibility with recent matplotlib
+versions.
+
+Lineshape Fitting Improvements
+------------------------------
+
+Analytical Voigt Derivatives
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Previous versions computed Voigt derivatives numerically using ``np.gradient``.
+During fitting, ``scipy.optimize.curve_fit`` also evaluates the Jacobian
+numerically, resulting in a numerical derivative of a numerical derivative.
+This compounded error prevented convergence for derivative Voigt signals.
+
+v0.3.5 replaces the numerical approach with analytical derivatives of the
+Faddeeva function:
+
+.. math::
+
+   w'(z) = -2z \cdot w(z) + \frac{2i}{\sqrt{\pi}}
+
+.. math::
+
+   w''(z) = -2w(z) + 4z^2 \cdot w(z) - \frac{4iz}{\sqrt{\pi}}
+
+where :math:`z = (x - x_0 + i\gamma) / (\sigma\sqrt{2})` and :math:`w(z)` is
+the Faddeeva function (``scipy.special.wofz``).
+
+**Impact:** Voigt derivative fitting now converges reliably with R² > 0.99 on
+synthetic data.
+
+Pseudo-Voigt Derivative and Phase Support
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``pseudo_voigt`` lineshape in ``fit_epr_signal()`` previously ignored the
+``derivative`` parameter and emitted a false warning. The internal ``lshape()``
+function was also using a buggy Dawson function approximation that returned
+complex values when ``phase != 0``.
+
+v0.3.5 fixes both issues:
+
+- ``derivative`` and ``phase`` are now passed directly to ``pseudo_voigt()``
+- ``lshape()`` delegates to the canonical ``gaussian()`` and ``lorentzian()``
+  functions, which handle derivatives and phase analytically
+
+Initial Parameter Estimation for Derivative Signals
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The automatic parameter estimator assumed absorption-like data (peak at center).
+For first derivative signals, this produced incorrect estimates (e.g., amplitude
+of 2.5 instead of 500, width of 117 instead of 15).
+
+New estimation heuristics for derivative signals:
+
+- **1st derivative:** center at zero-crossing between extrema, width from peak
+  separation, amplitude calibrated against unit-amplitude model
+- **2nd derivative:** center at central extremum, width from side lobe
+  separation, amplitude from model comparison
+
+Example usage:
+
+.. code-block:: python
+
+   from epyr.lineshapes import fit_epr_signal
+
+   # Fit 1st derivative Voigt - now works with auto parameter estimation
+   result = fit_epr_signal(x, y, 'voigt', derivative=1)
+
+   # Fit pseudo-Voigt with phase
+   result = fit_epr_signal(x, y, 'pseudo_voigt', derivative=1, fit_phase=True)
+
+   # Fine-tune optimizer settings
+   result = fit_epr_signal(x, y, 'voigt', derivative=1,
+                           maxfev=50000, ftol=1e-12)
+
+Visualization Improvements
+--------------------------
+
+plot_2d_map
+~~~~~~~~~~~
+
+- **Fixed** colorbar crash with matplotlib 3.8+ (replaced ``tight_layout``
+  with ``constrained`` layout)
+- **Added** ``vmin`` and ``vmax`` parameters for color scale control
+
+.. code-block:: python
+
+   import epyr
+
+   # Symmetric color scale
+   m = np.max(np.abs(y))
+   epyr.plot_2d_map(x, y, parm, vmin=-m, vmax=m, cmap="RdBu_r")
+
+plot_1d and plot_2d_waterfall
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Default line width set to **0.75** (was ~1.5 matplotlib default)
+- ``plot_2d_waterfall`` default ``max_traces`` reduced from 50 to **20**
+- ``plot_2d_waterfall`` accepts a ``lw`` parameter for custom line width
+
+JPG Export
+~~~~~~~~~~
+
+- Default DPI increased from 150 to **200**
+- 2D map colormap changed to **RdBu_r** (diverging, suitable for EPR signals)
+- Color scale uses symmetric bounds from ``np.percentile(np.abs(y), 98)``
+
+Bug Fixes
+---------
+
+- **baseline_polynomial_2d:** Fixed meshgrid shape mismatch. ``np.meshgrid``
+  arguments were swapped, producing arrays of shape ``(nx, ny)`` instead of
+  ``(ny, nx)`` matching the data.
+
+Upgrade Guide
+-------------
+
+No breaking changes. All existing code continues to work. The only visible
+differences are:
+
+- Thinner lines in plots (set ``lw=1.5`` explicitly to restore previous width)
+- Fewer traces in waterfall plots (set ``max_traces=50`` to restore)
+- Different JPG export appearance (colormap, DPI, color scale)

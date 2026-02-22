@@ -6,6 +6,67 @@ All notable changes to EPyR Tools are documented here.
 The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.0.0/>`_,
 and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
 
+[0.3.5] - 2026-02-22
+---------------------
+
+Fixed
+~~~~~
+- **FIX:** Voigt derivative fitting now uses analytical Faddeeva function identities
+  instead of numerical ``np.gradient``. Derivatives are computed via
+  ``w'(z) = -2z·w(z) + 2i/sqrt(pi)`` and ``w''(z) = -2w(z) + 4z²·w(z) - 4iz/sqrt(pi)``,
+  providing smooth and accurate profiles required for ``curve_fit`` convergence.
+
+- **FIX:** Pseudo-Voigt derivative fitting now correctly passes ``derivative`` and
+  ``phase`` parameters to the underlying ``lshape()`` function. Previously these
+  parameters were ignored and a false warning was emitted.
+
+- **FIX:** ``lshape()`` Gaussian/Lorentzian components now delegate to the canonical
+  ``gaussian()`` and ``lorentzian()`` implementations, replacing a buggy internal
+  Dawson function approximation that returned complex values when phase was nonzero.
+
+- **FIX:** ``fit_epr_signal()`` initial parameter estimation for derivative signals.
+  New heuristics for 1st and 2nd derivative data correctly estimate center (zero-crossing),
+  width (peak separation), and amplitude (model-calibrated scaling).
+
+- **FIX:** ``plot_2d_map()`` no longer crashes with recent matplotlib (3.8+) due to
+  ``tight_layout`` / colorbar incompatibility. Uses ``constrained`` layout instead.
+
+- **FIX:** ``baseline_polynomial_2d()`` meshgrid shape mismatch for 2D data.
+  ``np.meshgrid(x[0], x[1])`` now produces arrays matching ``y.shape``.
+
+Added
+~~~~~
+- **NEW:** ``vmin`` and ``vmax`` parameters for ``plot_2d_map()`` to control
+  the color scale range.
+
+Changed
+~~~~~~~
+- **DEFAULT:** Default line width set to 0.75 for ``plot_1d()`` and
+  ``plot_2d_waterfall()`` for cleaner plots.
+
+- **DEFAULT:** ``plot_2d_waterfall()`` default ``max_traces`` reduced from 50 to 20.
+
+- **DEFAULT:** JPG export (``save_to_jpg``) now uses 200 DPI (was 150), ``RdBu_r``
+  colormap for 2D maps, and symmetric color scale based on 98th percentile of
+  absolute values.
+
+Compatibility
+~~~~~~~~~~~~~
+- Backward compatible: all existing function signatures preserved.
+- New parameters use default values matching previous behavior where possible.
+
+[0.3.1] - 2026-02-03
+---------------------
+
+Added
+~~~~~
+- **NEW:** Automatic file extension detection for EPR data loading
+- **NEW:** ``fit_baseline`` option in ``fit_epr_signal()`` for affine baseline correction
+
+Fixed
+~~~~~
+- Fixed filename parsing for files with multiple dots in name
+
 [0.3.0] - 2025-11-02
 ---------------------
 
