@@ -45,7 +45,7 @@ from .lshape import lshape, pseudo_voigt
 from .voigtian import voigtian
 
 # Version info
-__version__ = "0.3.1"
+__version__ = "0.3.5"
 __author__ = "EPyR Tools Development Team"
 
 # Import fitting functionality

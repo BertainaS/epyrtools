@@ -471,19 +471,25 @@ def save_to_jpg(
             fig, ax = plot_1d(x, y, pars, title=file_name)
             plt.savefig(
                 output_basename.with_suffix(".jpg"),
-                dpi=150,
+                dpi=200,
                 format="jpg",
                 bbox_inches="tight",
             )
             plt.close(fig)
 
         elif y.ndim == 2:
+            # Symmetric color scale based on 98th percentile
+            vlim = np.percentile(np.abs(np.real(y)), 98)
+
             # 2D data - both map and waterfall plots
             logger.info(f"  Saving 2D map plot to: {output_basename}_map.jpg")
-            fig_map, ax_map = plot_2d_map(x, y, pars, title=f"{file_name} - Map")
+            fig_map, ax_map = plot_2d_map(
+                x, y, pars, title=f"{file_name} - Map",
+                cmap="RdBu_r", vmin=-vlim, vmax=vlim,
+            )
             plt.savefig(
                 str(output_basename) + "_map.jpg",
-                dpi=150,
+                dpi=200,
                 format="jpg",
                 bbox_inches="tight",
             )
@@ -495,7 +501,7 @@ def save_to_jpg(
             )
             plt.savefig(
                 str(output_basename) + "_waterfall.jpg",
-                dpi=150,
+                dpi=200,
                 format="jpg",
                 bbox_inches="tight",
             )

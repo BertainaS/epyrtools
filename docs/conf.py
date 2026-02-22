@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "EPyR Tools"
 copyright = "2025, Sylvain Bertaina"
 author = "Sylvain Bertaina"
-release = "0.3.1"
-version = "0.3.1"
+release = "0.3.5"
+version = "0.3.5"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

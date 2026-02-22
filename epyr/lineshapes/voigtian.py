@@ -133,29 +133,48 @@ def _voigt_faddeeva(x, center, gauss_width, lorentz_width, derivative):
     # Normalized coordinates
     z = ((x - center) + 1j * gamma) / (sigma * np.sqrt(2))
 
+    # Faddeeva function and normalization (used by all derivative orders except -1)
+    w = special.wofz(z)
+    norm = 1.0 / (sigma * np.sqrt(2 * np.pi))
+
     if derivative == 0:
-        # Standard Voigt profile
-        w = special.wofz(z)  # Faddeeva function
-        abs_part = np.real(w) / (sigma * np.sqrt(2 * np.pi))
-        disp_part = -np.imag(w) / (sigma * np.sqrt(2 * np.pi))
+        # Standard Voigt profile: V(x) = Re[w(z)] / (σ√(2π))
+        abs_part = np.real(w) * norm
+        disp_part = -np.imag(w) * norm
 
     elif derivative == -1:
         # Integral - approximate using individual components
-        # This is complex for true Voigt, so we approximate
         from .gaussian import gaussian
         from .lorentzian import lorentzian
 
         gauss_int = gaussian(x, center, gauss_width, derivative=-1)
         lorentz_int = lorentzian(x, center, lorentz_width, derivative=-1)
-        # Weighted combination (approximation)
         weight = gauss_width / (gauss_width + lorentz_width)
         abs_part = weight * gauss_int + (1 - weight) * lorentz_int
-        disp_part = np.zeros_like(x)  # Simplified
+        disp_part = np.zeros_like(x)
+
+    elif derivative == 1:
+        # Analytical first derivative using Faddeeva identity:
+        # w'(z) = -2z·w(z) + 2i/√π
+        dw = -2 * z * w + 2j / np.sqrt(np.pi)
+        dzdx = 1.0 / (sigma * np.sqrt(2))
+        result = dw * dzdx * norm
+        abs_part = np.real(result)
+        disp_part = -np.imag(result)
+
+    elif derivative == 2:
+        # Analytical second derivative using Faddeeva identities:
+        # w'(z) = -2z·w(z) + 2i/√π
+        # w''(z) = -2·w(z) + 4z²·w(z) - 4iz/√π
+        d2w = -2 * w + 4 * z**2 * w - 4j * z / np.sqrt(np.pi)
+        dzdx = 1.0 / (sigma * np.sqrt(2))
+        result = d2w * dzdx**2 * norm
+        abs_part = np.real(result)
+        disp_part = -np.imag(result)
 
     else:
-        # Derivatives - use numerical differentiation (more reliable than analytical Faddeeva derivatives)
-        abs_part, disp_part = _voigt_derivatives_numerical(
-            x, center, gauss_width, lorentz_width, derivative
+        raise NotImplementedError(
+            f"Voigt derivative order {derivative} not implemented"
         )
 
     return abs_part, disp_part

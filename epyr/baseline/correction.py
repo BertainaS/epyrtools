@@ -191,8 +191,10 @@ def baseline_polynomial_2d(
         y_1d = np.arange(ny)
         X, Y = np.meshgrid(x_1d, y_1d)
     elif isinstance(x, list) and len(x) == 2:
-        # Two 1D coordinate arrays provided
-        X, Y = np.meshgrid(x[1], x[0])  # Note: meshgrid swaps order
+        # Two 1D coordinate arrays: x[0]=field axis (nx), x[1]=second axis (ny)
+        # meshgrid(a, b) returns shape (len(b), len(a))
+        # We need shape (ny, nx) to match y.shape
+        X, Y = np.meshgrid(x[0], x[1])
     elif isinstance(x, np.ndarray):
         if x.ndim == 1:
             # Single 1D array, assume it's x-coordinates

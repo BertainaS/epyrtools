@@ -169,7 +169,7 @@ def fit_epr_signal(x_data: np.ndarray,
     # Estimate initial parameters if not provided
     if initial_params is None:
         initial_params = _estimate_initial_params(
-            x_clean, y_clean, shape_type, fit_phase, fit_baseline
+            x_clean, y_clean, shape_type, derivative, fit_phase, fit_baseline
         )
 
     # Validate and complete initial parameters
@@ -317,19 +317,17 @@ def _get_fit_function(
         }
 
     elif shape_type == 'pseudo_voigt':
-        if derivative != 0:
-            warnings.warn("pseudo_voigt does not support derivatives. Using derivative=0.")
-
         if fit_phase:
             def _lineshape(x, center, width, amplitude, alpha, phase):
-                # Pseudo-voigt doesn't have native phase support, approximate with cos/sin mix
-                abs_part = amplitude * pseudo_voigt(x, center, width, eta=alpha)
-                disp_part = amplitude * np.gradient(pseudo_voigt(x, center, width, eta=alpha), x[1]-x[0])
-                return np.cos(phase) * abs_part + np.sin(phase) * disp_part
+                return amplitude * pseudo_voigt(
+                    x, center, width, eta=alpha, derivative=derivative, phase=phase
+                )
             param_names = ['center', 'width', 'amplitude', 'alpha', 'phase']
         else:
             def _lineshape(x, center, width, amplitude, alpha):
-                return amplitude * pseudo_voigt(x, center, width, eta=alpha)
+                return amplitude * pseudo_voigt(
+                    x, center, width, eta=alpha, derivative=derivative
+                )
             param_names = ['center', 'width', 'amplitude', 'alpha']
 
         param_bounds = {
@@ -369,45 +367,37 @@ def _estimate_initial_params(
     x: np.ndarray,
     y: np.ndarray,
     shape_type: str,
+    derivative: int = 0,
     fit_phase: bool = False,
     fit_baseline: bool = False,
 ) -> Dict[str, float]:
-    """Estimate initial parameters from data"""
+    """Estimate initial parameters from data.
 
-    # Basic estimates
-    amplitude = np.max(y) - np.min(y)
-    if amplitude == 0:
-        amplitude = 1.0
+    Handles absorption (derivative=0), first derivative, and second derivative
+    signals with appropriate heuristics for center, width, and amplitude.
+    """
 
-    # Handle negative peaks
-    if np.abs(np.min(y)) > np.abs(np.max(y)):
-        amplitude = -amplitude
-        peak_idx = np.argmin(y)
+    if derivative == 0:
+        # Absorption signal: peak at center
+        center, width, amplitude = _estimate_absorption_params(x, y)
+    elif derivative == 1:
+        # First derivative: bipolar signal, center at zero-crossing
+        center, width, amplitude = _estimate_first_derivative_params(
+            x, y, shape_type
+        )
+    elif derivative == 2:
+        # Second derivative: central extremum with side lobes
+        center, width, amplitude = _estimate_second_derivative_params(
+            x, y, shape_type
+        )
     else:
-        peak_idx = np.argmax(y)
-
-    center = x[peak_idx]
-
-    # Estimate width from full width at half maximum
-    if amplitude > 0:
-        half_max = np.min(y) + amplitude / 2
-        above_half = y >= half_max
-    else:
-        half_max = np.max(y) + amplitude / 2  # amplitude is negative
-        above_half = y <= half_max
-
-    if np.sum(above_half) > 1:
-        indices = np.where(above_half)[0]
-        width = x[indices[-1]] - x[indices[0]]
-        if width <= 0:
-            width = (x[-1] - x[0]) / 10
-    else:
-        width = (x[-1] - x[0]) / 10
+        # Fallback to absorption-like estimation
+        center, width, amplitude = _estimate_absorption_params(x, y)
 
     # Shape-specific parameters
     initial_params = {
         'center': center,
-        'amplitude': amplitude
+        'amplitude': amplitude,
     }
 
     if shape_type in ['gaussian', 'lorentzian', 'pseudo_voigt']:
@@ -422,22 +412,18 @@ def _estimate_initial_params(
 
     # Add phase parameter if fitting phase
     if fit_phase:
-        # Estimate phase from the sign and shape of the data
-        # Simple heuristic: if first derivative of peak area is positive -> negative phase
         if len(y) > 2:
             peak_region = np.abs(x - center) < width
             if np.sum(peak_region) > 2:
                 y_peak = y[peak_region]
                 x_peak = x[peak_region]
-                # Rough estimate based on asymmetry
                 if len(y_peak) > 2:
                     gradient_estimate = np.gradient(y_peak, x_peak)
                     avg_gradient = np.mean(gradient_estimate)
-                    # Phase estimation: if derivative-like -> π/2, if absorption-like -> 0
                     if np.abs(avg_gradient) > np.abs(np.mean(y_peak)) * 0.1:
-                        initial_params['phase'] = np.pi/4  # Mixed
+                        initial_params['phase'] = np.pi / 4
                     else:
-                        initial_params['phase'] = 0.0  # Pure absorption
+                        initial_params['phase'] = 0.0
                 else:
                     initial_params['phase'] = 0.0
             else:
@@ -447,7 +433,6 @@ def _estimate_initial_params(
 
     # Estimate affine baseline parameters from data edges
     if fit_baseline:
-        # Use a linear regression on the edge regions (first and last 10% of data)
         n_edge = max(2, len(x) // 10)
         x_edges = np.concatenate([x[:n_edge], x[-n_edge:]])
         y_edges = np.concatenate([y[:n_edge], y[-n_edge:]])
@@ -460,6 +445,158 @@ def _estimate_initial_params(
             initial_params['baseline_offset'] = 0.0
 
     return initial_params
+
+
+def _estimate_absorption_params(
+    x: np.ndarray, y: np.ndarray
+) -> Tuple[float, float, float]:
+    """Estimate center, width, amplitude for absorption-like (derivative=0) signals."""
+
+    amplitude = np.max(y) - np.min(y)
+    if amplitude == 0:
+        amplitude = 1.0
+
+    if np.abs(np.min(y)) > np.abs(np.max(y)):
+        amplitude = -amplitude
+        peak_idx = np.argmin(y)
+    else:
+        peak_idx = np.argmax(y)
+
+    center = x[peak_idx]
+
+    # Estimate FWHM
+    if amplitude > 0:
+        half_max = np.min(y) + amplitude / 2
+        above_half = y >= half_max
+    else:
+        half_max = np.max(y) + amplitude / 2
+        above_half = y <= half_max
+
+    if np.sum(above_half) > 1:
+        indices = np.where(above_half)[0]
+        width = x[indices[-1]] - x[indices[0]]
+        if width <= 0:
+            width = (x[-1] - x[0]) / 10
+    else:
+        width = (x[-1] - x[0]) / 10
+
+    return center, width, amplitude
+
+
+def _estimate_first_derivative_params(
+    x: np.ndarray, y: np.ndarray, shape_type: str
+) -> Tuple[float, float, float]:
+    """Estimate center, width, amplitude for first derivative signals.
+
+    For a 1st derivative EPR signal, the center is at the zero-crossing
+    between the positive and negative extrema. The width is estimated from
+    the peak separation, and the amplitude is computed by comparing
+    the data peak-to-peak with that of a unit-amplitude model.
+    """
+
+    idx_max = np.argmax(y)
+    idx_min = np.argmin(y)
+
+    # Center is midpoint between extrema
+    center = (x[idx_max] + x[idx_min]) / 2.0
+
+    # Peak separation gives an estimate of the linewidth
+    peak_sep = abs(x[idx_max] - x[idx_min])
+    # For Gaussian: extrema at ±σ, so sep = 2σ = FWHM/√(2ln2) ≈ FWHM/1.18
+    # For Lorentzian: extrema at ±γ/√3, so sep = 2γ/√3 = FWHM/√3 ≈ FWHM/1.73
+    # Use ~1.4 as a general compromise
+    width = max(peak_sep * 1.4, np.diff(x).mean() * 3)
+
+    # Estimate amplitude by comparing data with unit-amplitude model derivative
+    peak_to_peak = np.max(y) - np.min(y)
+    amplitude = _estimate_amplitude_from_model(
+        x, center, width, peak_to_peak, shape_type, derivative=1
+    )
+
+    return center, width, amplitude
+
+
+def _estimate_second_derivative_params(
+    x: np.ndarray, y: np.ndarray, shape_type: str
+) -> Tuple[float, float, float]:
+    """Estimate center, width, amplitude for second derivative signals.
+
+    For a 2nd derivative, the central extremum is at the line center.
+    The width is estimated from the distance between the central peak
+    and the side lobes.
+    """
+
+    # Central extremum (largest absolute value) gives the center
+    idx_center = np.argmax(np.abs(y))
+    center = x[idx_center]
+
+    # Find the two side lobes (opposite sign from center)
+    center_sign = np.sign(y[idx_center])
+    opposite = np.where(np.sign(y) == -center_sign)[0]
+
+    if len(opposite) > 1:
+        # Distance from center to side lobes
+        left_lobes = opposite[opposite < idx_center]
+        right_lobes = opposite[opposite > idx_center]
+
+        if len(left_lobes) > 0 and len(right_lobes) > 0:
+            left_peak = left_lobes[np.argmin(y[left_lobes] * center_sign)]
+            right_peak = right_lobes[np.argmin(y[right_lobes] * center_sign)]
+            lobe_sep = x[right_peak] - x[left_peak]
+            width = max(lobe_sep * 0.8, np.diff(x).mean() * 3)
+        else:
+            width = (x[-1] - x[0]) / 10
+    else:
+        width = (x[-1] - x[0]) / 10
+
+    # Estimate amplitude from model comparison
+    peak_to_peak = np.max(y) - np.min(y)
+    amplitude = _estimate_amplitude_from_model(
+        x, center, width, peak_to_peak, shape_type, derivative=2
+    )
+
+    return center, width, amplitude
+
+
+def _estimate_amplitude_from_model(
+    x: np.ndarray,
+    center: float,
+    width: float,
+    data_peak_to_peak: float,
+    shape_type: str,
+    derivative: int,
+) -> float:
+    """Estimate the amplitude scaling factor by computing the model peak-to-peak.
+
+    Computes the lineshape with unit amplitude and estimated width/center,
+    then scales to match the observed data peak-to-peak.
+    """
+
+    try:
+        if shape_type == 'voigt':
+            y_model = voigtian(
+                x, center, (width * 0.6, width * 0.6), derivative=derivative
+            )
+        elif shape_type == 'gaussian':
+            y_model = gaussian(x, center, width, derivative=derivative)
+        elif shape_type == 'lorentzian':
+            y_model = lorentzian(x, center, width, derivative=derivative)
+        elif shape_type == 'pseudo_voigt':
+            y_model = pseudo_voigt(x, center, width, eta=0.5)
+            # pseudo_voigt doesn't support derivatives natively
+            if derivative > 0:
+                for _ in range(derivative):
+                    y_model = np.gradient(y_model, x)
+        else:
+            return data_peak_to_peak
+
+        model_ptp = np.max(y_model) - np.min(y_model)
+        if model_ptp > 0:
+            return data_peak_to_peak / model_ptp
+        else:
+            return data_peak_to_peak
+    except Exception:
+        return data_peak_to_peak
 
 
 def _validate_initial_params(initial_params: Dict[str, float],

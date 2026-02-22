@@ -74,10 +74,10 @@ def plot_1d(
 
     # Plot data
     if np.isrealobj(y):
-        ax.plot(absc, y, label="data")
+        ax.plot(absc, y, label="data", lw=0.75)
     else:
-        ax.plot(absc, np.real(y), label="real")
-        ax.plot(absc, np.imag(y), label="imag", linestyle="--")
+        ax.plot(absc, np.real(y), label="real", lw=0.75)
+        ax.plot(absc, np.imag(y), label="imag", linestyle="--", lw=0.75)
         ax.legend()
 
     # Set labels and formatting
@@ -100,6 +100,8 @@ def plot_2d_map(
     title: Optional[str] = None,
     ax: Optional[plt.Axes] = None,
     cmap: str = "magma",
+    vmin: Optional[float] = None,
+    vmax: Optional[float] = None,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """
     Plot 2D EPR data as a color map.
@@ -111,9 +113,15 @@ def plot_2d_map(
         title: Plot title (optional)
         ax: Matplotlib axes to plot on (optional)
         cmap: Colormap name (default: "magma")
+        vmin: Minimum value for color scale (default: data min)
+        vmax: Maximum value for color scale (default: data max)
 
     Returns:
         Tuple of (figure, axes)
+
+    Examples:
+        >>> fig, ax = plot_2d_map(x, y, parm, vmin=-100, vmax=100)
+        >>> fig, ax = plot_2d_map(x, y, parm, vmin=0)  # clip negatives
     """
     if y is None or y.size == 0:
         raise ValueError("No data available to plot.")
@@ -123,7 +131,7 @@ def plot_2d_map(
 
     # Create figure if not provided
     if ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(layout="constrained")
     else:
         fig = ax.get_figure()
 
@@ -157,7 +165,8 @@ def plot_2d_map(
     # Plot data (real part if complex)
     plot_data = np.real(y)
 
-    im = ax.pcolormesh(x_coords, y_coords, plot_data, shading="auto", cmap=cmap)
+    im = ax.pcolormesh(x_coords, y_coords, plot_data, shading="auto", cmap=cmap,
+                        vmin=vmin, vmax=vmax)
     fig.colorbar(im, ax=ax, label="Intensity (a.u.)")
 
     ax.set_xlabel(x_label)
@@ -167,7 +176,6 @@ def plot_2d_map(
     if title:
         ax.set_title(title)
 
-    plt.tight_layout()
     return fig, ax
 
 
@@ -178,8 +186,9 @@ def plot_2d_waterfall(
     title: Optional[str] = None,
     ax: Optional[plt.Axes] = None,
     offset_factor: float = 0.5,
-    max_traces: int = 50,
+    max_traces: int = 20,
     cmap: str = "viridis",
+    lw: float = 0.75,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """
     Plot 2D EPR data as waterfall plot.
@@ -191,8 +200,9 @@ def plot_2d_waterfall(
         title: Plot title (optional)
         ax: Matplotlib axes to plot on (optional)
         offset_factor: Vertical offset between traces
-        max_traces: Maximum number of traces to plot
+        max_traces: Maximum number of traces to plot (default: 20)
         cmap: Colormap name (default: "viridis")
+        lw: Line width for traces (default: 0.75)
 
     Returns:
         Tuple of (figure, axes)
@@ -267,7 +277,7 @@ def plot_2d_waterfall(
         else:
             label = f"{y_param_name}[{trace_idx}]"
 
-        ax.plot(x_coords, trace_data, label=label if i < 10 else "", color=colors[i])
+        ax.plot(x_coords, trace_data, label=label if i < 10 else "", color=colors[i], lw=lw)
 
     ax.set_xlabel(x_label)
     ax.set_ylabel(f"Intensity + {y_param_name} offset (a.u.)")

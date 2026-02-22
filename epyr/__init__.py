@@ -33,7 +33,7 @@ from .physics import constants
 from .plugins import plugin_manager
 from .sub.utils import BrukerListFiles
 
-__version__ = "0.3.1"
+__version__ = "0.3.5"
 
 # Set up logging
 logger = get_logger(__name__)

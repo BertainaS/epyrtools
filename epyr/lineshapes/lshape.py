@@ -83,19 +83,22 @@ def lshape(
             raise ValueError("width must be positive")
         width_gauss = width_lorentz = width
 
+    from .gaussian import gaussian as _gaussian
+    from .lorentzian import lorentzian as _lorentzian
+
     result = np.zeros_like(x, dtype=float)
 
-    # Compute Gaussian component
+    # Compute Gaussian component using the canonical implementation
     if alpha > 0:
-        gauss_component = _gaussian_component(x, center, width_gauss, derivative, phase)
-        result += alpha * gauss_component
-
-    # Compute Lorentzian component
-    if alpha < 1:
-        lorentz_component = _lorentzian_component(
-            x, center, width_lorentz, derivative, phase
+        result += alpha * _gaussian(
+            x, center, width_gauss, derivative=derivative, phase=phase
         )
-        result += (1 - alpha) * lorentz_component
+
+    # Compute Lorentzian component using the canonical implementation
+    if alpha < 1:
+        result += (1 - alpha) * _lorentzian(
+            x, center, width_lorentz, derivative=derivative, phase=phase
+        )
 
     return result
 
