@@ -455,8 +455,10 @@ def save_to_jpg(
     """
     try:
         import matplotlib
+
         matplotlib.use("Agg")  # Non-interactive backend
         import matplotlib.pyplot as plt
+
         from ..eprplot import plot_1d, plot_2d_map, plot_2d_waterfall
     except ImportError as e:
         warnings.warn(f"Could not import plotting modules: {e}. Skipping JPG export.")
@@ -484,8 +486,13 @@ def save_to_jpg(
             # 2D data - both map and waterfall plots
             logger.info(f"  Saving 2D map plot to: {output_basename}_map.jpg")
             fig_map, ax_map = plot_2d_map(
-                x, y, pars, title=f"{file_name} - Map",
-                cmap="RdBu_r", vmin=-vlim, vmax=vlim,
+                x,
+                y,
+                pars,
+                title=f"{file_name} - Map",
+                cmap="RdBu_r",
+                vmin=-vlim,
+                vmax=vlim,
             )
             plt.savefig(
                 str(output_basename) + "_map.jpg",
@@ -495,7 +502,9 @@ def save_to_jpg(
             )
             plt.close(fig_map)
 
-            logger.info(f"  Saving 2D waterfall plot to: {output_basename}_waterfall.jpg")
+            logger.info(
+                f"  Saving 2D waterfall plot to: {output_basename}_waterfall.jpg"
+            )
             fig_waterfall, ax_waterfall = plot_2d_waterfall(
                 x, y, pars, title=f"{file_name} - Waterfall"
             )

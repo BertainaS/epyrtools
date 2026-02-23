@@ -165,8 +165,9 @@ def plot_2d_map(
     # Plot data (real part if complex)
     plot_data = np.real(y)
 
-    im = ax.pcolormesh(x_coords, y_coords, plot_data, shading="auto", cmap=cmap,
-                        vmin=vmin, vmax=vmax)
+    im = ax.pcolormesh(
+        x_coords, y_coords, plot_data, shading="auto", cmap=cmap, vmin=vmin, vmax=vmax
+    )
     fig.colorbar(im, ax=ax, label="Intensity (a.u.)")
 
     ax.set_xlabel(x_label)
@@ -258,6 +259,7 @@ def plot_2d_waterfall(
 
     # Create colormap
     from matplotlib import cm
+
     colormap = cm.get_cmap(cmap)
     colors = colormap(np.linspace(0, 1, len(trace_indices)))
 
@@ -277,7 +279,9 @@ def plot_2d_waterfall(
         else:
             label = f"{y_param_name}[{trace_idx}]"
 
-        ax.plot(x_coords, trace_data, label=label if i < 10 else "", color=colors[i], lw=lw)
+        ax.plot(
+            x_coords, trace_data, label=label if i < 10 else "", color=colors[i], lw=lw
+        )
 
     ax.set_xlabel(x_label)
     ax.set_ylabel(f"Intensity + {y_param_name} offset (a.u.)")

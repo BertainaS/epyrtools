@@ -93,9 +93,7 @@ def convert_bruker_to_fair(
 
         # Use the consolidated save function from exporters
         # Formats are now passed directly (csv, json, hdf5)
-        _save_fair_formats(
-            output_basename, x, y, pars, original_file_path_str, formats
-        )
+        _save_fair_formats(output_basename, x, y, pars, original_file_path_str, formats)
 
         logger.info("FAIR conversion process finished.")
         return True

@@ -28,6 +28,7 @@ from .voigtian import voigtian
 @dataclass
 class FitResult:
     """Container for fitting results"""
+
     shape_type: str
     parameters: Dict[str, float]
     parameter_errors: Dict[str, float]
@@ -61,16 +62,18 @@ class FitResult:
         return "\n".join(lines)
 
 
-def fit_epr_signal(x_data: np.ndarray,
-                   y_data: np.ndarray,
-                   shape_type: str = 'gaussian',
-                   initial_params: Optional[Dict[str, float]] = None,
-                   bounds: Optional[Dict[str, Tuple[float, float]]] = None,
-                   derivative: int = 0,
-                   fit_phase: bool = False,
-                   fit_baseline: bool = False,
-                   plot: bool = True,
-                   **fit_kwargs) -> FitResult:
+def fit_epr_signal(
+    x_data: np.ndarray,
+    y_data: np.ndarray,
+    shape_type: str = "gaussian",
+    initial_params: Optional[Dict[str, float]] = None,
+    bounds: Optional[Dict[str, Tuple[float, float]]] = None,
+    derivative: int = 0,
+    fit_phase: bool = False,
+    fit_baseline: bool = False,
+    plot: bool = True,
+    **fit_kwargs,
+) -> FitResult:
     """
     Fit EPR signal with specified lineshape function.
 
@@ -174,24 +177,28 @@ def fit_epr_signal(x_data: np.ndarray,
         )
 
     # Validate and complete initial parameters
-    initial_params = _validate_initial_params(initial_params, param_names, x_clean, y_clean)
+    initial_params = _validate_initial_params(
+        initial_params, param_names, x_clean, y_clean
+    )
 
     # Setup parameter bounds
-    lower_bounds, upper_bounds = _setup_bounds(param_names, bounds, param_bounds,
-                                               initial_params, x_clean, y_clean)
+    lower_bounds, upper_bounds = _setup_bounds(
+        param_names, bounds, param_bounds, initial_params, x_clean, y_clean
+    )
 
     # Prepare parameters for fitting
     p0 = [initial_params[name] for name in param_names]
     bounds_tuple = (lower_bounds, upper_bounds)
 
     # Set default fitting options
-    default_kwargs = {'maxfev': 10000, 'method': 'trf'}
+    default_kwargs = {"maxfev": 10000, "method": "trf"}
     default_kwargs.update(fit_kwargs)
 
     try:
         # Perform the fit
-        popt, pcov = curve_fit(fit_func, x_clean, y_clean,
-                              p0=p0, bounds=bounds_tuple, **default_kwargs)
+        popt, pcov = curve_fit(
+            fit_func, x_clean, y_clean, p0=p0, bounds=bounds_tuple, **default_kwargs
+        )
 
         # Calculate fitted curve and residuals
         y_fitted = fit_func(x_clean, *popt)
@@ -199,7 +206,7 @@ def fit_epr_signal(x_data: np.ndarray,
 
         # Calculate statistics
         ss_res = np.sum(residuals**2)
-        ss_tot = np.sum((y_clean - np.mean(y_clean))**2)
+        ss_tot = np.sum((y_clean - np.mean(y_clean)) ** 2)
         r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
         chi_squared = ss_res / (len(y_clean) - len(popt))
 
@@ -209,7 +216,9 @@ def fit_epr_signal(x_data: np.ndarray,
 
         if pcov is not None:
             param_std_errors = np.sqrt(np.diag(pcov))
-            param_errors = {name: error for name, error in zip(param_names, param_std_errors)}
+            param_errors = {
+                name: error for name, error in zip(param_names, param_std_errors)
+            }
 
         # Create result object
         result = FitResult(
@@ -222,12 +231,14 @@ def fit_epr_signal(x_data: np.ndarray,
             chi_squared=chi_squared,
             success=True,
             message="Fit converged successfully",
-            covariance_matrix=pcov
+            covariance_matrix=pcov,
         )
 
         # Create plot if requested
         if plot:
-            _plot_fit_results(x_clean, y_clean, result, shape_type, derivative, fit_phase)
+            _plot_fit_results(
+                x_clean, y_clean, result, shape_type, derivative, fit_phase
+            )
 
         return result
 
@@ -242,7 +253,7 @@ def fit_epr_signal(x_data: np.ndarray,
             r_squared=0.0,
             chi_squared=np.inf,
             success=False,
-            message=str(e)
+            message=str(e),
         )
 
 
@@ -263,92 +274,128 @@ def _get_fit_function(
         Whether to include an affine baseline (a*x + b) in the model
     """
 
-    if shape_type == 'gaussian':
+    if shape_type == "gaussian":
         if fit_phase:
+
             def _lineshape(x, center, width, amplitude, phase):
-                return amplitude * gaussian(x, center, width, derivative=derivative, phase=phase)
-            param_names = ['center', 'width', 'amplitude', 'phase']
+                return amplitude * gaussian(
+                    x, center, width, derivative=derivative, phase=phase
+                )
+
+            param_names = ["center", "width", "amplitude", "phase"]
         else:
+
             def _lineshape(x, center, width, amplitude):
                 return amplitude * gaussian(x, center, width, derivative=derivative)
-            param_names = ['center', 'width', 'amplitude']
+
+            param_names = ["center", "width", "amplitude"]
 
         param_bounds = {
-            'center': (-np.inf, np.inf),
-            'width': (0.001, np.inf),
-            'amplitude': (-np.inf, np.inf),
-            'phase': (-np.pi, np.pi)
+            "center": (-np.inf, np.inf),
+            "width": (0.001, np.inf),
+            "amplitude": (-np.inf, np.inf),
+            "phase": (-np.pi, np.pi),
         }
 
-    elif shape_type == 'lorentzian':
+    elif shape_type == "lorentzian":
         if fit_phase:
+
             def _lineshape(x, center, width, amplitude, phase):
-                return amplitude * lorentzian(x, center, width, derivative=derivative, phase=phase)
-            param_names = ['center', 'width', 'amplitude', 'phase']
+                return amplitude * lorentzian(
+                    x, center, width, derivative=derivative, phase=phase
+                )
+
+            param_names = ["center", "width", "amplitude", "phase"]
         else:
+
             def _lineshape(x, center, width, amplitude):
                 return amplitude * lorentzian(x, center, width, derivative=derivative)
-            param_names = ['center', 'width', 'amplitude']
+
+            param_names = ["center", "width", "amplitude"]
 
         param_bounds = {
-            'center': (-np.inf, np.inf),
-            'width': (0.001, np.inf),
-            'amplitude': (-np.inf, np.inf),
-            'phase': (-np.pi, np.pi)
+            "center": (-np.inf, np.inf),
+            "width": (0.001, np.inf),
+            "amplitude": (-np.inf, np.inf),
+            "phase": (-np.pi, np.pi),
         }
 
-    elif shape_type == 'voigt':
+    elif shape_type == "voigt":
         if fit_phase:
-            def _lineshape(x, center, gaussian_width, lorentzian_width, amplitude, phase):
-                return amplitude * voigtian(x, center, (gaussian_width, lorentzian_width),
-                                          derivative=derivative, phase=phase)
-            param_names = ['center', 'gaussian_width', 'lorentzian_width', 'amplitude', 'phase']
+
+            def _lineshape(
+                x, center, gaussian_width, lorentzian_width, amplitude, phase
+            ):
+                return amplitude * voigtian(
+                    x,
+                    center,
+                    (gaussian_width, lorentzian_width),
+                    derivative=derivative,
+                    phase=phase,
+                )
+
+            param_names = [
+                "center",
+                "gaussian_width",
+                "lorentzian_width",
+                "amplitude",
+                "phase",
+            ]
         else:
+
             def _lineshape(x, center, gaussian_width, lorentzian_width, amplitude):
-                return amplitude * voigtian(x, center, (gaussian_width, lorentzian_width),
-                                          derivative=derivative)
-            param_names = ['center', 'gaussian_width', 'lorentzian_width', 'amplitude']
+                return amplitude * voigtian(
+                    x, center, (gaussian_width, lorentzian_width), derivative=derivative
+                )
+
+            param_names = ["center", "gaussian_width", "lorentzian_width", "amplitude"]
 
         param_bounds = {
-            'center': (-np.inf, np.inf),
-            'gaussian_width': (0.001, np.inf),
-            'lorentzian_width': (0.001, np.inf),
-            'amplitude': (-np.inf, np.inf),
-            'phase': (-np.pi, np.pi)
+            "center": (-np.inf, np.inf),
+            "gaussian_width": (0.001, np.inf),
+            "lorentzian_width": (0.001, np.inf),
+            "amplitude": (-np.inf, np.inf),
+            "phase": (-np.pi, np.pi),
         }
 
-    elif shape_type == 'pseudo_voigt':
+    elif shape_type == "pseudo_voigt":
         if fit_phase:
+
             def _lineshape(x, center, width, amplitude, alpha, phase):
                 return amplitude * pseudo_voigt(
                     x, center, width, eta=alpha, derivative=derivative, phase=phase
                 )
-            param_names = ['center', 'width', 'amplitude', 'alpha', 'phase']
+
+            param_names = ["center", "width", "amplitude", "alpha", "phase"]
         else:
+
             def _lineshape(x, center, width, amplitude, alpha):
                 return amplitude * pseudo_voigt(
                     x, center, width, eta=alpha, derivative=derivative
                 )
-            param_names = ['center', 'width', 'amplitude', 'alpha']
+
+            param_names = ["center", "width", "amplitude", "alpha"]
 
         param_bounds = {
-            'center': (-np.inf, np.inf),
-            'width': (0.001, np.inf),
-            'amplitude': (-np.inf, np.inf),
-            'alpha': (0.0, 1.0),
-            'phase': (-np.pi, np.pi)
+            "center": (-np.inf, np.inf),
+            "width": (0.001, np.inf),
+            "amplitude": (-np.inf, np.inf),
+            "alpha": (0.0, 1.0),
+            "phase": (-np.pi, np.pi),
         }
 
     else:
-        raise ValueError(f"Unsupported shape_type: {shape_type}. "
-                        "Choose from: 'gaussian', 'lorentzian', 'voigt', 'pseudo_voigt'")
+        raise ValueError(
+            f"Unsupported shape_type: {shape_type}. "
+            "Choose from: 'gaussian', 'lorentzian', 'voigt', 'pseudo_voigt'"
+        )
 
     # Wrap with affine baseline if requested
     if fit_baseline:
         n_lineshape_params = len(param_names)
-        param_names = param_names + ['baseline_slope', 'baseline_offset']
-        param_bounds['baseline_slope'] = (-np.inf, np.inf)
-        param_bounds['baseline_offset'] = (-np.inf, np.inf)
+        param_names = param_names + ["baseline_slope", "baseline_offset"]
+        param_bounds["baseline_slope"] = (-np.inf, np.inf)
+        param_bounds["baseline_offset"] = (-np.inf, np.inf)
 
         _inner = _lineshape
 
@@ -383,33 +430,29 @@ def _estimate_initial_params(
         center, width, amplitude = _estimate_absorption_params(x, y)
     elif derivative == 1:
         # First derivative: bipolar signal, center at zero-crossing
-        center, width, amplitude = _estimate_first_derivative_params(
-            x, y, shape_type
-        )
+        center, width, amplitude = _estimate_first_derivative_params(x, y, shape_type)
     elif derivative == 2:
         # Second derivative: central extremum with side lobes
-        center, width, amplitude = _estimate_second_derivative_params(
-            x, y, shape_type
-        )
+        center, width, amplitude = _estimate_second_derivative_params(x, y, shape_type)
     else:
         # Fallback to absorption-like estimation
         center, width, amplitude = _estimate_absorption_params(x, y)
 
     # Shape-specific parameters
     initial_params = {
-        'center': center,
-        'amplitude': amplitude,
+        "center": center,
+        "amplitude": amplitude,
     }
 
-    if shape_type in ['gaussian', 'lorentzian', 'pseudo_voigt']:
-        initial_params['width'] = max(width, np.diff(x).mean() * 2)
+    if shape_type in ["gaussian", "lorentzian", "pseudo_voigt"]:
+        initial_params["width"] = max(width, np.diff(x).mean() * 2)
 
-    if shape_type == 'voigt':
-        initial_params['gaussian_width'] = max(width * 0.6, np.diff(x).mean() * 2)
-        initial_params['lorentzian_width'] = max(width * 0.6, np.diff(x).mean() * 2)
+    if shape_type == "voigt":
+        initial_params["gaussian_width"] = max(width * 0.6, np.diff(x).mean() * 2)
+        initial_params["lorentzian_width"] = max(width * 0.6, np.diff(x).mean() * 2)
 
-    if shape_type == 'pseudo_voigt':
-        initial_params['alpha'] = 0.5  # 50/50 mix
+    if shape_type == "pseudo_voigt":
+        initial_params["alpha"] = 0.5  # 50/50 mix
 
     # Add phase parameter if fitting phase
     if fit_phase:
@@ -422,15 +465,15 @@ def _estimate_initial_params(
                     gradient_estimate = np.gradient(y_peak, x_peak)
                     avg_gradient = np.mean(gradient_estimate)
                     if np.abs(avg_gradient) > np.abs(np.mean(y_peak)) * 0.1:
-                        initial_params['phase'] = np.pi / 4
+                        initial_params["phase"] = np.pi / 4
                     else:
-                        initial_params['phase'] = 0.0
+                        initial_params["phase"] = 0.0
                 else:
-                    initial_params['phase'] = 0.0
+                    initial_params["phase"] = 0.0
             else:
-                initial_params['phase'] = 0.0
+                initial_params["phase"] = 0.0
         else:
-            initial_params['phase'] = 0.0
+            initial_params["phase"] = 0.0
 
     # Estimate affine baseline parameters from data edges
     if fit_baseline:
@@ -439,11 +482,11 @@ def _estimate_initial_params(
         y_edges = np.concatenate([y[:n_edge], y[-n_edge:]])
         if len(x_edges) >= 2:
             coeffs = np.polyfit(x_edges, y_edges, 1)
-            initial_params['baseline_slope'] = coeffs[0]
-            initial_params['baseline_offset'] = coeffs[1]
+            initial_params["baseline_slope"] = coeffs[0]
+            initial_params["baseline_offset"] = coeffs[1]
         else:
-            initial_params['baseline_slope'] = 0.0
-            initial_params['baseline_offset'] = 0.0
+            initial_params["baseline_slope"] = 0.0
+            initial_params["baseline_offset"] = 0.0
 
     return initial_params
 
@@ -574,15 +617,15 @@ def _estimate_amplitude_from_model(
     """
 
     try:
-        if shape_type == 'voigt':
+        if shape_type == "voigt":
             y_model = voigtian(
                 x, center, (width * 0.6, width * 0.6), derivative=derivative
             )
-        elif shape_type == 'gaussian':
+        elif shape_type == "gaussian":
             y_model = gaussian(x, center, width, derivative=derivative)
-        elif shape_type == 'lorentzian':
+        elif shape_type == "lorentzian":
             y_model = lorentzian(x, center, width, derivative=derivative)
-        elif shape_type == 'pseudo_voigt':
+        elif shape_type == "pseudo_voigt":
             y_model = pseudo_voigt(x, center, width, eta=0.5)
             # pseudo_voigt doesn't support derivatives natively
             if derivative > 0:
@@ -600,10 +643,12 @@ def _estimate_amplitude_from_model(
         return data_peak_to_peak
 
 
-def _validate_initial_params(initial_params: Dict[str, float],
-                           param_names: List[str],
-                           x: np.ndarray,
-                           y: np.ndarray) -> Dict[str, float]:
+def _validate_initial_params(
+    initial_params: Dict[str, float],
+    param_names: List[str],
+    x: np.ndarray,
+    y: np.ndarray,
+) -> Dict[str, float]:
     """Validate and complete initial parameters"""
 
     validated = initial_params.copy()
@@ -611,17 +656,17 @@ def _validate_initial_params(initial_params: Dict[str, float],
     # Ensure all required parameters are present
     for name in param_names:
         if name not in validated:
-            if name == 'center':
+            if name == "center":
                 validated[name] = x[np.argmax(np.abs(y))]
-            elif name == 'amplitude':
+            elif name == "amplitude":
                 validated[name] = np.max(y) - np.min(y)
-            elif 'width' in name:
+            elif "width" in name:
                 validated[name] = (x[-1] - x[0]) / 10
-            elif name == 'alpha':
+            elif name == "alpha":
                 validated[name] = 0.5
-            elif name == 'phase':
+            elif name == "phase":
                 validated[name] = 0.0
-            elif name in ('baseline_slope', 'baseline_offset'):
+            elif name in ("baseline_slope", "baseline_offset"):
                 validated[name] = 0.0
             else:
                 validated[name] = 1.0
@@ -629,12 +674,14 @@ def _validate_initial_params(initial_params: Dict[str, float],
     return validated
 
 
-def _setup_bounds(param_names: List[str],
-                 user_bounds: Optional[Dict[str, Tuple[float, float]]],
-                 default_bounds: Dict[str, Tuple[float, float]],
-                 initial_params: Dict[str, float],
-                 x: np.ndarray,
-                 y: np.ndarray) -> Tuple[List[float], List[float]]:
+def _setup_bounds(
+    param_names: List[str],
+    user_bounds: Optional[Dict[str, Tuple[float, float]]],
+    default_bounds: Dict[str, Tuple[float, float]],
+    initial_params: Dict[str, float],
+    x: np.ndarray,
+    y: np.ndarray,
+) -> Tuple[List[float], List[float]]:
     """Setup parameter bounds for fitting"""
 
     lower_bounds = []
@@ -651,20 +698,20 @@ def _setup_bounds(param_names: List[str],
             lower, upper = default_lower, default_upper
 
         # Make bounds reasonable based on data
-        if name == 'center':
+        if name == "center":
             if lower == -np.inf:
                 lower = x.min() - (x.max() - x.min())
             if upper == np.inf:
                 upper = x.max() + (x.max() - x.min())
-        elif name == 'amplitude':
+        elif name == "amplitude":
             if lower == -np.inf:
                 lower = -10 * (np.max(y) - np.min(y))
             if upper == np.inf:
                 upper = 10 * (np.max(y) - np.min(y))
-        elif 'width' in name:
+        elif "width" in name:
             if upper == np.inf:
                 upper = x.max() - x.min()
-        elif name == 'baseline_slope':
+        elif name == "baseline_slope":
             # Slope bounded by data range ratio
             y_range = np.max(y) - np.min(y) if np.max(y) != np.min(y) else 1.0
             x_range = x.max() - x.min() if x.max() != x.min() else 1.0
@@ -673,7 +720,7 @@ def _setup_bounds(param_names: List[str],
                 lower = -max_slope
             if upper == np.inf:
                 upper = max_slope
-        elif name == 'baseline_offset':
+        elif name == "baseline_offset":
             y_range = np.max(y) - np.min(y) if np.max(y) != np.min(y) else 1.0
             if lower == -np.inf:
                 lower = np.min(y) - 10 * y_range
@@ -730,13 +777,13 @@ def _format_significant_figures(value: float, n_sig: int) -> str:
     order = math.floor(math.log10(abs(value)))
 
     # Scale the number to have the first significant digit in the ones place
-    scaled = value / (10 ** order)
+    scaled = value / (10**order)
 
     # Round to n_sig decimal places
     rounded = round(scaled, n_sig - 1)
 
     # Scale back
-    result = rounded * (10 ** order)
+    result = rounded * (10**order)
 
     # Format based on the order of magnitude
     if order >= 4 or order < -3:
@@ -752,71 +799,98 @@ def _format_significant_figures(value: float, n_sig: int) -> str:
         return f"{result:.{decimal_places}f}"
 
 
-def _plot_fit_results(x: np.ndarray, y: np.ndarray, result: FitResult, shape_type: str, derivative: int = 0, fit_phase: bool = False):
+def _plot_fit_results(
+    x: np.ndarray,
+    y: np.ndarray,
+    result: FitResult,
+    shape_type: str,
+    derivative: int = 0,
+    fit_phase: bool = False,
+):
     """Create a plot showing the fit results"""
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 4),
-                                   gridspec_kw={'height_ratios': [3, 1]})
+    fig, (ax1, ax2) = plt.subplots(
+        2, 1, figsize=(6, 4), gridspec_kw={"height_ratios": [3, 1]}
+    )
 
     # Main plot
-    ax1.plot(x, y, 'o', markersize=4, alpha=0.7, label='Data', color='#1f77b4')
-    ax1.plot(x, result.fitted_curve, '-', linewidth=2, label=f'{shape_type.title()} fit',
-             color='#d62728')
+    ax1.plot(x, y, "o", markersize=4, alpha=0.7, label="Data", color="#1f77b4")
+    ax1.plot(
+        x,
+        result.fitted_curve,
+        "-",
+        linewidth=2,
+        label=f"{shape_type.title()} fit",
+        color="#d62728",
+    )
 
-    ax1.set_xlabel('Magnetic Field / G')
-    ax1.set_ylabel('Intensity')
+    ax1.set_xlabel("Magnetic Field / G")
+    ax1.set_ylabel("Intensity")
 
     # Build title with derivative and phase info
-    title_parts = [f'EPR Signal Fitting - {shape_type.title()}']
+    title_parts = [f"EPR Signal Fitting - {shape_type.title()}"]
     if derivative > 0:
-        title_parts.append(f'(d^{derivative})')
+        title_parts.append(f"(d^{derivative})")
     if fit_phase:
-        phase_val = result.parameters.get('phase', 0)
-        title_parts.append(f'Phase: {phase_val:.3f} rad')
+        phase_val = result.parameters.get("phase", 0)
+        title_parts.append(f"Phase: {phase_val:.3f} rad")
 
-    ax1.set_title(' '.join(title_parts))
+    ax1.set_title(" ".join(title_parts))
     ax1.legend()
     ax1.grid(True, alpha=0.3)
 
     # Build fit results text with parameters and errors
-    results_lines = [f'R² = {result.r_squared:.4f}', f'χ² = {result.chi_squared:.2e}']
+    results_lines = [f"R² = {result.r_squared:.4f}", f"χ² = {result.chi_squared:.2e}"]
 
     # Add fitted parameters with 4 significant figures and errors with 2 significant figures
     for param, value in result.parameters.items():
         # Format value to 4 significant figures
         value_str = _format_significant_figures(value, 4)
 
-        if param in result.parameter_errors and result.parameter_errors[param] is not None:
+        if (
+            param in result.parameter_errors
+            and result.parameter_errors[param] is not None
+        ):
             error = result.parameter_errors[param]
             # Format error to 2 significant figures
             error_str = _format_significant_figures(error, 2)
-            results_lines.append(f'{param}: {value_str} ± {error_str}')
+            results_lines.append(f"{param}: {value_str} ± {error_str}")
         else:
-            results_lines.append(f'{param}: {value_str}')
+            results_lines.append(f"{param}: {value_str}")
 
-    textstr = '\n'.join(results_lines)
-    props = dict(boxstyle='round', facecolor='lightblue', alpha=0.8)
-    ax1.text(0.02, 0.98, textstr, transform=ax1.transAxes, fontsize=9,
-             verticalalignment='top', horizontalalignment='left', bbox=props)
+    textstr = "\n".join(results_lines)
+    props = dict(boxstyle="round", facecolor="lightblue", alpha=0.8)
+    ax1.text(
+        0.02,
+        0.98,
+        textstr,
+        transform=ax1.transAxes,
+        fontsize=9,
+        verticalalignment="top",
+        horizontalalignment="left",
+        bbox=props,
+    )
 
     # Residuals plot
-    ax2.plot(x, result.residuals, 'o-', markersize=3, alpha=0.7, color='#ff7f0e')
-    ax2.axhline(y=0, color='k', linestyle='--', alpha=0.5)
-    ax2.set_xlabel('Magnetic Field / G')
-    ax2.set_ylabel('Residuals')
+    ax2.plot(x, result.residuals, "o-", markersize=3, alpha=0.7, color="#ff7f0e")
+    ax2.axhline(y=0, color="k", linestyle="--", alpha=0.5)
+    ax2.set_xlabel("Magnetic Field / G")
+    ax2.set_ylabel("Residuals")
     ax2.grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.show()
 
 
-def fit_multiple_shapes(x_data: np.ndarray,
-                       y_data: np.ndarray,
-                       shapes: List[str] = None,
-                       derivative: int = 0,
-                       fit_phase: bool = False,
-                       fit_baseline: bool = False,
-                       plot: bool = True) -> Dict[str, FitResult]:
+def fit_multiple_shapes(
+    x_data: np.ndarray,
+    y_data: np.ndarray,
+    shapes: List[str] = None,
+    derivative: int = 0,
+    fit_phase: bool = False,
+    fit_baseline: bool = False,
+    plot: bool = True,
+) -> Dict[str, FitResult]:
     """
     Fit EPR signal with multiple lineshape types and compare results.
 
@@ -842,24 +916,34 @@ def fit_multiple_shapes(x_data: np.ndarray,
     """
 
     if shapes is None:
-        shapes = ['gaussian', 'lorentzian', 'pseudo_voigt']
+        shapes = ["gaussian", "lorentzian", "pseudo_voigt"]
 
     results = {}
 
     for shape in shapes:
         try:
-            result = fit_epr_signal(x_data, y_data, shape, derivative=derivative,
-                                  fit_phase=fit_phase, fit_baseline=fit_baseline,
-                                  plot=False)
+            result = fit_epr_signal(
+                x_data,
+                y_data,
+                shape,
+                derivative=derivative,
+                fit_phase=fit_phase,
+                fit_baseline=fit_baseline,
+                plot=False,
+            )
             results[shape] = result
         except Exception as e:
             logger.warning(f"Failed to fit {shape}: {e}")
             results[shape] = FitResult(
                 shape_type=shape,
-                parameters={}, parameter_errors={},
-                fitted_curve=np.array([]), residuals=np.array([]),
-                r_squared=0.0, chi_squared=np.inf,
-                success=False, message=str(e)
+                parameters={},
+                parameter_errors={},
+                fitted_curve=np.array([]),
+                residuals=np.array([]),
+                r_squared=0.0,
+                chi_squared=np.inf,
+                success=False,
+                message=str(e),
             )
 
     # Find best fit based on R²
@@ -872,14 +956,19 @@ def fit_multiple_shapes(x_data: np.ndarray,
     logger.info("=== Fit Comparison ===")
     for shape, result in results.items():
         if result.success:
-            logger.info(f"{shape:12s}: R² = {result.r_squared:.6f}, χ² = {result.chi_squared:.2e}")
+            logger.info(
+                f"{shape:12s}: R² = {result.r_squared:.6f}, χ² = {result.chi_squared:.2e}"
+            )
         else:
             logger.info(f"{shape:12s}: FAILED - {result.message}")
 
     if successful_fits:
-        best_shape = max(successful_fits.keys(),
-                        key=lambda k: successful_fits[k].r_squared)
-        logger.info(f"\nBest fit: {best_shape} (R² = {successful_fits[best_shape].r_squared:.6f})")
+        best_shape = max(
+            successful_fits.keys(), key=lambda k: successful_fits[k].r_squared
+        )
+        logger.info(
+            f"\nBest fit: {best_shape} (R² = {successful_fits[best_shape].r_squared:.6f})"
+        )
 
     return results
 
@@ -887,25 +976,31 @@ def fit_multiple_shapes(x_data: np.ndarray,
 def _plot_comparison(x: np.ndarray, y: np.ndarray, results: Dict[str, FitResult]):
     """Plot comparison of different fits"""
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10),
-                                   gridspec_kw={'height_ratios': [3, 1]})
+    fig, (ax1, ax2) = plt.subplots(
+        2, 1, figsize=(12, 10), gridspec_kw={"height_ratios": [3, 1]}
+    )
 
-    colors = ['#d62728', '#2ca02c', '#ff7f0e', '#9467bd', '#8c564b']
+    colors = ["#d62728", "#2ca02c", "#ff7f0e", "#9467bd", "#8c564b"]
 
     # Data
-    ax1.plot(x, y, 'o', markersize=4, alpha=0.7, label='Data', color='#1f77b4')
+    ax1.plot(x, y, "o", markersize=4, alpha=0.7, label="Data", color="#1f77b4")
 
     # Fits
     for i, (shape, result) in enumerate(results.items()):
         if result.success:
             color = colors[i % len(colors)]
-            ax1.plot(x, result.fitted_curve, '-', linewidth=2,
-                    label=f'{shape.title()} (R²={result.r_squared:.4f})',
-                    color=color)
+            ax1.plot(
+                x,
+                result.fitted_curve,
+                "-",
+                linewidth=2,
+                label=f"{shape.title()} (R²={result.r_squared:.4f})",
+                color=color,
+            )
 
-    ax1.set_xlabel('Magnetic Field / G')
-    ax1.set_ylabel('Intensity')
-    ax1.set_title('EPR Signal Fitting - Shape Comparison')
+    ax1.set_xlabel("Magnetic Field / G")
+    ax1.set_ylabel("Intensity")
+    ax1.set_title("EPR Signal Fitting - Shape Comparison")
     ax1.legend()
     ax1.grid(True, alpha=0.3)
 
@@ -913,12 +1008,19 @@ def _plot_comparison(x: np.ndarray, y: np.ndarray, results: Dict[str, FitResult]
     for i, (shape, result) in enumerate(results.items()):
         if result.success:
             color = colors[i % len(colors)]
-            ax2.plot(x, result.residuals, 'o-', markersize=2, alpha=0.7,
-                    label=f'{shape.title()}', color=color)
+            ax2.plot(
+                x,
+                result.residuals,
+                "o-",
+                markersize=2,
+                alpha=0.7,
+                label=f"{shape.title()}",
+                color=color,
+            )
 
-    ax2.axhline(y=0, color='k', linestyle='--', alpha=0.5)
-    ax2.set_xlabel('Magnetic Field / G')
-    ax2.set_ylabel('Residuals')
+    ax2.axhline(y=0, color="k", linestyle="--", alpha=0.5)
+    ax2.set_xlabel("Magnetic Field / G")
+    ax2.set_ylabel("Residuals")
     ax2.legend()
     ax2.grid(True, alpha=0.3)
 
