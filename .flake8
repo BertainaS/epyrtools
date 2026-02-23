@@ -1,0 +1,64 @@
+[flake8]
+# Configuration for flake8 linting
+max-line-length = 88
+
+# Extend ignore: Black compatibility + documentation + import handling
+# I100/I101: import order handled by isort (flake8-import-order conflicts with isort's black profile)
+extend-ignore =
+    E203,
+    W503,
+    D100,
+    D104,
+    D105,
+    E402,
+    I100,
+    I101,
+    I202
+
+# Exclude patterns
+exclude =
+    .git,
+    __pycache__,
+    .pytest_cache,
+    .ipynb_checkpoints,
+    build,
+    dist,
+    *.egg-info,
+    .tox,
+    .venv,
+    venv,
+    docs/_build,
+    tests/fixtures,
+    # Legacy files that may not conform
+    epyr/fair_original_backup.py
+
+# File patterns to check
+filename = *.py
+
+# Maximum complexity (cyclomatic complexity)
+max-complexity = 15
+
+# Import order style (handled by isort, but defined for consistency)
+import-order-style = google
+application-import-names = epyr
+
+# Error codes to always show
+select = 
+    E,   # pycodestyle errors
+    W,   # pycodestyle warnings
+    F,   # pyflakes
+    C,   # mccabe complexity
+    B,   # flake8-bugbear
+    I,   # isort (import order)
+
+# Per-file ignores
+per-file-ignores =
+    # Test files can be more lenient
+    tests/*.py: D,F401,F811
+    # Init files often have unused imports
+    __init__.py: F401
+    # CLI module may have long functions
+    epyr/cli.py: C901
+    # Configuration files
+    setup.py: D100
+    conftest.py: D100
