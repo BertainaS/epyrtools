@@ -19,7 +19,7 @@ import pytest
 # Test imports for new baseline package
 try:
     import epyr.baseline as baseline
-    from epyr.baseline import (  # Core correction functions; Mathematical models; Region selection; Backend control; Utilities
+    from epyr.baseline import (
         RegionSelector,
         baseline_auto_1d,
         baseline_bi_exponential_1d,

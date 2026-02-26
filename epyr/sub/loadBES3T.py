@@ -30,7 +30,8 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
         dsc_extension = dsc_extension.upper()
         dta_extension = dta_extension.upper()
 
-    # Use string concatenation instead of with_suffix() to handle filenames with multiple dots
+    # Use string concatenation instead of with_suffix()
+    # to handle filenames with multiple dots
     dsc_file = Path(str(full_base_name) + dsc_extension)
     dta_file = Path(str(full_base_name) + dta_extension)
 
@@ -45,7 +46,7 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
         n_data_values = len(parts)
         is_complex = np.array([p.strip().upper() == "CPLX" for p in parts])
     else:
-        warnings.warn("IKKF not found in .DSC file. Assuming IKKF=REAL.")
+        warnings.warn("IKKF not found in .DSC file. Assuming IKKF=REAL.", stacklevel=2)
 
     # Dimensions
     try:
@@ -71,10 +72,11 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
         else:
             raise ValueError(f"Unknown BSEQ value '{parameters['BSEQ']}' in .DSC file.")
     else:
-        warnings.warn("BSEQ not found in .DSC file. Assuming BSEQ=BIG (big-endian).")
+        warnings.warn(
+            "BSEQ not found in .DSC file. Assuming BSEQ=BIG (big-endian).", stacklevel=2
+        )
 
     # Number Format (assuming same for real and imag if complex)
-    number_format_code = None
     if "IRFMT" in parameters:
         # For simplicity, take the first format if multiple are listed
         irfmt_val = parameters["IRFMT"].split(",")[0].strip().upper()
@@ -100,7 +102,8 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
         iifmt_val = parameters["IIFMT"].split(",")[0].strip().upper()
         if iifmt_val != parameters["IRFMT"].split(",")[0].strip().upper():
             warnings.warn(
-                "IRFMT and IIFMT differ in DSC file. Using IRFMT for reading."
+                "IRFMT and IIFMT differ in DSC file. Using IRFMT for reading.",
+                stacklevel=2,
             )
             # Raise error? MATLAB code enforces identity. Let's warn for now.
             # raise ValueError("IRFMT and IIFMT in DSC file must be identical.")
@@ -121,7 +124,8 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
             companion_suffix = f".{axis}GF"
             if file_extension.isupper():
                 companion_suffix = companion_suffix.upper()
-            # Use string concatenation instead of with_suffix() to handle filenames with multiple dots
+            # Use string concatenation instead of with_suffix()
+            # to handle filenames with multiple dots
             companion_file = Path(str(full_base_name) + companion_suffix)
 
             fmt_key = f"{axis}FMT"
@@ -129,7 +133,10 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
             fmt_map = {"D": "float64", "F": "float32", "I": "int32", "S": "int16"}
             if data_format_char not in fmt_map:
                 warnings.warn(
-                    f"Cannot read companion file format '{data_format_char}' for axis {axis}. Assuming linear."
+                    f"Cannot read companion file format"
+                    f" '{data_format_char}' for axis"
+                    f" {axis}. Assuming linear.",
+                    stacklevel=2,
                 )
                 axis_type = "IDX"  # Fallback to linear if format unknown
             else:
@@ -148,17 +155,29 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                             axis_defined[i] = True
                         else:
                             warnings.warn(
-                                f"Could not read expected {dim_size} values from companion file {companion_file}. Assuming linear axis."
+                                f"Could not read expected"
+                                f" {dim_size} values from"
+                                f" companion file"
+                                f" {companion_file}."
+                                " Assuming linear axis.",
+                                stacklevel=2,
                             )
                             axis_type = "IDX"  # Fallback to linear
                     except Exception as e:
                         warnings.warn(
-                            f"Error reading companion file {companion_file}: {e}. Assuming linear axis."
+                            f"Error reading companion file"
+                            f" {companion_file}: {e}."
+                            " Assuming linear axis.",
+                            stacklevel=2,
                         )
                         axis_type = "IDX"  # Fallback to linear
                 else:
                     warnings.warn(
-                        f"Companion file {companion_file} not found for non-linear axis {axis}. Assuming linear axis."
+                        f"Companion file {companion_file}"
+                        f" not found for non-linear"
+                        f" axis {axis}."
+                        " Assuming linear axis.",
+                        stacklevel=2,
                     )
                     axis_type = "IDX"  # Fallback to linear
 
@@ -171,7 +190,10 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                 if dim_size > 1:
                     if width == 0:
                         warnings.warn(
-                            f"{axis} range has zero width (WID=0). Using index range 0 to N-1."
+                            f"{axis} range has zero width"
+                            " (WID=0). Using index"
+                            " range 0 to N-1.",
+                            stacklevel=2,
                         )
                         # Use 0 to N-1 for indices if width is zero
                         abscissa_list[i] = np.arange(dim_size)
@@ -188,7 +210,10 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                 axis_defined[i] = True
             except (KeyError, ValueError, TypeError):
                 warnings.warn(
-                    f"Could not read MIN/WID parameters for axis {axis}. Using default index."
+                    f"Could not read MIN/WID parameters"
+                    f" for axis {axis}."
+                    " Using default index.",
+                    stacklevel=2,
                 )
                 abscissa_list[i] = np.arange(dim_size)  # Default to index
                 axis_defined[i] = True  # Mark as defined (with index)
@@ -209,10 +234,16 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
 
     # --- Read Data Matrix ---
     # Assuming single data value type for now (n_data_values=1)
-    # NOTE: Multiple data values per point (n_data_values > 1) not yet supported\n    # This would require handling interleaved data formats in some BES3T files
+    # NOTE: Multiple data values per point
+    # (n_data_values > 1) not yet supported.
+    # This would require handling interleaved data
+    # formats in some BES3T files
     if n_data_values > 1:
         warnings.warn(
-            f"DSC file indicates {n_data_values} data values per point (IKKF). Only reading the first value."
+            f"DSC file indicates {n_data_values}"
+            " data values per point (IKKF)."
+            " Only reading the first value.",
+            stacklevel=2,
         )
         # Adjust logic here if multiple channels need reading/combining
 
@@ -271,13 +302,19 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                 if data_prescaled:
                     # MATLAB errors here, let's warn
                     warnings.warn(
-                        f"Cannot scale by number of scans ('n'): Data is already averaged (SctNorm=true, AVGS={n_averages})."
+                        "Cannot scale by number of scans"
+                        " ('n'): Data is already averaged"
+                        f" (SctNorm=true, AVGS={n_averages}).",
+                        stacklevel=2,
                     )
                 else:
                     data = data / n_averages
             else:
                 warnings.warn(
-                    "Cannot scale by number of scans ('n'): AVGS missing, zero, or invalid."
+                    "Cannot scale by number of scans"
+                    " ('n'): AVGS missing,"
+                    " zero, or invalid.",
+                    stacklevel=2,
                 )
 
         if is_cw and "G" in scaling:
@@ -287,18 +324,28 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                 data = data / receiver_gain
             else:
                 warnings.warn(
-                    "Cannot scale by receiver gain ('G'): RCAG missing or invalid."
+                    "Cannot scale by receiver gain" " ('G'): RCAG missing or invalid.",
+                    stacklevel=2,
                 )
 
         if is_cw and "c" in scaling:
             if sampling_time_ms is not None and sampling_time_ms > 0:
-                # MATLAB notes Xepr scales even if SctNorm=false. Assume we should always scale if requested.
+                # MATLAB notes Xepr scales even if
+                # SctNorm=false. Assume we should always
+                # scale if requested.
                 # if data_prescaled:
-                #    warnings.warn("Scaling by conversion time ('c') requested, but data may already be scaled (SctNorm=true). Applying anyway.")
+                #    warnings.warn(
+                #        "Scaling by conversion time ('c')"
+                #        " requested, but data may already"
+                #        " be scaled (SctNorm=true)."
+                #    )
                 data = data / sampling_time_ms
             else:
                 warnings.warn(
-                    "Cannot scale by conversion time ('c'): SPTP missing, zero, or invalid."
+                    "Cannot scale by conversion time"
+                    " ('c'): SPTP missing,"
+                    " zero, or invalid.",
+                    stacklevel=2,
                 )
 
         if is_cw and "P" in scaling:
@@ -306,25 +353,29 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                 data = data / np.sqrt(mw_power_mw)
             else:
                 warnings.warn(
-                    "Cannot scale by microwave power ('P'): MWPW missing, zero, or invalid."
+                    "Cannot scale by microwave power"
+                    " ('P'): MWPW missing,"
+                    " zero, or invalid.",
+                    stacklevel=2,
                 )
         elif not is_cw and "P" in scaling:
             warnings.warn(
-                "Microwave power scaling ('P') requested, but experiment is not CW."
+                "Microwave power scaling ('P') requested, but experiment is not CW.",
+                stacklevel=2,
             )
 
         if "T" in scaling:
-            if (
-                temperature_k is not None
-            ):  # Allow T=0K ? MATLAB doesn't error but scaling makes no sense. Let's scale anyway.
+            if temperature_k is not None:  # Allow T=0K? Scaling makes no sense.
                 if temperature_k == 0:
                     warnings.warn(
-                        "Temperature (STMP) is zero. Scaling by T will result in zero."
+                        "Temperature (STMP) is zero. Scaling by T will result in zero.",
+                        stacklevel=2,
                     )
                 data = data * temperature_k
             else:
                 warnings.warn(
-                    "Cannot scale by temperature ('T'): STMP missing or invalid."
+                    "Cannot scale by temperature ('T'): STMP missing or invalid.",
+                    stacklevel=2,
                 )
 
     # Parse string parameters to numbers where possible

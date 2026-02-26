@@ -2,8 +2,9 @@
 Signal Processing Module for EPR Time-Domain Data
 ================================================
 
-This module provides comprehensive tools for frequency analysis of time-dependent EPR signals,
-optimized for pulse EPR experiments including Rabi oscillations, DEER spectroscopy, HYSCORE,
+This module provides comprehensive tools for frequency analysis
+of time-dependent EPR signals, optimized for pulse EPR experiments
+including Rabi oscillations, DEER spectroscopy, HYSCORE,
 and other advanced time-domain techniques.
 
 Key Features
@@ -117,5 +118,5 @@ __all__ = [
     "spectrogram_analysis",  # Time-frequency analysis
 ]
 
-__version__ = "0.3.5"
+__version__ = "0.3.6"
 __author__ = "EPyR Tools Development Team"

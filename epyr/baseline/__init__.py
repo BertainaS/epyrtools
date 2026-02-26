@@ -99,7 +99,7 @@ from .selection import (
 )
 
 # Package metadata
-__version__ = "0.3.5"
+__version__ = "0.3.6"
 __author__ = "EPyR Tools Development Team"
 
 # Define comprehensive public API
@@ -263,9 +263,9 @@ def demo():
                 corrected_auto, baseline_auto, info = baseline_auto_1d(
                     x_data, y_data, None, verbose=False
                 )
-                logger.info(
-                    f"   ✅ {name}: Best model = {info['best_model']} (R² = {info['parameters']['r2']:.3f})"
-                )
+                r2 = info["parameters"]["r2"]
+                model = info["best_model"]
+                logger.info(f"   ✅ {name}: Best model" f" = {model} (R² = {r2:.3f})")
             except Exception as e:
                 logger.info(f"   ⚠️  {name}: {e}")
 
@@ -294,7 +294,8 @@ _DEFAULT_SETTINGS = {
     "beta_range": (0.01, 5.0),
     "selection_criterion": "aic",
     "center_fraction": 0.3,
-    "interactive_backend": "manual",  # 'auto', 'widget', 'notebook', 'inline', or 'manual'
+    # 'auto', 'widget', 'notebook', 'inline', or 'manual'
+    "interactive_backend": "manual",
 }
 
 

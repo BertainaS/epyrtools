@@ -99,7 +99,7 @@ class MockExportPlugin(ExportPlugin):
 
         # Write mock export data
         with open(output_path, "w") as f:
-            f.write(f"# Mock export\n")
+            f.write("# Mock export\n")
             f.write(f"# Parameters: {parameters}\n")
             for x, y in zip(x_data[:5], y_data[:5]):  # First 5 points
                 f.write(f"{x},{y}\n")
@@ -115,6 +115,9 @@ class FailingPlugin(BasePlugin):
     def initialize(self) -> bool:
         raise Exception("Initialization failed")
 
+    def cleanup(self):
+        pass
+
 
 class TestBasePlugin:
     """Test base plugin functionality."""
@@ -125,6 +128,9 @@ class TestBasePlugin:
         class TestPlugin(BasePlugin):
             def initialize(self) -> bool:
                 return True
+
+            def cleanup(self):
+                pass
 
         plugin = TestPlugin()
         assert plugin.plugin_name == "TestPlugin"

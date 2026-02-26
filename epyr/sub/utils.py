@@ -1,6 +1,5 @@
 # sub/utils.py
 import re
-import sys
 import warnings
 from pathlib import Path
 from typing import List, Union
@@ -169,7 +168,8 @@ def get_matrix(
         dimensions: List of dimensions [nx, ny, nz].
         number_format: String representing numpy dtype ('int8', 'int16', etc.).
         byte_order: 'ieee-be' (big) or 'ieee-le' (little).
-        is_complex: Boolean indicating if the data is complex. Can be array for multi-channel.
+        is_complex: Boolean indicating if the data is complex.
+            Can be array for multi-channel.
 
     Returns:
         NumPy array with the data.
@@ -221,8 +221,10 @@ def get_matrix(
         )
     elif raw_data.size > n_values_to_read:
         warnings.warn(
-            f"Read more data points ({raw_data.size}) than expected ({n_values_to_read}) "
-            f"from {data_file_path}. Truncating."
+            f"Read more data points ({raw_data.size})"
+            f" than expected ({n_values_to_read}) "
+            f"from {data_file_path}. Truncating.",
+            stacklevel=2,
         )
         raw_data = raw_data[:n_values_to_read]
 
@@ -253,7 +255,9 @@ def get_matrix(
 
     except ValueError as e:
         raise ValueError(
-            f"Could not reshape data with {data.size} points into desired shape {shape_numpy_order}. Original dims: {dimensions}. Error: {e}"
+            f"Could not reshape data with {data.size} points"
+            f" into desired shape {shape_numpy_order}."
+            f" Original dims: {dimensions}. Error: {e}"
         ) from e
 
     return data
@@ -265,7 +269,8 @@ def BrukerListFiles(path, recursive=False):
 
     Args:
         path (str or Path): Path to the folder containing Bruker files.
-        recursive (bool, optional): If True, search subfolders recursively. Defaults to False.
+        recursive (bool, optional): If True, search subfolders
+            recursively. Defaults to False.
 
     Returns:
         list[Path]: Sorted list of Path objects for found files.

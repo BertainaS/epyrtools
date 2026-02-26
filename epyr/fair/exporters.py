@@ -10,7 +10,7 @@ import json
 import warnings
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 
@@ -57,11 +57,12 @@ def save_to_json(
         with open(json_file, "w", encoding="utf-8") as f:
             json.dump(metadata_to_save, f, indent=4, default=str)
     except IOError as e:
-        warnings.warn(f"Could not write JSON file {json_file}: {e}")
+        warnings.warn(f"Could not write JSON file {json_file}: {e}", stacklevel=2)
     except TypeError as e:
         warnings.warn(
             f"Error serializing metadata to JSON for {json_file}: {e}. "
-            f"Some parameters might not be saved correctly."
+            f"Some parameters might not be saved correctly.",
+            stacklevel=2,
         )
 
 
@@ -107,19 +108,28 @@ def save_to_csv(
             writer.writerow(
                 [
                     "# Microwave_Frequency:",
-                    f"{mwfq_info.get('value', 'N/A')} {mwfq_info.get('unit', '')}".strip(),
+                    (
+                        f"{mwfq_info.get('value', 'N/A')} "
+                        f"{mwfq_info.get('unit', '')}"
+                    ).strip(),
                 ]
             )
             writer.writerow(
                 [
                     "# Field_Center/Start:",
-                    f"{field_info.get('value', 'N/A')} {field_info.get('unit', '')}".strip(),
+                    (
+                        f"{field_info.get('value', 'N/A')} "
+                        f"{field_info.get('unit', '')}"
+                    ).strip(),
                 ]
             )
             writer.writerow(
                 [
                     "# Field_Sweep/Increment:",
-                    f"{sweep_info.get('value', 'N/A')} {sweep_info.get('unit', '')}".strip(),
+                    (
+                        f"{sweep_info.get('value', 'N/A')} "
+                        f"{sweep_info.get('unit', '')}"
+                    ).strip(),
                 ]
             )
             writer.writerow(["# Data_Shape:", str(y.shape)])
@@ -150,7 +160,10 @@ def save_to_csv(
                     data_columns.append(np.arange(n_pts))
                     if x is not None:
                         warnings.warn(
-                            "Provided x-axis ignored for CSV (shape mismatch or not ndarray). Using index."
+                            "Provided x-axis ignored for CSV "
+                            "(shape mismatch or not ndarray)."
+                            " Using index.",
+                            stacklevel=2,
                         )
 
                 # Intensity columns
@@ -205,9 +218,12 @@ def save_to_csv(
             writer.writerows(rows_to_write)
 
     except IOError as e:
-        warnings.warn(f"Could not write CSV file {csv_file}: {e}")
+        warnings.warn(f"Could not write CSV file {csv_file}: {e}", stacklevel=2)
     except Exception as e:
-        warnings.warn(f"An unexpected error occurred while writing CSV {csv_file}: {e}")
+        warnings.warn(
+            f"An unexpected error occurred while writing CSV {csv_file}: {e}",
+            stacklevel=2,
+        )
 
 
 def save_to_csv_json(
@@ -256,12 +272,15 @@ def _try_set_h5_attr(h5_object, key: str, value: Any):
     except TypeError:
         warnings.warn(
             f"Could not store attribute '{key}' (type: {type(value)}) "
-            f"directly in HDF5 attributes. Converting to string."
+            f"directly in HDF5 attributes. Converting to string.",
+            stacklevel=2,
         )
         h5_object.attrs[key] = str(value)
     except Exception as e:
         warnings.warn(
-            f"Unexpected error storing attribute '{key}': {type(e).__name__} - {e}. Skipping."
+            f"Unexpected error storing attribute '{key}': "
+            f"{type(e).__name__} - {e}. Skipping.",
+            stacklevel=2,
         )
 
 
@@ -283,7 +302,9 @@ def save_to_hdf5(
     """
     if not HAS_H5PY:
         warnings.warn(
-            "h5py library not found. Skipping HDF5 output. Install with 'pip install h5py'"
+            "h5py library not found. Skipping HDF5 output. "
+            "Install with 'pip install h5py'",
+            stacklevel=2,
         )
         return
 
@@ -363,7 +384,7 @@ def save_to_hdf5(
             elif isinstance(x, np.ndarray):  # 1D data
                 ds_x = data_grp.create_dataset("abscissa_x", data=x)
                 _try_set_h5_attr(ds_x, "units", x_unit_val)
-                _try_set_h5_attr(ds_x, "description", f"X axis")
+                _try_set_h5_attr(ds_x, "description", "X axis")
                 _try_set_h5_attr(ds_x, "axis_type", "independent_variable")
                 axis_datasets["x"] = ds_x
 
@@ -400,7 +421,9 @@ def save_to_hdf5(
                         dims[x_dim_index].attach_scale(axis_datasets["x"])
                     except Exception as e:
                         warnings.warn(
-                            f"Error linking X dimension scale: {type(e).__name__} - {e}"
+                            f"Error linking X dimension scale: "
+                            f"{type(e).__name__} - {e}",
+                            stacklevel=2,
                         )
 
                 # Link Y dimension (second to last dimension)
@@ -411,7 +434,9 @@ def save_to_hdf5(
                         dims[y_dim_index].attach_scale(axis_datasets["y"])
                     except Exception as e:
                         warnings.warn(
-                            f"Error linking Y dimension scale: {type(e).__name__} - {e}"
+                            f"Error linking Y dimension scale: "
+                            f"{type(e).__name__} - {e}",
+                            stacklevel=2,
                         )
 
                 # Link Z dimension (third to last dimension)
@@ -422,15 +447,18 @@ def save_to_hdf5(
                         dims[z_dim_index].attach_scale(axis_datasets["z"])
                     except Exception as e:
                         warnings.warn(
-                            f"Error linking Z dimension scale: {type(e).__name__} - {e}"
+                            f"Error linking Z dimension scale: "
+                            f"{type(e).__name__} - {e}",
+                            stacklevel=2,
                         )
 
     except IOError as e:
-        warnings.warn(f"Could not write HDF5 file {h5_file}: {e}")
+        warnings.warn(f"Could not write HDF5 file {h5_file}: {e}", stacklevel=2)
     except Exception as e:
         warnings.warn(
             f"An unexpected error occurred while writing HDF5 file {h5_file}: "
-            f"{type(e).__name__} - {e}"
+            f"{type(e).__name__} - {e}",
+            stacklevel=2,
         )
 
 
@@ -461,7 +489,10 @@ def save_to_jpg(
 
         from ..eprplot import plot_1d, plot_2d_map, plot_2d_waterfall
     except ImportError as e:
-        warnings.warn(f"Could not import plotting modules: {e}. Skipping JPG export.")
+        warnings.warn(
+            f"Could not import plotting modules: {e}. Skipping JPG export.",
+            stacklevel=2,
+        )
         return
 
     try:
@@ -518,11 +549,14 @@ def save_to_jpg(
 
         else:
             warnings.warn(
-                f"Cannot create JPG for {y.ndim}D data. Only 1D and 2D supported."
+                f"Cannot create JPG for {y.ndim}D data. Only 1D and 2D supported.",
+                stacklevel=2,
             )
 
     except Exception as e:
-        warnings.warn(f"Failed to create JPG for {original_file_path}: {e}")
+        warnings.warn(
+            f"Failed to create JPG for {original_file_path}: {e}", stacklevel=2
+        )
 
 
 def save_fair(
@@ -531,7 +565,7 @@ def save_fair(
     y: np.ndarray,
     pars: Dict[str, Any],
     original_file_path: str,
-    formats: List[str] = ["csv", "json"],
+    formats: Optional[List[str]] = None,
 ) -> None:
     """Save EPR data in specified FAIR formats.
 
@@ -541,13 +575,17 @@ def save_fair(
         y: Intensity data array
         pars: Raw parameters dictionary
         original_file_path: Path to original data file
-        formats: List of output formats. Options: 'csv', 'json', 'hdf5', 'jpg', 'csv_json'
+        formats: List of output formats.
+            Options: 'csv', 'json', 'hdf5', 'jpg', 'csv_json'
             - 'csv': Save data to CSV file only
             - 'json': Save metadata to JSON file only
             - 'hdf5': Save data and metadata to HDF5 file
             - 'jpg': Save visualization plots (1D: single plot, 2D: map + waterfall)
             - 'csv_json': Save both CSV and JSON (backward compatibility)
+            Defaults to ['csv', 'json'].
     """
+    if formats is None:
+        formats = ["csv", "json"]
     # Handle individual formats
     if "csv" in formats:
         save_to_csv(output_basename, x, y, pars, original_file_path)

@@ -244,7 +244,9 @@ def analyze_frequencies(
     sampling_rate = 1.0 / dt_seconds
     logger.debug(f"Time unit: {time_unit}, Frequency unit: {freq_unit}")
     logger.debug(
-        f"Sampling rate: {sampling_rate/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit, 1):.1f} {freq_unit}"
+        "Sampling rate: "
+        f"{sampling_rate / {'MHz': 1e6, 'kHz': 1e3}.get(freq_unit, 1):.1f}"
+        f" {freq_unit}"
     )
 
     # Step 1: Remove DC offset (very important for EPR signals)
@@ -619,7 +621,7 @@ def _plot_fft_analysis(
             color="red",
             linestyle="--",
             alpha=0.5,
-            label=f"Original data end",
+            label="Original data end",
         )
         axes[1, 0].legend()
 
@@ -941,10 +943,14 @@ def _analyze_2d_full(
     sampling_rate2 = 1.0 / dt_seconds2
 
     logger.debug(
-        f"Axis 1: {time_unit1} → {freq_unit1}, sampling rate: {sampling_rate1/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit1, 1):.1f} {freq_unit1}"
+        f"Axis 1: {time_unit1} → {freq_unit1}, sampling rate: "
+        f"{sampling_rate1 / {'MHz': 1e6, 'kHz': 1e3}.get(freq_unit1, 1):.1f}"
+        f" {freq_unit1}"
     )
     logger.debug(
-        f"Axis 2: {time_unit2} → {freq_unit2}, sampling rate: {sampling_rate2/{'MHz': 1e6, 'kHz': 1e3}.get(freq_unit2, 1):.1f} {freq_unit2}"
+        f"Axis 2: {time_unit2} → {freq_unit2}, sampling rate: "
+        f"{sampling_rate2 / {'MHz': 1e6, 'kHz': 1e3}.get(freq_unit2, 1):.1f}"
+        f" {freq_unit2}"
     )
 
     n_points1, n_points2 = signal_data.shape
@@ -1310,7 +1316,7 @@ def demo():
     logger.info("DEMO 2: Comparison without DC Removal")
     logger.info("=" * 50)
 
-    result_no_dc = analyze_frequencies(
+    analyze_frequencies(
         t,
         noisy_signal,
         window="hann",
@@ -1362,14 +1368,10 @@ def demo():
     logger.info("DEMO 4: Power Spectrum Methods")
     logger.info("=" * 50)
 
-    psd_welch = power_spectrum(
-        t, noisy_signal, method="welch", remove_dc=True, plot=True
-    )
+    power_spectrum(t, noisy_signal, method="welch", remove_dc=True, plot=True)
     logger.info("Welch method completed")
 
-    psd_periodogram = power_spectrum(
-        t, noisy_signal, method="periodogram", remove_dc=True, plot=True
-    )
+    power_spectrum(t, noisy_signal, method="periodogram", remove_dc=True, plot=True)
     logger.info("Periodogram method completed")
 
     logger.info("")

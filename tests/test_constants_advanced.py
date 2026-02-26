@@ -175,9 +175,9 @@ class TestConstantsUtilities:
         for nucleus in common_nuclei:
             # Test various ways nuclear data might be accessed
             access_methods = [
-                f"get_nuclear_data",
-                f"get_isotope_data",
-                f"nuclear_properties",
+                "get_nuclear_data",
+                "get_isotope_data",
+                "nuclear_properties",
             ]
 
             for method_name in access_methods:

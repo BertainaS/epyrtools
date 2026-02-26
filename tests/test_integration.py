@@ -133,7 +133,8 @@ class TestEPRIntegration:
                             tmp_path / "test.h5",
                         ]
 
-                        # At least one output should exist or result should indicate success
+                        # At least one output should exist or
+                        # result should indicate success
                         files_created = any(f.exists() for f in expected_files)
                         assert files_created or result is not None
 

@@ -8,8 +8,6 @@ in EPR data analysis. These are pure mathematical functions without any
 data processing logic.
 """
 
-from typing import Tuple
-
 import numpy as np
 
 

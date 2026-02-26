@@ -2,6 +2,7 @@
 Tests for EPyR Tools performance optimization module.
 """
 
+import os
 import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -426,7 +427,7 @@ class TestOptimizedLoader:
             f.write(b"test data")
 
         try:
-            with pytest.raises(Exception):
+            with pytest.raises(Exception, match="."):
                 loader.load_epr_file(test_file)
 
         finally:

@@ -15,11 +15,10 @@ Features:
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from ..config import config
 from ..logging_config import get_logger
 
 logger = get_logger(__name__)

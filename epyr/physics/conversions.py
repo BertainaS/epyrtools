@@ -5,7 +5,7 @@ Provides simple, direct conversion functions between common EPR units:
 MHz, mT, cm-1, and related energy/field conversions.
 """
 
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 import numpy as np
 

@@ -67,7 +67,7 @@ try:
             print("✅ Real 2D data plotted successfully")
     else:
         print("⚠️  No real data found, using synthetic data only")
-except:
+except Exception:
     print("⚠️  No real data available, using synthetic data only")
 
 print("\n🎉 All eprplot functions tested successfully!")

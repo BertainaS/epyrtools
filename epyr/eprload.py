@@ -1,15 +1,14 @@
 # eprload.py
 
-import os
-import sys
 import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import matplotlib.pyplot as plt
-import numpy as np
 import tkinter as tk
 from tkinter import filedialog
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 from .logging_config import get_logger
 from .performance import MemoryMonitor, get_global_cache
@@ -139,7 +138,9 @@ def _determine_file_format(file_path: Path) -> Tuple[Path, str]:
         file_format = "BrukerESP"
     else:
         raise ValueError(
-            f"Unsupported file extension '{file_extension}'. Only Bruker formats (.dta, .dsc, .spc, .par) supported."
+            f"Unsupported file extension '{file_extension}'. "
+            "Only Bruker formats "
+            "(.dta, .dsc, .spc, .par) supported."
         )
 
     return file_path, file_format
@@ -211,36 +212,49 @@ def eprload(
     Load experimental EPR data from Bruker BES3T or ESP formats.
 
     Args:
-        file_name (str or Path, optional): Path to the data file (.dta, .dsc, .spc, .par) or a directory.
-            If None or a directory, a file browser is shown. Defaults to None (opens browser in cwd).
-        scaling (str, optional): String of characters specifying scaling operations (only for Bruker files).
+        file_name (str or Path, optional): Path to the data file
+            (.dta, .dsc, .spc, .par) or a directory.
+            If None or a directory, a file browser is shown.
+            Defaults to None (opens browser in cwd).
+        scaling (str, optional): String of characters specifying
+            scaling operations (only for Bruker files).
             Each character enables a scaling operation:
                 'n': Divide by number of scans (AVGS/JSD).
                 'P': Divide by sqrt of MW power in mW (MWPW/MP).
                 'G': Divide by receiver gain (RCAG/RRG).
                 'T': Multiply by temperature in Kelvin (STMP/TE).
-                'c': Divide by conversion/sampling time in ms (SPTP/RCT).
+                'c': Divide by conversion/sampling time in ms
+                    (SPTP/RCT).
             Defaults to "" (no scaling).
-        plot_if_possible (bool, optional): If True and data is loaded successfully, a simple plot is generated using matplotlib.
+        plot_if_possible (bool, optional): If True and data is loaded
+            successfully, a simple plot is generated using matplotlib.
             Defaults to False.
-        return_type (str, optional): Specifies which component of the signal to return.
+        return_type (str, optional): Specifies which component of
+            the signal to return.
             Options:
-                "default": Return y as-is (both real and imaginary parts if complex).
+                "default": Return y as-is (both real and imaginary
+                    parts if complex).
                 "real": Return only the real part of y (np.real(y)).
-                "imag": Return only the imaginary part of y (np.imag(y)).
+                "imag": Return only the imaginary part of y
+                    (np.imag(y)).
             Defaults to "default".
 
     Returns:
         tuple:
-            - x (np.ndarray or list of np.ndarray): Abscissa data (or list for 2D).
+            - x (np.ndarray or list of np.ndarray): Abscissa data
+                (or list for 2D).
             - y (np.ndarray): Ordinate data.
-            - pars (dict): Dictionary of parameters from the descriptor/parameter file.
+            - pars (dict): Dictionary of parameters from the
+                descriptor/parameter file.
             - file_path (str): The full path of the loaded file.
-            - On failure (e.g., user cancel, file error): (None, None, None, None)
+            - On failure (e.g., user cancel, file error):
+                (None, None, None, None)
 
     Raises:
-        FileNotFoundError: If the specified file or directory does not exist.
-        ValueError: If the file format is unsupported, scaling is invalid, or parameter inconsistencies are found.
+        FileNotFoundError: If the specified file or directory
+            does not exist.
+        ValueError: If the file format is unsupported, scaling is
+            invalid, or parameter inconsistencies are found.
         IOError: If there are problems reading files.
     """
     # Initialize outputs
@@ -258,7 +272,8 @@ def eprload(
         if file_path is None:
             return None, None, None, None
     else:
-        # Use file_name as-is, _determine_file_format will try to find it with extensions
+        # Use file_name as-is, _determine_file_format will try
+        # to find it with extensions
         file_path = file_name
 
     # --- Determine File Format and Validate ---
@@ -289,12 +304,13 @@ def eprload(
             y, x, pars = _load_data_by_format(file_path, file_format, scaling)
             # Cache the result for future use
             cache.put(cache_key, (x, y, pars, loaded_file_path))
-        except (FileNotFoundError, ValueError, IOError, NotImplementedError) as e:
+        except (ValueError, IOError, NotImplementedError) as e:
             logger.error(f"Failed to load data from {file_path}: {e}")
             return None, None, None, None
         except Exception as e:
             logger.error(
-                f"An unexpected error occurred loading {file_path}: {type(e).__name__}: {e}"
+                f"An unexpected error occurred loading "
+                f"{file_path}: {type(e).__name__}: {e}"
             )
             logger.debug("Full traceback:", exc_info=True)
             return None, None, None, None
@@ -307,7 +323,8 @@ def eprload(
             y = np.imag(y)
         else:
             raise ValueError(
-                f"Invalid return_type '{return_type}'. Must be 'default', 'real', or 'imag'."
+                f"Invalid return_type '{return_type}'. "
+                "Must be 'default', 'real', or 'imag'."
             )
 
     # --- Plotting (Optional) ---
@@ -340,7 +357,9 @@ def _plot_data(
         absc = x
         if absc is None or not isinstance(absc, np.ndarray) or absc.shape != y.shape:
             warnings.warn(
-                "Abscissa data (x) missing or incompatible shape. Using index for plotting."
+                "Abscissa data (x) missing or incompatible "
+                "shape. Using index for plotting.",
+                stacklevel=2,
             )
             absc = np.arange(y.size)
             x_label = "Index"
@@ -371,7 +390,7 @@ def _plot_data(
     elif y.ndim == 2:
         # y shape is typically (ny, nx) after loading
         ny, nx = y.shape
-        aspect_ratio = nx / ny if ny > 0 else 1.0
+        # aspect_ratio could be used for layout: nx / ny if ny > 0 else 1.0
 
         # Determine x and y axes for the plot
         x_coords = np.arange(nx)  # Default x: index
@@ -388,9 +407,9 @@ def _plot_data(
             x_axis, y_axis = x[0], x[1]
             if isinstance(x_axis, np.ndarray) and x_axis.size == nx:
                 x_coords = x_axis
-                x_unit = params.get(
-                    "XAXIS_UNIT"
-                )  # if isinstance(x_units_list, list) and len(x_units_list) > 0 else 'a.u.'
+                x_unit = params.get("XAXIS_UNIT")
+                # if isinstance(x_units_list, list)
+                # and len(x_units_list) > 0 else 'a.u.'
                 x_label = params.get("XAXIS_NAME") + f"({x_unit})"
             if isinstance(y_axis, np.ndarray) and y_axis.size == ny:
                 y_coords = y_axis
@@ -429,7 +448,8 @@ def _plot_data(
         logger.warning(f"Cannot plot data with {y.ndim} dimensions.")
         return  # Don't show empty plot
 
-    # Apply tight_layout only for 1D plots (colorbar in 2D causes layout engine conflict)
+    # Apply tight_layout only for 1D plots
+    # (colorbar in 2D causes layout engine conflict)
     if y.ndim == 1:
         plt.tight_layout()
 

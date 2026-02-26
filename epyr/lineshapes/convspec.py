@@ -3,8 +3,6 @@ Spectrum convolution with lineshapes
 Modern implementation with multi-dimensional support
 """
 
-from typing import Optional, Tuple, Union
-
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
@@ -212,7 +210,7 @@ def demo():
             ax.plot(
                 x, convolved, color=colors[i], linewidth=2.5, label=f"FWHM = {width}"
             )
-        except:
+        except Exception:
             # Fallback
             from scipy import ndimage
 
@@ -274,7 +272,7 @@ def demo():
     try:
         epr_broadened = convspec(epr_stick, 0.1, 3.0, alpha=0.7)  # Mostly Gaussian
         ax.plot(x, epr_broadened, color=colors[1], linewidth=2.5, label="Broadened")
-    except:
+    except Exception:
         from scipy import ndimage
 
         sigma = 3.0 / 0.1 / (2 * np.sqrt(2 * np.log(2)))

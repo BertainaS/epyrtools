@@ -12,7 +12,6 @@ Based on the _plot_data function from eprload.py
 """
 
 import warnings
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -59,7 +58,8 @@ def plot_1d(
     if x is None or not isinstance(x, np.ndarray) or x.shape != y.shape:
         if x is not None:
             warnings.warn(
-                "X-axis data missing or incompatible shape. Using index for plotting."
+                "X-axis data missing or incompatible shape. Using index for plotting.",
+                stacklevel=2,
             )
         absc = np.arange(y.size)
         x_label = "Index (points)"
@@ -190,6 +190,7 @@ def plot_2d_waterfall(
     max_traces: int = 20,
     cmap: str = "viridis",
     lw: float = 0.75,
+    clip_factor: Optional[float] = None,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """
     Plot 2D EPR data as waterfall plot.
@@ -204,6 +205,12 @@ def plot_2d_waterfall(
         max_traces: Maximum number of traces to plot (default: 20)
         cmap: Colormap name (default: "viridis")
         lw: Line width for traces (default: 0.75)
+        clip_factor: Clipping threshold as a fraction of
+            each trace's peak-to-peak amplitude. Values above
+            ``clip_factor * max(abs(trace))`` or below
+            ``-clip_factor * max(abs(trace))`` are clipped.
+            None means no clipping (default). Typical values:
+            0.5 clips at 50% of max amplitude.
 
     Returns:
         Tuple of (figure, axes)
@@ -227,7 +234,9 @@ def plot_2d_waterfall(
         step = ny // max_traces
         trace_indices = np.arange(0, ny, step)
         warnings.warn(
-            f"Too many traces ({ny}), showing every {step}th trace ({len(trace_indices)} total)."
+            f"Too many traces ({ny}), showing every "
+            f"{step}th trace ({len(trace_indices)} total).",
+            stacklevel=2,
         )
     else:
         trace_indices = np.arange(ny)
@@ -265,8 +274,15 @@ def plot_2d_waterfall(
 
     # Plot traces
     for i, trace_idx in enumerate(trace_indices):
+        trace_raw = plot_data[trace_idx, :]
+
+        # Apply clipping if requested
+        if clip_factor is not None:
+            threshold = clip_factor * np.max(np.abs(trace_raw))
+            trace_raw = np.clip(trace_raw, -threshold, threshold)
+
         y_offset = i * offset
-        trace_data = plot_data[trace_idx, :] + y_offset
+        trace_data = trace_raw + y_offset
 
         # Create label
         if isinstance(x, list) and len(x) >= 2:
@@ -316,7 +332,8 @@ def plot_2d_slicer(
         y: 2D spectral data array (ny, nx)
         params: Parameter dictionary from eprload
         title: Plot title (optional)
-        slice_direction: 'horizontal' for horizontal slices, 'vertical' for vertical slices
+        slice_direction: 'horizontal' for horizontal slices,
+            'vertical' for vertical slices
         cmap: Colormap name (default: "magma")
 
     Note:
@@ -346,11 +363,9 @@ def plot_2d_slicer(
     if slice_direction == "horizontal":
         n_slices = ny
         slice_axis_name = "Y"
-        plot_axis_name = "X"
     else:  # vertical
         n_slices = nx
         slice_axis_name = "X"
-        plot_axis_name = "Y"
         plot_data = plot_data.T  # Transpose for vertical slices
 
     # Prepare axes
@@ -478,7 +493,7 @@ def plot_2d_slicer(
     logger.info("=" * 50)
     logger.info(f"Direction: {slice_direction}")
     logger.info(f"Number of slices: {n_slices}")
-    logger.info(f"Use the slider to navigate between slices")
+    logger.info("Use the slider to navigate between slices")
     logger.info("Red line in overview shows current position")
 
     # Show plot

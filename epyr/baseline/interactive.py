@@ -7,8 +7,6 @@ This module provides matplotlib-based interactive widgets for selecting
 baseline regions in Jupyter notebooks and desktop environments.
 """
 
-from typing import List, Optional, Tuple
-
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,7 +18,8 @@ logger = get_logger(__name__)
 
 
 def _get_widget_props_param():
-    """Get the correct parameter name for matplotlib widget properties based on version."""
+    """Get the correct parameter name for matplotlib
+    widget properties based on version."""
     # Matplotlib 3.5+ uses 'props' instead of 'rectprops'
     version = tuple(map(int, matplotlib.__version__.split(".")[:2]))
     if version >= (3, 5):
@@ -70,8 +69,12 @@ class RegionSelector:
         x2, y2 = erelease.xdata, erelease.ydata
         region = ((min(x1, x2), max(x1, x2)), (min(y1, y2), max(y1, y2)))
         self.regions.append(region)
+        xr = region[0]
+        yr = region[1]
         logger.info(
-            f"Selected region: x={region[0][0]:.2f}-{region[0][1]:.2f}, y={region[1][0]:.2f}-{region[1][1]:.2f}"
+            f"Selected region:"
+            f" x={xr[0]:.2f}-{xr[1]:.2f},"
+            f" y={yr[0]:.2f}-{yr[1]:.2f}"
         )
 
     def select_regions_1d(
@@ -93,7 +96,10 @@ class RegionSelector:
         self.fig, self.ax = plt.subplots(figsize=(12, 6))
         self.ax.plot(x, y, "b-", alpha=0.7)
         self.ax.set_title(
-            f"{title}\nClick and drag to select regions.\nPress ENTER or ESC when done, or run selector.finish_selection()"
+            f"{title}\nClick and drag to select"
+            " regions.\nPress ENTER or ESC when"
+            " done, or run"
+            " selector.finish_selection()"
         )
         self.ax.grid(True, alpha=0.3)
 
@@ -142,7 +148,10 @@ class RegionSelector:
         self.fig.colorbar(im, ax=self.ax)
 
         self.ax.set_title(
-            f"{title}\nClick and drag to select rectangular regions.\nPress ENTER or ESC when done, or run selector.finish_selection()"
+            f"{title}\nClick and drag to select"
+            " rectangular regions.\nPress ENTER"
+            " or ESC when done, or run"
+            " selector.finish_selection()"
         )
 
         # Add keyboard event handling
@@ -215,7 +224,7 @@ def close_selector_window():
     Use this if the interactive region selector gets stuck or won't close.
     """
     try:
-        global _current_selector
+        global _current_selector  # noqa: F824
         if _current_selector is not None:
             _current_selector.finish_selection()
         plt.close("all")
@@ -232,37 +241,43 @@ def jupyter_help():
     help_text = """
     📋 JUPYTER NOTEBOOK - INTERACTIVE REGION SELECTION HELP
     ====================================================
-    
+
     When you run interactive baseline correction, a plot will appear.
-    
+
     HOW TO SELECT REGIONS:
     1. Click and drag on the plot to select regions to exclude from baseline fitting
     2. You can select multiple regions
-    
+
     HOW TO FINISH SELECTION:
     Method 1: Press ENTER or ESC key on the plot
-    Method 2: In a new cell, run: from epyr.baseline.interactive import close_selector_window; close_selector_window()
+    Method 2: In a new cell, run:
+        from epyr.baseline.interactive import (
+            close_selector_window)
+        close_selector_window()
     Method 3: In a new cell, run: plt.close('all')
-    
+
     IF STUCK:
     - Run: plt.close('all') to force close all plots
-    - Run: from epyr.baseline.interactive import close_selector_window; close_selector_window()
-    
+    - Run in a new cell:
+        from epyr.baseline.interactive import (
+            close_selector_window)
+        close_selector_window()
+
     EXAMPLE:
     --------
     import epyr
     x, y, params, filepath = epyr.eprload("data.dsc", plot_if_possible=False)
-    
+
     # Option 1: Direct baseline correction with interactive selection
     corrected, baseline = epyr.baseline_polynomial_1d(x, y, params, interactive=True)
-    
+
     # Option 2: Manual region selection first
     from epyr.baseline.interactive import interactive_select_regions_1d
     regions = interactive_select_regions_1d(x, y, "Select baseline regions")
-    corrected, baseline = epyr.baseline_polynomial_1d(x, y, params, 
+    corrected, baseline = epyr.baseline_polynomial_1d(x, y, params,
                                                      manual_regions=regions,
                                                      region_mode='include')
-    
+
     # If the plot won't close, run in a new cell:
     from epyr.baseline.interactive import close_selector_window
     close_selector_window()
@@ -290,7 +305,8 @@ def is_interactive_available():
         backend = matplotlib.get_backend().lower()
         if "inline" in backend:
             logger.warning(
-                "⚠️  Warning: Inline backend detected. Interactive selection may not work."
+                "Warning: Inline backend detected."
+                " Interactive selection may not work."
             )
             logger.warning("   Try: %matplotlib widget or %matplotlib notebook")
             return False
@@ -319,11 +335,11 @@ def setup_interactive_backend():
                 try:
                     ipython.magic("matplotlib widget")
                     logger.info("✅ Switched to widget backend")
-                except:
+                except Exception:
                     try:
                         ipython.magic("matplotlib notebook")
                         logger.info("✅ Switched to notebook backend")
-                    except:
+                    except Exception:
                         logger.warning("⚠️  Could not switch to interactive backend")
                         logger.warning("   Try running: %matplotlib widget")
         else:

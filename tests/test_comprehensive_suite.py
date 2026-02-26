@@ -83,14 +83,15 @@ class TestModuleCoverage:
         if hasattr(eprload, "eprload"):
             # Test with mock files
             try:
-                # This would normally require GUI, so we test the import and basic properties
+                # This would normally require GUI, so we test
+                # the import and basic properties
                 assert callable(eprload.eprload)
 
                 # Test function signature
                 sig = inspect.signature(eprload.eprload)
                 assert "file_path" in sig.parameters or len(sig.parameters) == 0
 
-            except Exception as e:
+            except Exception:
                 # If GUI-dependent, just ensure function exists
                 assert hasattr(eprload, "eprload")
 
@@ -195,7 +196,7 @@ class TestModuleCoverage:
 
         # Test any utility functions
         functions = self.get_module_functions(constants)
-        for func_name, func_obj in functions:
+        for _func_name, func_obj in functions:
             assert callable(func_obj)
 
     def test_config_module_coverage(self):
@@ -398,7 +399,7 @@ class TestLineshapesComprehensive:
                     assert len(result) == len(B)
                     assert np.all(np.isfinite(result))
 
-                except Exception as e:
+                except Exception:
                     # Factory function might have different signature
                     pass
 
@@ -472,7 +473,7 @@ class TestNumericalAccuracy:
         B = np.linspace(-5, 5, 10001)
 
         # Test that repeated calculations give identical results
-        for i in range(5):
+        for _i in range(5):
             result1 = gaussian(B, center=0, width=2.5)
             result2 = gaussian(B, center=0, width=2.5)
             np.testing.assert_array_equal(result1, result2)

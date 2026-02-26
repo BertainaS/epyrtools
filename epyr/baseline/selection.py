@@ -7,7 +7,7 @@ This module provides functions for creating and managing baseline regions
 for both 1D and 2D EPR data.
 """
 
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -339,11 +339,13 @@ def validate_regions_2d(
     for i, ((x1, x2), (y1, y2)) in enumerate(regions):
         if not (x_min <= x1 <= x_max and x_min <= x2 <= x_max):
             raise ValueError(
-                f"Region {i} X bounds ({x1}, {x2}) outside data bounds ({x_min}, {x_max})"
+                f"Region {i} X bounds ({x1}, {x2}) "
+                f"outside data bounds ({x_min}, {x_max})"
             )
         if not (y_min <= y1 <= y_max and y_min <= y2 <= y_max):
             raise ValueError(
-                f"Region {i} Y bounds ({y1}, {y2}) outside data bounds ({y_min}, {y_max})"
+                f"Region {i} Y bounds ({y1}, {y2}) "
+                f"outside data bounds ({y_min}, {y_max})"
             )
         if x1 == x2 or y1 == y2:
             raise ValueError(f"Region {i} has zero area: (({x1}, {x2}), ({y1}, {y2}))")

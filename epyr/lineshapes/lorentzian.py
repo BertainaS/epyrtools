@@ -3,8 +3,6 @@ Lorentzian lineshape functions
 Modern, optimized implementation for EPR spectroscopy
 """
 
-from typing import Tuple, Union
-
 import matplotlib.pyplot as plt
 import numpy as np
 

@@ -8,7 +8,6 @@ correction model using statistical criteria (AIC, BIC, R²).
 """
 
 import sys
-import warnings
 from io import StringIO
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -25,7 +24,6 @@ from .correction import (
     baseline_stretched_exponential_1d,
 )
 from .interactive import RegionSelector, is_interactive_available
-from .models import MODEL_INFO
 
 
 def _calculate_model_metrics(y_data, y_pred, n_params, n_points):
@@ -198,7 +196,7 @@ def baseline_auto_1d(
     x: Union[np.ndarray, None],
     y: np.ndarray,
     params: Optional[Dict[str, Any]] = None,
-    models: List[str] = ["polynomial", "stretched_exponential", "bi_exponential"],
+    models: Optional[List[str]] = None,
     selection_criterion: str = "aic",
     use_real_part: bool = True,
     exclude_initial: int = 0,
@@ -218,31 +216,52 @@ def baseline_auto_1d(
         x: X-axis data from eprload (can be None)
         y: 1D spectral data array from eprload
         params: Parameter dictionary from eprload (optional)
-        models: List of models to test ['polynomial', 'stretched_exponential', 'bi_exponential']
-        selection_criterion: 'aic' (Akaike), 'bic' (Bayesian), or 'r2' (R-squared)
-        use_real_part: If True, fit only real part of complex data
-        exclude_initial: Number of initial points to exclude from fitting
-        exclude_final: Number of final points to exclude from fitting
-        manual_regions: List of manually selected regions as [(x1, x2), ...]
-        region_mode: 'exclude' to exclude manual_regions, 'include' to use only manual_regions
-        interactive: If True, open interactive region selector
-        verbose: If True, print detailed model comparison
+        models: List of models to test. Options:
+            'polynomial', 'stretched_exponential',
+            'bi_exponential'
+        selection_criterion: 'aic' (Akaike), 'bic'
+            (Bayesian), or 'r2' (R-squared)
+        use_real_part: If True, fit only real part of
+            complex data
+        exclude_initial: Number of initial points to
+            exclude from fitting
+        exclude_final: Number of final points to
+            exclude from fitting
+        manual_regions: List of manually selected
+            regions as [(x1, x2), ...]
+        region_mode: 'exclude' to exclude
+            manual_regions, 'include' to use only
+            manual_regions
+        interactive: If True, open interactive region
+            selector
+        verbose: If True, print detailed model
+            comparison
 
     Returns:
-        tuple: (corrected_data, best_baseline, model_info)
-            model_info contains: {'best_model': str, 'criteria': dict, 'parameters': dict}
+        tuple: (corrected_data, best_baseline,
+            model_info) where model_info contains:
+            {'best_model': str, 'criteria': dict,
+            'parameters': dict}
 
     Examples:
         # Automatic model selection
-        corrected, baseline, info = baseline_auto_1d(x, y, params)
+        corrected, baseline, info = baseline_auto_1d(
+            x, y, params)
         print(f"Best model: {info['best_model']}")
 
         # Restrict to specific models
-        corrected, baseline, info = baseline_auto_1d(x, y, params, models=['polynomial', 'stretched_exponential'])
+        corrected, baseline, info = baseline_auto_1d(
+            x, y, params,
+            models=['polynomial',
+                    'stretched_exponential'])
 
         # Use BIC for model selection
-        corrected, baseline, info = baseline_auto_1d(x, y, params, selection_criterion='bic')
+        corrected, baseline, info = baseline_auto_1d(
+            x, y, params,
+            selection_criterion='bic')
     """
+    if models is None:
+        models = ["polynomial", "stretched_exponential", "bi_exponential"]
     if y is None or y.ndim != 1:
         raise ValueError("y must be a 1D array")
 
@@ -277,7 +296,7 @@ def baseline_auto_1d(
 
     if interactive:
         if not is_interactive_available():
-            logger.warning("⚠️  Interactive selection may not work in this environment.")
+            logger.warning("Interactive selection may not" " work in this environment.")
 
         if verbose:
             logger.info("🖱️ Interactive region selection enabled...")
@@ -319,8 +338,11 @@ def baseline_auto_1d(
             model_results["polynomial"] = poly_result
             if verbose:
                 metrics = poly_result["metrics"]
+                crit = selection_criterion
+                val = metrics[crit]
+                order = poly_result["order"]
                 logger.info(
-                    f"   ✅ Polynomial (order {poly_result['order']}): {selection_criterion.upper()}={metrics[selection_criterion]:.2f}"
+                    f"   Polynomial (order {order}):" f" {crit.upper()}={val:.2f}"
                 )
 
     # Test stretched exponential model
@@ -335,9 +357,9 @@ def baseline_auto_1d(
             model_results["stretched_exponential"] = stretch_result
             if verbose:
                 metrics = stretch_result["metrics"]
-                logger.info(
-                    f"   ✅ Stretched exponential: {selection_criterion.upper()}={metrics[selection_criterion]:.2f}"
-                )
+                crit = selection_criterion
+                val = metrics[crit]
+                logger.info(f"   Stretched exponential:" f" {crit.upper()}={val:.2f}")
 
     # Test bi-exponential model
     if "bi_exponential" in models:
@@ -351,9 +373,9 @@ def baseline_auto_1d(
             model_results["bi_exponential"] = bi_result
             if verbose:
                 metrics = bi_result["metrics"]
-                logger.info(
-                    f"   ✅ Bi-exponential: {selection_criterion.upper()}={metrics[selection_criterion]:.2f}"
-                )
+                crit = selection_criterion
+                val = metrics[crit]
+                logger.info(f"   Bi-exponential:" f" {crit.upper()}={val:.2f}")
 
     # Select best model
     if not model_results:
@@ -421,7 +443,7 @@ def compare_models_detailed(
     x: Union[np.ndarray, None],
     y: np.ndarray,
     params: Optional[Dict[str, Any]] = None,
-    models: List[str] = ["polynomial", "stretched_exponential", "bi_exponential"],
+    models: Optional[List[str]] = None,
     **kwargs,
 ) -> Dict[str, Dict[str, Any]]:
     """
@@ -437,6 +459,8 @@ def compare_models_detailed(
     Returns:
         dict: Detailed results for each model
     """
+    if models is None:
+        models = ["polynomial", "stretched_exponential", "bi_exponential"]
     # Remove verbose and selection_criterion from kwargs for individual model testing
     kwargs_clean = kwargs.copy()
     kwargs_clean.pop("verbose", None)
@@ -547,8 +571,8 @@ def auto_baseline_with_recommendations(
     kwargs.setdefault("verbose", True)
 
     if kwargs.get("verbose"):
-        logger.info(
-            f"🎯 Recommended models for {data_type or 'unknown'} {experiment_type or 'data'}: {recommended_models}"
-        )
+        dt = data_type or "unknown"
+        et = experiment_type or "data"
+        logger.info(f"Recommended models for {dt}" f" {et}: {recommended_models}")
 
     return baseline_auto_1d(x, y, params, **kwargs)

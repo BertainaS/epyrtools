@@ -272,7 +272,7 @@ class TestLineshapesDeep(TestProtocol):
             np.testing.assert_allclose(left_half, right_half, rtol=1e-10)
 
             # Test derivative relationships
-            gauss_0 = gaussian(B, center=center, width=width, derivative=0)
+            gaussian(B, center=center, width=width, derivative=0)
             gauss_1 = gaussian(B, center=center, width=width, derivative=1)
 
             # First derivative should be antisymmetric
@@ -545,9 +545,10 @@ class TestPerformanceBenchmarks(TestProtocol):
             10000: 1.0,  # 1s for 10000 points
         }
 
-        assert (
-            perf_data["execution_time"] < expected_max_time[data_size]
-        ), f"{function_name} too slow for {data_size} points: {perf_data['execution_time']:.3f}s"
+        assert perf_data["execution_time"] < expected_max_time[data_size], (
+            f"{function_name} too slow for {data_size}"
+            f" points: {perf_data['execution_time']:.3f}s"
+        )
 
     @pytest.mark.parametrize("protocol_level", ["standard", "deep"])
     def test_memory_usage(self, protocol_level):
@@ -616,7 +617,6 @@ class TestIntegrationWorkflows(TestProtocol):
         # 5. Check that baseline correction improved the fit
         # (This is a simplified check - in practice would use proper fitting metrics)
         corrected_peak = np.max(y_corrected)
-        original_peak = np.max(y)
         assert corrected_peak > 0  # Should have positive signal after correction
 
 

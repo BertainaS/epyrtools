@@ -35,7 +35,7 @@ import inspect
 import pkgutil
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -68,7 +68,7 @@ class BasePlugin(ABC):
         """
         pass
 
-    def cleanup(self):
+    def cleanup(self):  # noqa: B027
         """Cleanup plugin resources. Called when plugin is unloaded."""
         pass
 
@@ -332,7 +332,7 @@ class PluginManager:
                     sys.path.insert(0, str(plugin_dir))
 
                 # Discover Python modules in directory
-                for finder, name, ispkg in pkgutil.iter_modules([str(plugin_dir)]):
+                for _finder, name, _ispkg in pkgutil.iter_modules([str(plugin_dir)]):
                     try:
                         module = importlib.import_module(name)
                         plugins_found = self._extract_plugins_from_module(module)
@@ -365,7 +365,7 @@ class PluginManager:
             package_dir = Path(epyr.__file__).parent
             system_plugin_dir = package_dir / "plugins"
             directories.append(system_plugin_dir)
-        except:
+        except Exception:
             pass
 
         return directories

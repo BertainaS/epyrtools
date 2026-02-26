@@ -147,7 +147,6 @@ class TestConfigCommand:
     def test_cmd_config_reset_section(self):
         """Test config reset section."""
         # Modify a value
-        original_value = config.get("plotting.dpi")
         config.set("plotting.dpi", 999)
 
         # Reset section

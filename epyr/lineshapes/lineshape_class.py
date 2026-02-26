@@ -4,7 +4,7 @@ Unified Lineshape class for EPR spectroscopy
 Provides a single interface for all lineshape types with consistent API.
 """
 
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Tuple, Union
 
 import numpy as np
 
@@ -255,13 +255,19 @@ class Lineshape:
 
     def __repr__(self) -> str:
         """String representation"""
-        return f"Lineshape(type='{self.shape_type}', width={self.width}, α={self.alpha:.2f})"
+        return (
+            f"Lineshape(type='{self.shape_type}',"
+            f" width={self.width}, α={self.alpha:.2f})"
+        )
 
     def __str__(self) -> str:
         """Human-readable string"""
         phase_desc = "absorption" if self.phase == 0 else f"phase={self.phase:.3f}"
         deriv_desc = "" if self.derivative == 0 else f", d^{self.derivative}"
-        return f"{self.shape_type.title()} lineshape (w={self.width}, {phase_desc}{deriv_desc})"
+        return (
+            f"{self.shape_type.title()} lineshape"
+            f" (w={self.width}, {phase_desc}{deriv_desc})"
+        )
 
 
 # Factory functions for common lineshapes

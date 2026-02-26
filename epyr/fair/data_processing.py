@@ -5,11 +5,8 @@ This module contains functions for processing Bruker EPR parameters and
 preparing metadata for FAIR format export.
 """
 
-import warnings
 from datetime import datetime
-from typing import Any, Dict, List, Tuple, Union
-
-import numpy as np
+from typing import Any, Dict, List, Tuple
 
 from ..logging_config import get_logger
 
@@ -35,7 +32,7 @@ def process_parameters(pars: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, 
         "value": {
             "converter_script": "epyr_fair_converter",
             "conversion_timestamp": datetime.now().isoformat(),
-            "epyr_version": "0.3.5",  # Current EPyR Tools version
+            "epyr_version": "0.3.6",  # Current EPyR Tools version
         },
         "unit": "",
         "description": "Information about the conversion process to FAIR format.",

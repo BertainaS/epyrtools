@@ -3,8 +3,6 @@ Gaussian lineshape functions
 Modern, optimized implementation for magnetic resonance spectroscopy
 """
 
-from typing import Tuple, Union
-
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import special

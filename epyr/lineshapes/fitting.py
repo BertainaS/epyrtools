@@ -1,14 +1,14 @@
 """
 EPR Signal Fitting Module
 
-Provides comprehensive fitting capabilities for EPR signals using various lineshape functions.
-Integrates with the eprload function and lineshapes module for complete analysis workflow.
+Provides comprehensive fitting capabilities for EPR signals
+using various lineshape functions. Integrates with the eprload
+function and lineshapes module for complete analysis workflow.
 """
 
 import math
-import warnings
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,7 +19,6 @@ from ..logging_config import get_logger
 logger = get_logger(__name__)
 
 from .gaussian import gaussian
-from .lineshape_class import Lineshape
 from .lorentzian import lorentzian
 from .lshape import pseudo_voigt
 from .voigtian import voigtian
@@ -135,12 +134,18 @@ def fit_epr_signal(
     >>> result = fit_epr_signal(x, y, 'gaussian', fit_baseline=True)
     >>>
     >>> # Fit with custom initial parameters including phase
-    >>> initial = {'center': 3500, 'width': 10, 'amplitude': 1000, 'phase': 0.1}
-    >>> result = fit_epr_signal(x, y, 'lorentzian', initial_params=initial, fit_phase=True)
+    >>> initial = {'center': 3500, 'width': 10,
+    ...            'amplitude': 1000, 'phase': 0.1}
+    >>> result = fit_epr_signal(
+    ...     x, y, 'lorentzian',
+    ...     initial_params=initial, fit_phase=True)
     >>>
     >>> # Fit 2nd derivative with bounds
-    >>> bounds = {'center': (3400, 3600), 'width': (5, 50), 'phase': (0, 3.14)}
-    >>> result = fit_epr_signal(x, y, 'gaussian', derivative=2, fit_phase=True, bounds=bounds)
+    >>> bounds = {'center': (3400, 3600),
+    ...           'width': (5, 50), 'phase': (0, 3.14)}
+    >>> result = fit_epr_signal(
+    ...     x, y, 'gaussian', derivative=2,
+    ...     fit_phase=True, bounds=bounds)
     """
 
     # Input validation
@@ -840,9 +845,13 @@ def _plot_fit_results(
     ax1.grid(True, alpha=0.3)
 
     # Build fit results text with parameters and errors
-    results_lines = [f"R² = {result.r_squared:.4f}", f"χ² = {result.chi_squared:.2e}"]
+    results_lines = [
+        f"R² = {result.r_squared:.4f}",
+        f"χ² = {result.chi_squared:.2e}",
+    ]
 
-    # Add fitted parameters with 4 significant figures and errors with 2 significant figures
+    # Add fitted parameters with 4 significant figures
+    # and errors with 2 significant figures
     for param, value in result.parameters.items():
         # Format value to 4 significant figures
         value_str = _format_significant_figures(value, 4)
@@ -957,7 +966,8 @@ def fit_multiple_shapes(
     for shape, result in results.items():
         if result.success:
             logger.info(
-                f"{shape:12s}: R² = {result.r_squared:.6f}, χ² = {result.chi_squared:.2e}"
+                f"{shape:12s}: R² = {result.r_squared:.6f},"
+                f" χ² = {result.chi_squared:.2e}"
             )
         else:
             logger.info(f"{shape:12s}: FAILED - {result.message}")
@@ -967,7 +977,8 @@ def fit_multiple_shapes(
             successful_fits.keys(), key=lambda k: successful_fits[k].r_squared
         )
         logger.info(
-            f"\nBest fit: {best_shape} (R² = {successful_fits[best_shape].r_squared:.6f})"
+            f"\nBest fit: {best_shape}"
+            f" (R² = {successful_fits[best_shape].r_squared:.6f})"
         )
 
     return results

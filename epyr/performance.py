@@ -269,13 +269,12 @@ class OptimizedLoader:
 
         # For very large files, we would implement chunked reading
         # This is a framework for future implementation
-        chunk_size_bytes = self.chunk_size_mb * 1024 * 1024
-
         # This is a placeholder - actual chunked implementation would depend
         # on the specific file format and processing requirements
         warnings.warn(
             f"Chunked processing not yet implemented for {file_path.suffix} files. "
-            f"Loading entire file ({file_size_mb:.1f} MB)."
+            f"Loading entire file ({file_size_mb:.1f} MB).",
+            stacklevel=2,
         )
 
         return chunk_processor(file_path, is_chunked=False)

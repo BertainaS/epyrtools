@@ -6,7 +6,7 @@ All values from 2022 CODATA recommendations with proper units and uncertainties.
 """
 
 # Import constants and functions
-from .constants import (  # SI constants (direct values); CGS constants (direct values); Backward compatibility functions; EPR-specific functions
+from .constants import (
     AVOGADRO,
     AVOGADRO_CGS,
     BMAGN,
@@ -114,5 +114,5 @@ __all__ = [
 ]
 
 # Version info
-__version__ = "0.3.5"
+__version__ = "0.3.6"
 __author__ = "EPyR Tools Development Team"

@@ -36,12 +36,14 @@ regions_2d = [((2, 4), (1, 2)), ((6, 8), (3, 4))]
 
 mask_2d_exclude = create_region_mask_2d(X_test, Y_test, regions_2d, mode="exclude")
 print(
-    f"✅ Masque 2D exclusion: {np.sum(mask_2d_exclude)}/{mask_2d_exclude.size} points utilisés"
+    f"✅ Masque 2D exclusion: {np.sum(mask_2d_exclude)}"
+    f"/{mask_2d_exclude.size} points utilisés"
 )
 
 mask_2d_include = create_region_mask_2d(X_test, Y_test, regions_2d, mode="include")
 print(
-    f"✅ Masque 2D inclusion: {np.sum(mask_2d_include)}/{mask_2d_include.size} points utilisés"
+    f"✅ Masque 2D inclusion: {np.sum(mask_2d_include)}"
+    f"/{mask_2d_include.size} points utilisés"
 )
 
 # Test 3: Correction 1D avec régions manuelles

@@ -30,17 +30,23 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "IKKF": {
         "fair_name": "imaginary_data_kind_format",
         "unit": None,
-        "description": "Format of imaginary data component (e.g., REAL, CMPLX, NODATA).",
+        "description": (
+            "Format of imaginary data component" " (e.g., REAL, CMPLX, NODATA)."
+        ),
     },
     "XTYP": {
         "fair_name": "x_axis_type",
         "unit": None,
-        "description": "Type of X-axis data (e.g., IDX for indexed, MONO for monotonic).",
+        "description": (
+            "Type of X-axis data" " (e.g., IDX for indexed, MONO for monotonic)."
+        ),
     },
     "YTYP": {
         "fair_name": "y_axis_type",
         "unit": None,
-        "description": "Type of Y-axis data (e.g., IDX for indexed, NODATA for 1D spectra).",
+        "description": (
+            "Type of Y-axis data" " (e.g., IDX for indexed, NODATA for 1D spectra)."
+        ),
     },
     "ZTYP": {
         "fair_name": "z_axis_type",
@@ -50,12 +56,18 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "IRFMT": {
         "fair_name": "intensity_data_format",
         "unit": None,
-        "description": "Format of real part of intensity data (e.g., D for double precision float).",
+        "description": (
+            "Format of real part of intensity data"
+            " (e.g., D for double precision float)."
+        ),
     },
     "IIFMT": {
         "fair_name": "imaginary_intensity_data_format",
         "unit": None,
-        "description": "Format of imaginary part of intensity data (e.g., D for double precision float).",
+        "description": (
+            "Format of imaginary part of intensity data"
+            " (e.g., D for double precision float)."
+        ),
     },  # New
     "XPTS": {
         "fair_name": "number_of_points_x_axis",
@@ -80,12 +92,18 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "YMIN": {
         "fair_name": "y_axis_minimum",
         "unit": "refer to YUNI",
-        "description": "Minimum value of the Y-axis (for 2D experiments). Unit specified by YUNI.",
+        "description": (
+            "Minimum value of the Y-axis"
+            " (for 2D experiments). Unit specified by YUNI."
+        ),
     },  # New
     "YWID": {
         "fair_name": "y_axis_width",
         "unit": "refer to YUNI",
-        "description": "Width (range) of the Y-axis (for 2D experiments). Unit specified by YUNI.",
+        "description": (
+            "Width (range) of the Y-axis"
+            " (for 2D experiments). Unit specified by YUNI."
+        ),
     },  # New
     "TITL": {
         "fair_name": "title",
@@ -166,22 +184,34 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "STAG": {
         "fair_name": "sample_stage_temperature",
         "unit": "K",
-        "description": "Sample stage or temperature controller setting. Assumed Kelvin, verify units.",
+        "description": (
+            "Sample stage or temperature controller setting."
+            " Assumed Kelvin, verify units."
+        ),
     },  # Often temperature
     "EXPT": {
         "fair_name": "experiment_type",
         "unit": None,
-        "description": "Type of experiment (e.g., CW for Continuous Wave, PLS for Pulsed).",
+        "description": (
+            "Type of experiment" " (e.g., CW for Continuous Wave, PLS for Pulsed)."
+        ),
     },
     "OXS1": {
         "fair_name": "ordinate_axis_1_source",
         "unit": None,
-        "description": "Source/type for the first ordinate axis (e.g., IADC - Imaginary ADC signal, TADC - Transient ADC).",
+        "description": (
+            "Source/type for the first ordinate axis"
+            " (e.g., IADC - Imaginary ADC signal,"
+            " TADC - Transient ADC)."
+        ),
     },
     "AXS1": {
         "fair_name": "abscissa_axis_1_type",
         "unit": None,
-        "description": "Type/parameter for the first abscissa axis (e.g., B0VL - Magnetic Field).",
+        "description": (
+            "Type/parameter for the first abscissa axis"
+            " (e.g., B0VL - Magnetic Field)."
+        ),
     },
     "AXS2": {
         "fair_name": "abscissa_axis_2_type",
@@ -196,12 +226,18 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "A1CT": {
         "fair_name": "abscissa_1_center",
         "unit": None,
-        "description": "Center value for the first abscissa axis. Units depend on AXS1 (e.g., Tesla if B0VL).",
+        "description": (
+            "Center value for the first abscissa axis."
+            " Units depend on AXS1 (e.g., Tesla if B0VL)."
+        ),
     },
     "A1SW": {
         "fair_name": "abscissa_1_sweep_width",
         "unit": None,
-        "description": "Sweep width for the first abscissa axis. Units depend on AXS1 (e.g., Tesla if B0VL).",
+        "description": (
+            "Sweep width for the first abscissa axis."
+            " Units depend on AXS1 (e.g., Tesla if B0VL)."
+        ),
     },
     "MWFQ": {
         "fair_name": "microwave_frequency",
@@ -246,7 +282,10 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "B0MF": {
         "fair_name": "modulation_frequency_spl",
         "unit": "Hz",
-        "description": "Magnetic field modulation frequency in Hz from Standard Parameter Layer.",
+        "description": (
+            "Magnetic field modulation frequency in Hz"
+            " from Standard Parameter Layer."
+        ),
     },
     "RCPH": {
         "fair_name": "receiver_phase",
@@ -256,17 +295,23 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "RCOF": {
         "fair_name": "receiver_offset_spl",
         "unit": "%",
-        "description": "Receiver offset as a percentage from Standard Parameter Layer.",
+        "description": (
+            "Receiver offset as a percentage" " from Standard Parameter Layer."
+        ),
     },
     "A1RS": {
         "fair_name": "abscissa_1_resolution_points",
         "unit": "points",
-        "description": "Resolution (number of points) for the first abscissa axis.",
+        "description": (
+            "Resolution (number of points)" " for the first abscissa axis."
+        ),
     },
     "RCTC": {
         "fair_name": "receiver_time_constant_spl",
         "unit": "s",
-        "description": "Receiver time constant in seconds from Standard Parameter Layer.",
+        "description": (
+            "Receiver time constant in seconds" " from Standard Parameter Layer."
+        ),
     },
     "B0VL": {
         "fair_name": "magnetic_field_value",
@@ -416,7 +461,9 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "Delay": {
         "fair_name": "field_controller_delay",
         "unit": "s",
-        "description": "Delay after setting field before measurement by field controller.",
+        "description": (
+            "Delay after setting field before measurement" " by field controller."
+        ),
     },
     "FieldFlyback": {
         "fair_name": "field_controller_flyback_enabled",
@@ -426,17 +473,26 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "FieldPosition": {
         "fair_name": "field_controller_current_field_position",
         "unit": "G",
-        "description": "Current magnetic field position reported by the field controller.",
+        "description": (
+            "Current magnetic field position" " reported by the field controller."
+        ),
     },  # New
     "FieldWait": {
         "fair_name": "field_controller_wait_condition",
         "unit": None,
-        "description": "Condition for waiting after field set by field controller (e.g., 'Wait LED off').",
+        "description": (
+            "Condition for waiting after field set"
+            " by field controller"
+            " (e.g., 'Wait LED off')."
+        ),
     },
     "GFactor": {
         "fair_name": "field_controller_g_factor_reference",
         "unit": None,
-        "description": "g-factor setting used for field-frequency calculations by field controller.",
+        "description": (
+            "g-factor setting used for field-frequency"
+            " calculations by field controller."
+        ),
     },
     "MeasuringHall": {
         "fair_name": "field_controller_measuring_hall_sensor",
@@ -456,7 +512,9 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "SweepDirection": {
         "fair_name": "field_controller_sweep_direction",
         "unit": None,
-        "description": "Direction of magnetic field sweep by field controller (e.g., Up, Down).",
+        "description": (
+            "Direction of magnetic field sweep" " by field controller (e.g., Up, Down)."
+        ),
     },
     "SweepWidth": {
         "fair_name": "field_controller_sweep_width",
@@ -554,7 +612,9 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "FieldIsStatic": {
         "fair_name": "ftepr_field_is_static",
         "unit": None,
-        "description": "Indicates if the magnetic field is static during the experiment.",
+        "description": (
+            "Indicates if the magnetic field is static" " during the experiment."
+        ),
     },
     "GradIntPulse": {
         "fair_name": "ftepr_gradient_integration_pulse",
@@ -699,7 +759,9 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "TD_DirectAxis": {
         "fair_name": "ftepr_transient_direct_axis",
         "unit": None,
-        "description": "Specifies the direct acquisition dimension in transient experiments.",
+        "description": (
+            "Specifies the direct acquisition dimension" " in transient experiments."
+        ),
     },
     "TD_EnableFIR": {
         "fair_name": "ftepr_transient_fir_filter_enabled",
@@ -806,7 +868,9 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "DModDetectSCT": {
         "fair_name": "signal_channel_double_modulation_detection_sct",
         "unit": None,
-        "description": "Double modulation detection SCT (Signal Channel Transducer) setting.",
+        "description": (
+            "Double modulation detection SCT" " (Signal Channel Transducer) setting."
+        ),
     },
     "DModEliDelay": {
         "fair_name": "signal_channel_double_modulation_elimination_delay",
@@ -846,12 +910,16 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "DModModOutput": {
         "fair_name": "signal_channel_double_modulation_output",
         "unit": None,
-        "description": "Modulation output source for double modulation (e.g., Internal).",
+        "description": (
+            "Modulation output source" " for double modulation (e.g., Internal)."
+        ),
     },
     "DModSignalInput": {
         "fair_name": "signal_channel_double_modulation_signal_input",
         "unit": None,
-        "description": "Signal input source for double modulation (e.g., Internal).",
+        "description": (
+            "Signal input source" " for double modulation (e.g., Internal)."
+        ),
     },
     "DModTimeConst": {
         "fair_name": "signal_channel_double_modulation_time_constant",
@@ -992,38 +1060,27 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "transRec.Position": {
         "fair_name": "transient_recorder_position",
         "unit": "%",
-        "description": "Position of the transient recording window relative to the trigger (percentage).",
+        "description": (
+            "Position of the transient recording window"
+            " relative to the trigger (percentage)."
+        ),
     },
-    # DSC Parameters with Units (Examples - needs verification of actual parameter names and context)
-    # Note: XMIN, XWID, YMIN, YWID already defined above in DSC section
-    # SPL Parameters with Units (Examples - needs verification of actual parameter names and context)
-    "MWFQ": {
-        "fair_name": "microwave_frequency",
-        "unit": "GHz",
-        "description": "Microwave frequency.",
-    },  # Common notation is GHz
-    "MWPW": {
-        "fair_name": "microwave_power",
-        "unit": "mW",
-        "description": "Microwave power.",
-    },
-    "B0MA": {
-        "fair_name": "modulation_amplitude",
-        "unit": "G",
-        "description": "Magnetic field modulation amplitude in Gauss.",
-    },
-    "RCTC": {
-        "fair_name": "receiver_time_constant",
-        "unit": "ms",
-        "description": "Receiver time constant in milliseconds.",
-    },  # Often in ms
+    # DSC Parameters with Units
+    # (Examples - needs verification of actual parameter names)
+    # Note: XMIN, XWID, YMIN, YWID already defined above
+    # SPL Parameters with Units
+    # (Examples - needs verification of actual parameter names)
+    # Note: MWFQ, MWPW, B0MA, RCTC already defined above
+    # in SPL section (SI units: Hz, W, T, s)
     # ... (continue adding more based on typical Bruker DSC/DSC files)
     # --- ESP Parameters ---
     # --- General & File ---
     "DOS  Format": {  # Note: Two spaces after DOS if that's in your file
         "fair_name": "file_format_version",
         "unit": None,
-        "description": "Specifies the DOS text file format version for the parameter file.",
+        "description": (
+            "Specifies the DOS text file format version" " for the parameter file."
+        ),
     },
     "JON": {
         "fair_name": "instrument_manufacturer_jcamp",
@@ -1042,50 +1099,95 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     },
     # --- Data Dimensions & Points ---
     "ANZ": {
-        "fair_name": "total_number_of_points",  # For 2D, this is typically points_dim1 * points_dim2
+        # For 2D: typically points_dim1 * points_dim2
+        "fair_name": "total_number_of_points",
         "unit": None,  # Typically an integer count
-        "description": "Total number of data points in the dataset (e.g., X_points * Y_points for 2D).",
+        "description": (
+            "Total number of data points in the dataset"
+            " (e.g., X_points * Y_points for 2D)."
+        ),
     },
     "MIN": {
-        "fair_name": "data_axis_minimum_value_defined",  # For 2D, this applies to the linearized data
-        "unit": "G",  # Or could be unitless depending on context, example showed G
-        "description": "Defined minimum value of the data axis. For 2D, this may relate to the full range of the ADC for the linearized 2D data block or a display default. Actual swept range per dimension is derived from other parameters.",
+        # For 2D, this applies to the linearized data
+        "fair_name": "data_axis_minimum_value_defined",
+        # Or could be unitless depending on context
+        "unit": "G",
+        "description": (
+            "Defined minimum value of the data axis."
+            " For 2D, this may relate to the full range"
+            " of the ADC for the linearized 2D data block"
+            " or a display default. Actual swept range"
+            " per dimension is derived from other"
+            " parameters."
+        ),
     },
     "MAX": {
-        "fair_name": "data_axis_maximum_value_defined",  # For 2D, this applies to the linearized data
-        "unit": "G",  # Or could be unitless, example showed G
-        "description": "Defined maximum value of the data axis. For 2D, this may relate to the full range of the ADC for the linearized 2D data block or a display default. Actual swept range per dimension is derived from other parameters.",
+        # For 2D, this applies to the linearized data
+        "fair_name": "data_axis_maximum_value_defined",
+        "unit": "G",  # Or could be unitless
+        "description": (
+            "Defined maximum value of the data axis."
+            " For 2D, this may relate to the full range"
+            " of the ADC for the linearized 2D data block"
+            " or a display default. Actual swept range"
+            " per dimension is derived from other"
+            " parameters."
+        ),
     },
-    "JSS": {  # Interpretation might vary for 2D
+    # Interpretation might vary for 2D
+    "JSS": {
         "fair_name": "jcamp_spectral_data_structure_parameter",
         "unit": None,
-        "description": "JCAMP-DX parameter related to spectral data structure. For 1D, spectrum status. For 2D, might be points in first dimension (e.g. F2 size) or data block size.",
+        "description": (
+            "JCAMP-DX parameter related to spectral data"
+            " structure. For 1D, spectrum status. For 2D,"
+            " might be points in first dimension"
+            " (e.g. F2 size) or data block size."
+        ),
     },
     "SSX": {
         "fair_name": "number_of_points_x_dimension",
         "unit": None,
-        "description": "Number of data points in the X-dimension (often the directly acquired dimension or F2).",
+        "description": (
+            "Number of data points in the X-dimension"
+            " (often the directly acquired"
+            " dimension or F2)."
+        ),
     },
     "SSY": {
         "fair_name": "number_of_points_y_dimension",
         "unit": None,
-        "description": "Number of data points in the Y-dimension (often the indirectly acquired dimension or F1).",
+        "description": (
+            "Number of data points in the Y-dimension"
+            " (often the indirectly acquired"
+            " dimension or F1)."
+        ),
     },
     "RES": {  # Often same as SSX for Bruker
         "fair_name": "number_of_points_x_dimension_alias_res",
         "unit": None,
-        "description": "Number of points in the X-dimension (Bruker 'RES' parameter, typically equals SSX).",
+        "description": (
+            "Number of points in the X-dimension"
+            " (Bruker 'RES' parameter,"
+            " typically equals SSX)."
+        ),
     },
     "REY": {  # Often same as SSY for Bruker
         "fair_name": "number_of_points_y_dimension_alias_rey",
         "unit": None,
-        "description": "Number of points in the Y-dimension (Bruker 'REY' parameter, typically equals SSY).",
+        "description": (
+            "Number of points in the Y-dimension"
+            " (Bruker 'REY' parameter,"
+            " typically equals SSY)."
+        ),
     },
     # --- X-Dimension (often Magnetic Field) Parameters ---
     "JEX": {
         "fair_name": "x_dimension_experiment_type_jcamp",
         "unit": None,
-        "description": "JCAMP-DX experiment type for the X-dimension (e.g., 'field-sweep').",
+        "description": (
+            "JCAMP-DX experiment type for the" " X-dimension (e.g., 'field-sweep')."
+        ),
     },
     "XXLB": {
         "fair_name": "x_dimension_axis_start_value",
@@ -1105,23 +1207,36 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "HCF": {
         "fair_name": "x_dimension_magnetic_field_center",
         "unit": "G",
-        "description": "Center of the magnetic field sweep (typically for the X-dimension).",
+        "description": (
+            "Center of the magnetic field sweep" " (typically for the X-dimension)."
+        ),
     },
     "HSW": {
         "fair_name": "x_dimension_magnetic_field_sweep_width",
         "unit": "G",
-        "description": "Width of the magnetic field sweep (typically for the X-dimension).",
+        "description": (
+            "Width of the magnetic field sweep" " (typically for the X-dimension)."
+        ),
     },
-    "JUN": {  # Primarily for 1D, but might appear if X-dim is the main one
+    # Primarily for 1D, but might appear if X-dim
+    # is the main one
+    "JUN": {
         "fair_name": "primary_x_axis_unit_jcamp",
-        "unit": None,  # The value itself is the unit, e.g., 'G'
-        "description": "JCAMP-DX unit for the primary X-axis (often the X-dimension in 2D, e.g., 'G' for Gauss).",
+        # The value itself is the unit, e.g., 'G'
+        "unit": None,
+        "description": (
+            "JCAMP-DX unit for the primary X-axis"
+            " (often the X-dimension in 2D,"
+            " e.g., 'G' for Gauss)."
+        ),
     },
     # --- Y-Dimension (e.g., MW Power, Time, etc.) Parameters ---
     "JEY": {
         "fair_name": "y_dimension_experiment_type_jcamp",
         "unit": None,
-        "description": "JCAMP-DX experiment type for the Y-dimension (e.g., 'mw-power-sweep').",
+        "description": (
+            "JCAMP-DX experiment type for the" " Y-dimension (e.g., 'mw-power-sweep')."
+        ),
     },
     "XYLB": {
         "fair_name": "y_dimension_axis_start_value",
@@ -1140,24 +1255,43 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     },
     "MPS": {
         "fair_name": "y_dimension_sweep_step_size",
-        "unit": None,  # Unit typically same as XYUN or implied by context (e.g., dB for power)
-        "description": "Step size or increment for the Y-dimension sweep (e.g., microwave power step in dB).",
+        # Unit typically same as XYUN or implied by context
+        "unit": None,
+        "description": (
+            "Step size or increment for the Y-dimension"
+            " sweep (e.g., microwave power step in dB)."
+        ),
     },
-    # --- Spectrometer / Acquisition Parameters (often apply to X-dim or per point) ---
-    "GST": {  # Display g-factor for X-axis if field sweep
+    # --- Spectrometer / Acquisition Parameters ---
+    # (often apply to X-dim or per point)
+    # Display g-factor for X-axis if field sweep
+    "GST": {
         "fair_name": "g_factor_start_display",
         "unit": None,  # Dimensionless
-        "description": "Start value for g-factor axis display/calculation (if X-axis is magnetic field).",
+        "description": (
+            "Start value for g-factor axis"
+            " display/calculation"
+            " (if X-axis is magnetic field)."
+        ),
     },
-    "GSI": {  # Display g-factor for X-axis if field sweep
+    # Display g-factor for X-axis if field sweep
+    "GSI": {
         "fair_name": "g_factor_increment_display",
         "unit": None,  # Dimensionless
-        "description": "Increment value for g-factor axis display/calculation (if X-axis is magnetic field).",
+        "description": (
+            "Increment value for g-factor axis"
+            " display/calculation"
+            " (if X-axis is magnetic field)."
+        ),
     },
     "JNS": {
         "fair_name": "number_of_scans",
         "unit": None,  # Integer count
-        "description": "Number of accumulated scans (for each point in Y-dimension in a 2D experiment, or total for 1D).",
+        "description": (
+            "Number of accumulated scans"
+            " (for each point in Y-dimension in a 2D"
+            " experiment, or total for 1D)."
+        ),
     },
     "EMF": {
         "fair_name": "magnetic_field_modulation_frequency",
@@ -1176,18 +1310,27 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     },
     "RRG": {
         "fair_name": "receiver_gain",
-        "unit": None,  # Often a relative value or code, sometimes dB
-        "description": "Overall gain of the receiver (often a relative value or code).",
+        # Often a relative value or code, sometimes dB
+        "unit": None,
+        "description": (
+            "Overall gain of the receiver" " (often a relative value or code)."
+        ),
     },
     "ROF": {
         "fair_name": "receiver_offset",
-        "unit": "%",  # Or could be ADC units depending on system
-        "description": "Receiver DC offset, often as a percentage of full scale or in ADC units.",
+        # Or could be ADC units depending on system
+        "unit": "%",
+        "description": (
+            "Receiver DC offset, often as a percentage"
+            " of full scale or in ADC units."
+        ),
     },
     "RMA": {
         "fair_name": "magnetic_field_modulation_amplitude",
         "unit": "G",  # Typically peak-to-peak
-        "description": "Amplitude of the magnetic field modulation (typically peak-to-peak).",
+        "description": (
+            "Amplitude of the magnetic field modulation" " (typically peak-to-peak)."
+        ),
     },
     "RPH": {
         "fair_name": "receiver_detection_phase",
@@ -1196,13 +1339,20 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     },
     "RHA": {
         "fair_name": "receiver_detection_harmonic",
-        "unit": None,  # Integer, e.g., 1 for fundamental, 2 for second harmonic
-        "description": "Harmonic of the modulation frequency used for detection (e.g., 1 or 2).",
+        # Integer, e.g., 1 for fundamental, 2 for 2nd harmonic
+        "unit": None,
+        "description": (
+            "Harmonic of the modulation frequency" " used for detection (e.g., 1 or 2)."
+        ),
     },
     "RMF": {
-        "fair_name": "receiver_microwave_attenuation",  # Or "Reference Arm Microwave Factor"
+        # Or "Reference Arm Microwave Factor"
+        "fair_name": "receiver_microwave_attenuation",
         "unit": "dB",
-        "description": "Microwave attenuation in the receiver path or reference arm (ESP specific).",
+        "description": (
+            "Microwave attenuation in the receiver"
+            " path or reference arm (ESP specific)."
+        ),
     },
     "MF": {
         "fair_name": "microwave_frequency",
@@ -1212,6 +1362,12 @@ BRUKER_PARAM_MAP: Dict[str, Dict[str, Any]] = {
     "MPD": {
         "fair_name": "microwave_power_attenuation_setting_initial",
         "unit": "dB",
-        "description": "Microwave power attenuation setting in dB, relative to maximum source power. For power sweeps (2D), this is often the initial attenuation value for the Y-dimension.",
+        "description": (
+            "Microwave power attenuation setting in dB,"
+            " relative to maximum source power."
+            " For power sweeps (2D), this is often"
+            " the initial attenuation value"
+            " for the Y-dimension."
+        ),
     },
 }

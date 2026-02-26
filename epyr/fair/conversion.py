@@ -5,7 +5,6 @@ This module provides the high-level interface for converting Bruker EPR data
 to FAIR-compliant formats using the EPyR Tools package.
 """
 
-import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -17,14 +16,13 @@ from ..logging_config import get_logger
 
 logger = get_logger(__name__)
 
-from .data_processing import append_fair_metadata
 from .exporters import save_fair as _save_fair_formats
 
 
 def convert_bruker_to_fair(
     input_file: Union[str, Path],
     output_dir: Optional[Union[str, Path]] = None,
-    formats: List[str] = ["csv", "json"],
+    formats: Optional[List[str]] = None,
     include_metadata: bool = True,
     scaling: str = "",
 ) -> bool:
@@ -45,12 +43,15 @@ def convert_bruker_to_fair(
             - 'hdf5': Export data and metadata to HDF5 file
             - 'jpg': Export visualization (1D: single plot, 2D: map + waterfall)
             Multiple formats can be combined (e.g., ['csv', 'json', 'hdf5', 'jpg']).
+            Defaults to ['csv', 'json'].
         include_metadata: Whether to include metadata in output files.
         scaling: Scaling options passed to eprload (e.g., 'nPGT').
 
     Returns:
         True if conversion successful, False otherwise.
     """
+    if formats is None:
+        formats = ["csv", "json"]
     try:
         logger.info("Starting FAIR conversion process...")
         input_file = Path(input_file)
@@ -109,7 +110,7 @@ def save_fair(
     y: np.ndarray,
     params: Dict[str, Any],
     original_file_path: str,
-    output_formats: List[str] = ["csv", "json"],
+    output_formats: Optional[List[str]] = None,
 ) -> None:
     """Save already-loaded EPR data to one or more FAIR formats.
 
@@ -129,10 +130,13 @@ def save_fair(
             - 'hdf5': Export data and metadata to HDF5 file
             - 'jpg': Export visualization (1D: single plot, 2D: map + waterfall)
             - 'csv_json': Export both CSV and JSON (backward compatibility)
+            Defaults to ['csv', 'json'].
 
     Returns:
         None. Files are saved to disk.
     """
+    if output_formats is None:
+        output_formats = ["csv", "json"]
     output_basename = Path(output_basename)
     output_path = output_basename.parent
     output_path.mkdir(parents=True, exist_ok=True)
@@ -150,9 +154,9 @@ def save_fair(
 def batch_convert_directory(
     input_directory: Union[str, Path],
     output_directory: Optional[Union[str, Path]] = None,
-    file_extensions: List[str] = [".dsc", ".spc", ".par"],
+    file_extensions: Optional[List[str]] = None,
     scaling: str = "",
-    output_formats: List[str] = ["csv", "json"],
+    output_formats: Optional[List[str]] = None,
     recursive: bool = False,
 ) -> None:
     """Convert all Bruker EPR files in a directory to FAIR formats.
@@ -162,15 +166,22 @@ def batch_convert_directory(
         output_directory: Directory to save converted files. If None, saves
             alongside original files.
         file_extensions: List of file extensions to process.
+            Defaults to ['.dsc', '.spc', '.par'].
         scaling: Scaling options passed to eprload.
-        output_formats: List of formats to generate. Options: 'csv', 'json', 'hdf5', 'jpg'.
-            Each format can be specified independently. For 2D data, 'jpg' creates both
-            map and waterfall visualizations.
+        output_formats: List of formats to generate.
+            Options: 'csv', 'json', 'hdf5', 'jpg'.
+            Each format can be specified independently.
+            For 2D data, 'jpg' creates both map and waterfall
+            visualizations. Defaults to ['csv', 'json'].
         recursive: If True, search subdirectories recursively.
 
     Returns:
         None. Prints progress and summary.
     """
+    if file_extensions is None:
+        file_extensions = [".dsc", ".spc", ".par"]
+    if output_formats is None:
+        output_formats = ["csv", "json"]
     input_path = Path(input_directory)
     if not input_path.is_dir():
         raise ValueError(f"Input path is not a directory: {input_directory}")
@@ -228,7 +239,7 @@ def batch_convert_directory(
             logger.error(f"Error processing {file_path}: {type(e).__name__} - {e}")
             failed_conversions += 1
 
-    logger.info(f"\n--- Batch conversion complete ---")
+    logger.info("\n--- Batch conversion complete ---")
     logger.info(f"Successfully processed: {successful_conversions} files")
     logger.info(f"Failed to process: {failed_conversions} files")
 

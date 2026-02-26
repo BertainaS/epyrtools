@@ -18,7 +18,6 @@ Usage:
 import argparse
 import sys
 from pathlib import Path
-from typing import List, Optional
 
 import numpy as np
 
@@ -253,7 +252,11 @@ def cmd_convert():
         "-f",
         "--formats",
         default="csv,json",
-        help="Output formats (comma-separated): csv, json, hdf5, jpg. Each can be specified independently (default: csv,json)",
+        help=(
+            "Output formats (comma-separated): csv, json, "
+            "hdf5, jpg. Each can be specified independently "
+            "(default: csv,json)"
+        ),
     )
     parser.add_argument(
         "--no-metadata", action="store_true", help="Skip metadata export"
@@ -456,8 +459,12 @@ def cmd_batch_convert():
         "-f",
         "--formats",
         default="csv,json",
-        help="Output formats (comma-separated): csv, json, hdf5, jpg. "
-        "For 2D data, jpg generates both map and waterfall plots (e.g., 'csv,json,jpg', 'jpg')",
+        help=(
+            "Output formats (comma-separated): csv, json, "
+            "hdf5, jpg. For 2D data, jpg generates both map "
+            "and waterfall plots "
+            "(e.g., 'csv,json,jpg', 'jpg')"
+        ),
     )
     parser.add_argument(
         "-j", "--jobs", type=int, default=1, help="Number of parallel jobs (default: 1)"
@@ -535,7 +542,7 @@ def cmd_batch_convert():
                 logger.debug("Full traceback:", exc_info=True)
             failed_count += 1
 
-    logger.info(f"\nBatch conversion completed:")
+    logger.info("\nBatch conversion completed:")
     logger.info(f"  Successfully converted: {success_count}/{len(files)}")
     logger.info(f"  Failed: {failed_count}/{len(files)}")
     logger.info(f"  Output directory: {output_dir}")
@@ -680,7 +687,7 @@ def cmd_isotopes():
         prog="epyr-isotopes", description="Launch the interactive isotope database GUI"
     )
 
-    args = parser.parse_args()
+    parser.parse_args()
 
     try:
         logger.info("Launching isotope database GUI...")
@@ -701,7 +708,10 @@ def _plot_main(args_list=None):
     parser.add_argument(
         "file",
         nargs="?",
-        help="EPR file to load (.dta, .dsc, .spc, .par). If not provided, opens file dialog.",
+        help=(
+            "EPR file to load (.dta, .dsc, .spc, .par). "
+            "If not provided, opens file dialog."
+        ),
     )
     parser.add_argument(
         "-s",
@@ -717,11 +727,18 @@ def _plot_main(args_list=None):
         action="store_true",
         help="Enable interactive matplotlib backend",
     )
-    parser.add_argument("--save", action="store_true", help="Save plot as PNG file")
+    parser.add_argument(
+        "--save",
+        action="store_true",
+        help="Save plot as PNG file",
+    )
     parser.add_argument(
         "--measure",
         action="store_true",
-        help="Enable interactive measurement tool (click two points to measure distance)",
+        help=(
+            "Enable interactive measurement tool "
+            "(click two points to measure distance)"
+        ),
     )
     parser.add_argument("-v", "--verbose", action="store_true")
 
@@ -1000,17 +1017,21 @@ def cmd_validate():
                         valid_files += 1
                     else:
                         logger.info(
-                            f"⚠ {file_path.name} - Valid data but FAIR compliance issues"
+                            f"⚠ {file_path.name} - Valid data"
+                            " but FAIR compliance issues"
                         )
                         valid_files += 1
 
                     logger.info(f"  Data points: {len(y)}")
+                    x_min = np.min(x) if x is not None else "N/A"
+                    x_max = np.max(x) if x is not None else "N/A"
+                    logger.info(f"  X-axis range: {x_min} to {x_max}")
+                    n_params = len(params) if params else 0
+                    logger.info(f"  Parameters: {n_params} entries")
+                    n_err = len(fair_result.errors)
+                    n_warn = len(fair_result.warnings)
                     logger.info(
-                        f"  X-axis range: {np.min(x) if x is not None else 'N/A'} to {np.max(x) if x is not None else 'N/A'}"
-                    )
-                    logger.info(f"  Parameters: {len(params) if params else 0} entries")
-                    logger.info(
-                        f"  FAIR compliance: {len(fair_result.errors)} errors, {len(fair_result.warnings)} warnings"
+                        f"  FAIR compliance: {n_err} errors, " f"{n_warn} warnings"
                     )
 
                     if fair_result.errors:
@@ -1060,7 +1081,10 @@ def main():
     plot_parser.add_argument(
         "file",
         nargs="?",
-        help="EPR file to load (.dta, .dsc, .spc, .par). If not provided, opens file dialog.",
+        help=(
+            "EPR file to load (.dta, .dsc, .spc, .par). "
+            "If not provided, opens file dialog."
+        ),
     )
     plot_parser.add_argument(
         "-s",
@@ -1069,7 +1093,9 @@ def main():
         help="Scaling string (n=scans, P=power, G=gain, T=temp, c=time)",
     )
     plot_parser.add_argument(
-        "--no-plot", action="store_true", help="Load data without plotting"
+        "--no-plot",
+        action="store_true",
+        help="Load data without plotting",
     )
     plot_parser.add_argument(
         "--interactive",
@@ -1077,12 +1103,17 @@ def main():
         help="Enable interactive matplotlib backend",
     )
     plot_parser.add_argument(
-        "--save", action="store_true", help="Save plot as PNG file"
+        "--save",
+        action="store_true",
+        help="Save plot as PNG file",
     )
     plot_parser.add_argument(
         "--measure",
         action="store_true",
-        help="Enable interactive measurement tool (click two points to measure distance)",
+        help=(
+            "Enable interactive measurement tool "
+            "(click two points to measure distance)"
+        ),
     )
     plot_parser.add_argument("-v", "--verbose", action="store_true")
 

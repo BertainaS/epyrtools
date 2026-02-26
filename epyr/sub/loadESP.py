@@ -30,7 +30,8 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
         par_extension = par_extension.upper()
         spc_extension = spc_extension.upper()
 
-    # Use string concatenation instead of with_suffix() to handle filenames with multiple dots
+    # Use string concatenation instead of with_suffix()
+    # to handle filenames with multiple dots
     par_file = Path(str(full_base_name) + par_extension)
     spc_file = Path(str(full_base_name) + spc_extension)
 
@@ -56,7 +57,10 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
             is_complex = bool(flags & (1 << 4))  # Bit 5 (0-indexed)
             two_d = bool(flags & (1 << 12))  # Bit 13
         except (ValueError, TypeError):
-            warnings.warn("Could not parse JSS flag in .par file. Assuming defaults.")
+            warnings.warn(
+                "Could not parse JSS flag in .par file. Assuming defaults.",
+                stacklevel=2,
+            )
 
     # Get dimensions from various possible keys
     n_anz = None
@@ -69,7 +73,7 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                 nx = n_anz // 2 if is_complex else n_anz
             # Consistency check if 2D will happen later
         except (ValueError, TypeError):
-            warnings.warn("Could not parse ANZ in .par file.")
+            warnings.warn("Could not parse ANZ in .par file.", stacklevel=2)
 
     # SSX/SSY preferred for 2D
     if "SSX" in parameters:  # X points (often total points for 1D pulse)
@@ -80,7 +84,7 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                     file_type = "p"  # Treat as pulse if SSX/SSY found
                 nx = ssx_val // 2 if is_complex else ssx_val
         except (ValueError, TypeError):
-            warnings.warn("Could not parse SSX in .par file.")
+            warnings.warn("Could not parse SSX in .par file.", stacklevel=2)
 
     if "SSY" in parameters:  # Y points
         try:
@@ -89,7 +93,7 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                     file_type = "p"
                 ny = int(parameters["SSY"])
         except (ValueError, TypeError):
-            warnings.warn("Could not parse SSY in .par file.")
+            warnings.warn("Could not parse SSY in .par file.", stacklevel=2)
 
     if two_d and n_anz is not None and nx * ny != n_anz:
         raise ValueError("Inconsistent 2D dimensions from ANZ, SSX, SSY in .par file.")
@@ -97,7 +101,10 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
         # ANZ overrides RES/XPLS if not 2D
         if nx != (n_anz // 2 if is_complex else n_anz):
             warnings.warn(
-                "ANZ value conflicts with other dimension keys (RES/XPLS) for 1D data. Using ANZ."
+                "ANZ value conflicts with other"
+                " dimension keys (RES/XPLS)"
+                " for 1D data. Using ANZ.",
+                stacklevel=2,
             )
             nx = n_anz // 2 if is_complex else n_anz
 
@@ -106,19 +113,19 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
         try:
             nx = int(parameters["RES"])
         except (ValueError, TypeError):
-            warnings.warn("Could not parse RES in .par file.")
+            warnings.warn("Could not parse RES in .par file.", stacklevel=2)
     if "REY" in parameters and two_d and ny == 1:  # Y points (check if SSY was missing)
         try:
             ny = int(parameters["REY"])
         except (ValueError, TypeError):
-            warnings.warn("Could not parse REY in .par file.")
+            warnings.warn("Could not parse REY in .par file.", stacklevel=2)
     if (
         "XPLS" in parameters and not two_d and n_anz is None and "RES" not in parameters
     ):  # X points (Pulse?)
         try:
             nx = int(parameters["XPLS"])
         except (ValueError, TypeError):
-            warnings.warn("Could not parse XPLS in .par file.")
+            warnings.warn("Could not parse XPLS in .par file.", stacklevel=2)
 
     # Determine number format
     if file_type == "w":  # WinEPR/Simfonia
@@ -128,7 +135,8 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
     else:
         number_format_code = "f4"  # Default fallback
         warnings.warn(
-            f"Unclear file type '{file_type}', assuming int32 (f4) data format."
+            f"Unclear file type '{file_type}', assuming int32 (f4) data format.",
+            stacklevel=2,
         )
 
     # --- Construct Abscissa ---
@@ -169,7 +177,8 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                 and two_d
             ):
                 take_gh = 3
-            # If only XX present, or if XY present but not 2D, still prefer XX for X axis
+            # If only XX present, or if XY present but
+            # not 2D, still prefer XX for X axis
             elif not two_d or (
                 params_num.get("XYLB") is None or params_num.get("XYWI") is None
             ):
@@ -192,7 +201,7 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
             and params_num.get("HCF") is not None
         ):
             params_num["HSW"] = 50.0  # Assume HSW=50 G if missing (like MATLAB code)
-            warnings.warn("HSW missing, assuming 50 G.")
+            warnings.warn("HSW missing, assuming 50 G.", stacklevel=2)
             take_gh = 2
         elif (
             params_num.get("HCF") is None
@@ -216,7 +225,9 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                 and params_num.get("GSI") is not None
             ):
                 gst, gsi = params_num["GST"], params_num["GSI"]
-                # linspace includes endpoint, MATLAB GSI*linspace(0,1,nx) implies GSI is width
+                # linspace includes endpoint,
+                # MATLAB GSI*linspace(0,1,nx) implies
+                # GSI is width
                 # Correct interpretation: gst is start, gsi is increment
                 # x_axis = gst + gsi * np.arange(nx) # If GSI is increment
                 # If GSI is total width (like HSW):
@@ -250,7 +261,10 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                     abscissa = x_axis
             else:
                 warnings.warn(
-                    "Could not determine abscissa range from parameter file. Abscissa set to None."
+                    "Could not determine abscissa range"
+                    " from parameter file."
+                    " Abscissa set to None.",
+                    stacklevel=2,
                 )
                 abscissa = np.arange(nx)  # Default to indices if range fails
 
@@ -259,7 +273,10 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
     if not two_d and ny > 1:
         # This might happen if REY was present but JSS didn't have 2D flag
         warnings.warn(
-            f"Parameter file indicates ny={ny} (REY?) but JSS flag doesn't indicate 2D. Assuming 1D data."
+            f"Parameter file indicates ny={ny} (REY?)"
+            " but JSS flag doesn't indicate 2D."
+            " Assuming 1D data.",
+            stacklevel=2,
         )
         ny = 1
 
@@ -310,19 +327,26 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                 data = data / n_scans_done
             else:
                 warnings.warn(
-                    "Cannot scale by number of scans ('n'): JSD missing, zero, or invalid."
+                    "Cannot scale by number of scans"
+                    " ('n'): JSD missing,"
+                    " zero, or invalid.",
+                    stacklevel=2,
                 )
         if "G" in scaling:
             if receiver_gain is not None and receiver_gain != 0:
                 data = data / receiver_gain
             else:
                 warnings.warn(
-                    "Cannot scale by receiver gain ('G'): RRG missing, zero, or invalid."
+                    "Cannot scale by receiver gain"
+                    " ('G'): RRG missing,"
+                    " zero, or invalid.",
+                    stacklevel=2,
                 )
         if "P" in scaling:
             if mw_power_mw is not None and mw_power_mw > 0:
                 if is_power_sweep_y and two_d and data.ndim == 2:
-                    # Assume power is along the second dimension (y-axis, index 0 in numpy)
+                    # Assume power is along the second
+                    # dimension (y-axis, index 0 in numpy)
                     if (
                         abscissa is not None
                         and isinstance(abscissa, list)
@@ -335,7 +359,8 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                             y_axis_params.size == data.shape[0]
                         ):  # ny should be first dim
                             power_factors_db = y_axis_params
-                            # Assuming y_axis_params stores dB ATTENUATION relative to MP power
+                            # Assuming y_axis_params stores dB
+                            # ATTENUATION relative to MP power
                             # Power(i) = MP * 10^(-dB(i)/10)
                             power_values_mw = mw_power_mw * (
                                 10.0 ** (-power_factors_db / 10.0)
@@ -346,10 +371,14 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                             )  # Threshold for valid power
                             if np.any(~valid_power):
                                 warnings.warn(
-                                    "Some power values in power sweep are <= 0. Scaling skipped for those points."
+                                    "Some power values in power"
+                                    " sweep are <= 0. Scaling"
+                                    " skipped for those points.",
+                                    stacklevel=2,
                                 )
                             # Scale each row (spectrum at specific power)
-                            # Need to broadcast sqrt(power) correctly across columns (nx)
+                            # Need to broadcast sqrt(power)
+                            # correctly across columns (nx)
                             sqrt_power = np.sqrt(power_values_mw[valid_power])
                             # Apply scaling row-wise where power is valid
                             data[valid_power, :] = (
@@ -358,11 +387,17 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
 
                         else:
                             warnings.warn(
-                                "Cannot apply power sweep scaling ('P'): Y-axis data mismatch or missing."
+                                "Cannot apply power sweep"
+                                " scaling ('P'): Y-axis data"
+                                " mismatch or missing.",
+                                stacklevel=2,
                             )
                     else:
                         warnings.warn(
-                            "Cannot apply power sweep scaling ('P'): Abscissa data missing or not 2D."
+                            "Cannot apply power sweep"
+                            " scaling ('P'): Abscissa data"
+                            " missing or not 2D.",
+                            stacklevel=2,
                         )
 
                 elif (
@@ -371,25 +406,32 @@ def load(full_base_name: Path, file_extension: str, scaling: str) -> tuple:
                     data = data / np.sqrt(mw_power_mw)
                 else:
                     warnings.warn(
-                        "Cannot apply power scaling ('P') to data with >2 dimensions."
+                        "Cannot apply power scaling ('P') to data with >2 dimensions.",
+                        stacklevel=2,
                     )
             else:
                 warnings.warn(
-                    "Cannot scale by microwave power ('P'): MP missing, zero, or invalid."
+                    "Cannot scale by microwave power"
+                    " ('P'): MP missing, zero, or invalid.",
+                    stacklevel=2,
                 )
         if "T" in scaling:
             if temperature_k is not None and temperature_k > 0:
                 data = data * temperature_k
             else:
                 warnings.warn(
-                    "Cannot scale by temperature ('T'): TE missing, zero, or invalid."
+                    "Cannot scale by temperature ('T'): TE missing, zero, or invalid.",
+                    stacklevel=2,
                 )
         if "c" in scaling:
             if conversion_time_ms is not None and conversion_time_ms > 0:
                 data = data / conversion_time_ms
             else:
                 warnings.warn(
-                    "Cannot scale by conversion time ('c'): RCT missing, zero, or invalid."
+                    "Cannot scale by conversion time"
+                    " ('c'): RCT missing,"
+                    " zero, or invalid.",
+                    stacklevel=2,
                 )
 
     # Parse string parameters to numbers where possible

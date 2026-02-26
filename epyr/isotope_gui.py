@@ -11,9 +11,10 @@ import os
 import platform
 import traceback
 
-import pandas as pd
 import tkinter as tk
 from tkinter import messagebox, ttk
+
+import pandas as pd
 
 from .logging_config import get_logger
 
@@ -250,7 +251,9 @@ class IsotopesGUI:
         # Schedule geometry setting after the GUI is fully realized
         def set_proper_geometry():
             self.root.geometry(
-                f"{self.calculated_window_width}x{self.calculated_window_height}+{int(x_pos)}+{int(y_pos)}"
+                f"{self.calculated_window_width}"
+                f"x{self.calculated_window_height}"
+                f"+{int(x_pos)}+{int(y_pos)}"
             )
 
         # Set geometry on next event loop iteration
@@ -358,7 +361,8 @@ class IsotopesGUI:
                 data["gamma"] = pd.NA  # Ensure column exists even if gn doesn't
 
             # Assemble isotope symbols (e.g., 1H, 14C*, 235U)
-            # Note: In the data file, column N is actually the mass number A (not neutron count)
+            # Note: In the data file, column N is actually
+            # the mass number A (not neutron count)
             isotopes = []
             required_cols = ["N", "Z", "element", "radioactive"]
             if all(col in data.columns for col in required_cols):
@@ -374,12 +378,15 @@ class IsotopesGUI:
                         else:
                             isotopes.append(iso_str)
                     else:
-                        # This case should ideally not happen after dropna above, but safer
+                        # This case should ideally not happen
+                        # after dropna above, but safer
                         isotopes.append(pd.NA)
             else:
                 # Handle case where required columns might be missing in the input file
                 logger.warning(
-                    "Warning: Missing required columns (N, Z, element, radioactive) for isotope symbol generation."
+                    "Warning: Missing required columns "
+                    "(N, Z, element, radioactive) "
+                    "for isotope symbol generation."
                 )
                 data["isotope"] = pd.NA  # Assign NA if cannot generate
 
@@ -692,8 +699,6 @@ class IsotopesGUI:
             height=self.bottom_height + self.border,
         )  # Adjusted height
 
-        current_x = 0  # Relative x within the frame
-        control_height = 25  # Slightly increased height for better spacing/visuals
         control_pady = self.border // 2  # Vertical padding
 
         # Checkboxes
@@ -894,13 +899,15 @@ class IsotopesGUI:
             and B0 is not None
         ):
             # Freq[MHz] = gamma[MHz/T] * B0[mT] * 1e-3 [T/mT]
-            # Ensure gamma is positive for frequency calculation if needed, or handle 0 gamma
+            # Ensure gamma is positive for frequency
+            # calculation if needed, or handle 0 gamma
             # Apply calculation only where gamma is not NA
             valid_gamma_mask = filtered_df["gamma"].notna()
             filtered_df.loc[valid_gamma_mask, "NMRfreq"] = (
                 filtered_df.loc[valid_gamma_mask, "gamma"] * B0 * 1e-3
             )
-            # Fill remaining NMRfreq with NaN or 0 where gamma was NA or calculation not applicable
+            # Fill remaining NMRfreq with NaN or 0 where gamma
+            # was NA or calculation not applicable
             filtered_df["NMRfreq"] = filtered_df["NMRfreq"].fillna(
                 pd.NA
             )  # Use pd.NA for consistency
@@ -979,7 +986,8 @@ class IsotopesGUI:
                 # else: spin_str remains "" if spin is placeholder or NA
 
                 # Assemble the list of values in the correct column order
-                # Use .get() with default for safety if a column was missing from display_df
+                # Use .get() with default for safety if a column
+                # was missing from display_df
                 values = [
                     row.get("isotope", ""),
                     abundance_str,
@@ -991,7 +999,8 @@ class IsotopesGUI:
                 ]
                 table_values.append(values)
 
-            # Insert all rows at once (potentially faster for large datasets, though tkinter might not optimize this much)
+            # Insert all rows at once (potentially faster for
+            # large datasets, though tkinter might not optimize)
             for values in table_values:
                 self.table.insert("", tk.END, values=values)
 
@@ -1006,17 +1015,27 @@ class IsotopesGUI:
                 data_list.append((value, item_id))
             except tk.TclError:
                 logger.warning(
-                    f"Warning: Could not get value for item {item_id}, column {col_id}. Skipping."
+                    f"Warning: Could not get value for "
+                    f"item {item_id}, column {col_id}. "
+                    "Skipping."
                 )
                 continue  # Skip item if value cannot be retrieved
 
         # Define columns to attempt numeric sort
-        numeric_cols_for_sort = ["abundance", "spin", "gn", "gamma", "qm", "nmrfreq"]
+        numeric_cols_for_sort = [
+            "abundance",
+            "spin",
+            "gn",
+            "gamma",
+            "qm",
+            "nmrfreq",
+        ]
 
         # Sorting logic
         try:
             if col_id in numeric_cols_for_sort:
-                # Key function for robust numeric sort (handles errors, empty strings)
+                # Key function for robust numeric sort
+                # (handles errors, empty strings)
                 def sort_key_numeric(item_tuple):
                     value_str = item_tuple[0]
                     try:
@@ -1025,10 +1044,11 @@ class IsotopesGUI:
                             return float(value_str)
                         elif isinstance(value_str, (int, float)):  # Already numeric
                             return float(value_str)
-                        else:  # Empty string or other non-convertible type treated as lowest/highest
+                        else:  # Empty string or other type
                             return -float("inf") if not reverse else float("inf")
                     except (ValueError, TypeError):
-                        # Handle cases like "1/2" if they weren't formatted numerically, treat as lowest/highest
+                        # Handle cases like "1/2" if they
+                        # weren't formatted numerically
                         return -float("inf") if not reverse else float("inf")
 
                 data_list.sort(key=sort_key_numeric, reverse=reverse)
@@ -1072,21 +1092,25 @@ def run_gui():
     root = tk.Tk()
     try:
         # Pass the root window to the application class
-        app = IsotopesGUI(root)
+        IsotopesGUI(root)
         # Start the Tkinter event loop
         root.mainloop()
     except FileNotFoundError as e:
         # Handle the specific case where the data file wasn't found during init
         messagebox.showerror(
             "Fatal Error - Data File Not Found",
-            f"Could not initialize application.\n{e}\n\nPlease ensure the 'sub' directory containing 'isotopedata.txt' is accessible.",
+            f"Could not initialize application.\n{e}\n\n"
+            "Please ensure the 'sub' directory containing "
+            "'isotopedata.txt' is accessible.",
         )
         root.destroy()  # Close the (likely empty) root window
     except Exception as e:
         # Catch any other unexpected errors during initialization
         messagebox.showerror(
             "Fatal Error - Initialization Failed",
-            f"An unexpected error occurred during application startup:\n\n{e}\n\n{traceback.format_exc()}",
+            "An unexpected error occurred during "
+            f"application startup:\n\n{e}"
+            f"\n\n{traceback.format_exc()}",
         )
         root.destroy()  # Close the root window
 

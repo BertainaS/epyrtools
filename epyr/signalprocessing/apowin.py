@@ -3,8 +3,6 @@ Apodization windows for signal processing
 Modern implementation with additional window types and features
 """
 
-from typing import Optional, Union
-
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import special

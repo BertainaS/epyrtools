@@ -18,7 +18,6 @@ from ..logging_config import get_logger
 logger = get_logger(__name__)
 
 from .interactive import (
-    RegionSelector,
     interactive_select_regions_1d,
     interactive_select_regions_2d,
     is_interactive_available,
@@ -27,14 +26,10 @@ from .interactive import (
 # Import from our new modules
 from .models import (
     bi_exponential_1d,
-    exponential_1d,
-    polynomial_1d,
     polynomial_2d,
     stretched_exponential_1d,
 )
 from .selection import (
-    create_region_mask_1d,
-    create_region_mask_2d,
     get_baseline_regions_1d,
     get_baseline_regions_2d,
 )
@@ -65,8 +60,11 @@ def baseline_polynomial_1d(
         exclude_center: If True, exclude center region from fitting
         center_fraction: Fraction of data to exclude from center
         manual_regions: List of manually selected regions as [(x1, x2), ...]
-        region_mode: 'exclude' to exclude manual_regions, 'include' to use only manual_regions
-        interactive: If True, open interactive region selector
+        region_mode: 'exclude' to exclude
+            manual_regions, 'include' to use only
+            manual_regions
+        interactive: If True, open interactive
+            region selector
 
     Returns:
         tuple: (corrected_data, baseline)
@@ -87,7 +85,7 @@ def baseline_polynomial_1d(
 
     if interactive:
         if not is_interactive_available():
-            logger.warning("⚠️  Interactive selection may not work in this environment.")
+            logger.warning("Interactive selection may not" " work in this environment.")
             logger.warning("   Consider using manual_regions parameter instead.")
 
         logger.info("🖱️ Interactive region selection enabled...")
@@ -118,7 +116,10 @@ def baseline_polynomial_1d(
     y_fit = y_fit[valid]
 
     if len(y_fit) < order + 1:
-        warnings.warn(f"Not enough points ({len(y_fit)}) for polynomial order {order}")
+        warnings.warn(
+            f"Not enough points ({len(y_fit)})" f" for polynomial order {order}",
+            stacklevel=2,
+        )
         return y, np.zeros_like(y)
 
     try:
@@ -134,7 +135,7 @@ def baseline_polynomial_1d(
         return corrected_data, baseline
 
     except np.linalg.LinAlgError as e:
-        warnings.warn(f"Polynomial fitting failed: {e}")
+        warnings.warn(f"Polynomial fitting failed: {e}", stacklevel=2)
         return y, np.zeros_like(y)
 
 
@@ -156,19 +157,30 @@ def baseline_polynomial_2d(
     Polynomial baseline correction for 2D EPR data.
 
     Fits a 2D polynomial surface to specified regions and subtracts it from
-    the entire dataset. Useful for 2D EPR measurements like DEER, Rabi oscillations, etc.
+    the entire dataset. Useful for 2D EPR measurements
+    like DEER, Rabi oscillations, etc.
 
     Args:
-        x: X-axis coordinates (None, 1D arrays, or meshgrids)
+        x: X-axis coordinates (None, 1D arrays,
+            or meshgrids)
         y: 2D spectral data array
-        params: Parameter dictionary from eprload (optional)
-        order: Polynomial order (int for same order in both directions, or (order_x, order_y))
-        exclude_center: If True, exclude center region from fitting
-        center_fraction: Fraction of data to exclude from center
-        manual_regions: List of manually selected regions as [((x1,x2), (y1,y2)), ...]
-        region_mode: 'exclude' to exclude manual_regions, 'include' to use only manual_regions
-        interactive: If True, open interactive region selector
-        use_real_part: If True, use real part of complex data
+        params: Parameter dictionary from eprload
+            (optional)
+        order: Polynomial order (int for same order
+            in both directions, or (order_x, order_y))
+        exclude_center: If True, exclude center
+            region from fitting
+        center_fraction: Fraction of data to exclude
+            from center
+        manual_regions: List of manually selected
+            regions as [((x1,x2), (y1,y2)), ...]
+        region_mode: 'exclude' to exclude
+            manual_regions, 'include' to use only
+            manual_regions
+        interactive: If True, open interactive
+            region selector
+        use_real_part: If True, use real part of
+            complex data
 
     Returns:
         tuple: (corrected_data, baseline)
@@ -224,9 +236,9 @@ def baseline_polynomial_2d(
 
     if interactive:
         if not is_interactive_available():
-            logger.warning("⚠️  Interactive selection may not work in this environment.")
+            logger.warning("Interactive selection may not" " work in this environment.")
 
-        logger.info("🖱️ Interactive 2D region selection enabled...")
+        logger.info("Interactive 2D region selection" " enabled...")
         selected_regions = interactive_select_regions_2d(
             X,
             Y,
@@ -260,7 +272,10 @@ def baseline_polynomial_2d(
     min_points = (order_x + 1) * (order_y + 1)
     if len(Z_flat) < min_points:
         warnings.warn(
-            f"Not enough points ({len(Z_flat)}) for polynomial order ({order_x}, {order_y})"
+            f"Not enough points ({len(Z_flat)})"
+            f" for polynomial order"
+            f" ({order_x}, {order_y})",
+            stacklevel=2,
         )
         return y, np.zeros_like(data_for_fitting)
 
@@ -284,7 +299,8 @@ def baseline_polynomial_2d(
                 corrected_data = y.copy()
                 corrected_data.real -= baseline
             else:
-                # Subtract from magnitude (this is tricky, use phase-preserving approach)
+                # Subtract from magnitude (tricky,
+                # use phase-preserving approach)
                 magnitude = np.abs(y)
                 phase = np.angle(y)
                 corrected_magnitude = magnitude - baseline
@@ -295,7 +311,7 @@ def baseline_polynomial_2d(
         return corrected_data, baseline
 
     except Exception as e:
-        warnings.warn(f"2D polynomial fitting failed: {e}")
+        warnings.warn(f"2D polynomial fitting failed: {e}", stacklevel=2)
         return y, np.zeros_like(data_for_fitting)
 
 
@@ -419,11 +435,19 @@ def baseline_stretched_exponential_1d(
         use_real_part: If True, fit only real part of complex data
         exclude_initial: Number of initial points to exclude from fitting
         exclude_final: Number of final points to exclude from fitting
-        manual_regions: List of manually selected regions as [(x1, x2), ...]
-        region_mode: 'exclude' to exclude manual_regions, 'include' to use only manual_regions
-        interactive: If True, open interactive region selector
-        beta_range: Range for stretching exponent (min, max)
-        initial_guess: Dictionary with initial parameter guesses {'A': ..., 'tau': ..., 'beta': ..., 'offset': ...}
+        manual_regions: List of manually selected
+            regions as [(x1, x2), ...]
+        region_mode: 'exclude' to exclude
+            manual_regions, 'include' to use only
+            manual_regions
+        interactive: If True, open interactive
+            region selector
+        beta_range: Range for stretching exponent
+            (min, max)
+        initial_guess: Dictionary with initial
+            parameter guesses
+            {'A': ..., 'tau': ..., 'beta': ...,
+            'offset': ...}
 
     Returns:
         tuple: (corrected_data, baseline)
@@ -472,7 +496,8 @@ def baseline_stretched_exponential_1d(
 
         if len(y_fit) < 4:  # Need at least 4 points for 4 parameters
             warnings.warn(
-                f"Not enough points ({len(y_fit)}) for stretched exponential fitting"
+                f"Not enough points ({len(y_fit)}) for stretched exponential fitting",
+                stacklevel=2,
             )
             return y, np.zeros_like(data_for_fitting)
 
@@ -488,7 +513,10 @@ def baseline_stretched_exponential_1d(
             p0 = _smart_exponential_initial_guess(x_fit, y_fit, "stretched")
 
         logger.debug(
-            f"🔧 Initial guesses: A={p0[0]:.2e}, tau={p0[1]:.2e}, beta={p0[2]:.2f}, offset={p0[3]:.2e}"
+            f"Initial guesses: A={p0[0]:.2e},"
+            f" tau={p0[1]:.2e},"
+            f" beta={p0[2]:.2f},"
+            f" offset={p0[3]:.2e}"
         )
 
         # Parameter bounds
@@ -508,14 +536,24 @@ def baseline_stretched_exponential_1d(
         try:
             param_errors = np.sqrt(np.diag(pcov))
             logger.info(
-                f"✅ Fit successful: A={A_fit:.2e}, tau={tau_fit:.2e}, beta={beta_fit:.2f}, offset={offset_fit:.2e}"
+                f"Fit successful: A={A_fit:.2e},"
+                f" tau={tau_fit:.2e},"
+                f" beta={beta_fit:.2f},"
+                f" offset={offset_fit:.2e}"
             )
             logger.info(
-                f"📊 Parameter uncertainties: ΔA={param_errors[0]:.2e}, Δτ={param_errors[1]:.2e}, Δβ={param_errors[2]:.3f}, Δoffset={param_errors[3]:.2e}"
+                f"Parameter uncertainties:"
+                f" dA={param_errors[0]:.2e},"
+                f" dtau={param_errors[1]:.2e},"
+                f" dbeta={param_errors[2]:.3f},"
+                f" doffset={param_errors[3]:.2e}"
             )
-        except:
+        except Exception:
             logger.info(
-                f"✅ Fit successful: A={A_fit:.2e}, tau={tau_fit:.2e}, beta={beta_fit:.2f}, offset={offset_fit:.2e}"
+                f"Fit successful: A={A_fit:.2e},"
+                f" tau={tau_fit:.2e},"
+                f" beta={beta_fit:.2f},"
+                f" offset={offset_fit:.2e}"
             )
 
         # Evaluate baseline over full range
@@ -527,7 +565,7 @@ def baseline_stretched_exponential_1d(
         return corrected_data, baseline
 
     except Exception as e:
-        warnings.warn(f"Stretched exponential fitting failed: {e}")
+        warnings.warn(f"Stretched exponential fitting failed: {e}", stacklevel=2)
         return y, np.zeros_like(y if not np.iscomplexobj(y) else np.real(y))
 
 
@@ -559,10 +597,15 @@ def baseline_bi_exponential_1d(
         use_real_part: If True, fit only real part of complex data
         exclude_initial: Number of initial points to exclude from fitting
         exclude_final: Number of final points to exclude from fitting
-        manual_regions: List of manually selected regions as [(x1, x2), ...]
-        region_mode: 'exclude' to exclude manual_regions, 'include' to use only manual_regions
-        interactive: If True, open interactive region selector
-        tau_ratio_min: Minimum ratio between tau2 and tau1 to ensure component separation
+        manual_regions: List of manually selected
+            regions as [(x1, x2), ...]
+        region_mode: 'exclude' to exclude
+            manual_regions, 'include' to use only
+            manual_regions
+        interactive: If True, open interactive
+            region selector
+        tau_ratio_min: Minimum ratio between tau2
+            and tau1 to ensure component separation
         initial_guess: Dictionary with initial parameter guesses
 
     Returns:
@@ -610,7 +653,8 @@ def baseline_bi_exponential_1d(
 
         if len(y_fit) < 5:  # Need at least 5 points for 5 parameters
             warnings.warn(
-                f"Not enough points ({len(y_fit)}) for bi-exponential fitting"
+                f"Not enough points ({len(y_fit)}) for bi-exponential fitting",
+                stacklevel=2,
             )
             return y, np.zeros_like(data_for_fitting)
 
@@ -627,7 +671,11 @@ def baseline_bi_exponential_1d(
             p0 = _smart_exponential_initial_guess(x_fit, y_fit, "bi_exponential")
 
         logger.debug(
-            f"🔧 Initial guesses: A1={p0[0]:.2e}, τ1={p0[1]:.2e}, A2={p0[2]:.2e}, τ2={p0[3]:.2e}, offset={p0[4]:.2e}"
+            f"Initial guesses: A1={p0[0]:.2e},"
+            f" t1={p0[1]:.2e},"
+            f" A2={p0[2]:.2e},"
+            f" t2={p0[3]:.2e},"
+            f" offset={p0[4]:.2e}"
         )
 
         # Custom fitting function with tau ratio constraint
@@ -656,7 +704,11 @@ def baseline_bi_exponential_1d(
             tau2_fit = tau1_fit * tau_ratio_min
 
         logger.info(
-            f"✅ Fit successful: A1={A1_fit:.2e}, τ1={tau1_fit:.2e}, A2={A2_fit:.2e}, τ2={tau2_fit:.2e}, offset={offset_fit:.2e}"
+            f"Fit successful: A1={A1_fit:.2e},"
+            f" t1={tau1_fit:.2e},"
+            f" A2={A2_fit:.2e},"
+            f" t2={tau2_fit:.2e},"
+            f" offset={offset_fit:.2e}"
         )
         logger.info(f"📊 Time constant ratio: τ2/τ1 = {tau2_fit/tau1_fit:.2f}")
 
@@ -671,5 +723,5 @@ def baseline_bi_exponential_1d(
         return corrected_data, baseline
 
     except Exception as e:
-        warnings.warn(f"Bi-exponential fitting failed: {e}")
+        warnings.warn(f"Bi-exponential fitting failed: {e}", stacklevel=2)
         return y, np.zeros_like(y if not np.iscomplexobj(y) else np.real(y))
