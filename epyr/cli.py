@@ -183,6 +183,7 @@ def create_interactive_plot_with_measurements(
     ax.set_title(plot_title, fontsize=12)
 
     # Plot the data
+    measurement_tool = None
     if y.ndim == 1:
         # 1D data
         absc = x if x is not None and hasattr(x, "__len__") else np.arange(len(y))
@@ -204,8 +205,6 @@ def create_interactive_plot_with_measurements(
         ax.set_ylabel("Intensity (a.u.)")
         ax.grid(True, linestyle=":", alpha=0.6)
 
-        # Enable measurement tool if requested
-        measurement_tool = None
         if enable_measurements:
             measurement_tool = InteractiveMeasurementTool(ax, absc, y)
             measurement_tool.enable()
@@ -233,6 +232,284 @@ def create_interactive_plot_with_measurements(
         logger.info("  • 'q' - Quit")
 
     return fig, ax
+
+
+def _view_1d(
+    x: np.ndarray,
+    y: np.ndarray,
+    params: dict,
+    file_path: str,
+) -> None:
+    """Display a 1D EPR spectrum in an interactive matplotlib window.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Field or time axis.
+    y : np.ndarray
+        Signal array (real or complex).
+    params : dict
+        Measurement parameters extracted by eprload.
+    file_path : str
+        Path of the loaded file, used as window title.
+    """
+    import platform
+
+    import matplotlib
+
+    if platform.system() == "Darwin":
+        try:
+            matplotlib.use("TkAgg")
+        except Exception:
+            pass
+
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    fname = Path(file_path).name if file_path else "EPR Data"
+
+    absc = x if (x is not None and hasattr(x, "__len__")) else np.arange(len(y))
+
+    if np.isrealobj(y):
+        ax.plot(absc, y, color="C0", linewidth=1.2)
+    else:
+        ax.plot(absc, np.real(y), color="C0", linewidth=1.2, label="real")
+        ax.plot(
+            absc, np.imag(y), color="C3", linewidth=1.2, linestyle="--", label="imag"
+        )
+        ax.legend(framealpha=0.7)
+
+    x_name = (params.get("XAXIS_NAME", "Field") if params else "Field") or "Field"
+    x_unit = (params.get("XAXIS_UNIT", "G") if params else "G") or "G"
+    ax.set_xlabel(f"{x_name} ({x_unit})")
+    ax.set_ylabel("Intensity (a.u.)")
+    ax.set_title(fname)
+    ax.grid(True, linestyle=":", alpha=0.5)
+    fig.tight_layout()
+
+    fig.canvas.mpl_connect(
+        "key_press_event",
+        lambda e: plt.close("all") if e.key == "q" else None,
+    )
+
+    print(f"Loaded: {fname}  |  {len(y)} points  |  Press 'q' to quit")
+    plt.show(block=True)
+
+
+def _view_2d(
+    x,
+    y: np.ndarray,
+    params: dict,
+    file_path: str,
+) -> None:
+    """Display a 2D EPR dataset as an interactive slicer.
+
+    The slicer shows the 2D color map on the left and the currently selected
+    1D slice on the right. A slider navigates through slices, a range slider
+    controls the color scale, and radio buttons switch the slicing direction.
+
+    Parameters
+    ----------
+    x : list of np.ndarray or np.ndarray
+        Axis arrays. For 2D data, x[0] is the horizontal axis and x[1] the
+        vertical axis of the map.
+    y : np.ndarray
+        2D signal array, shape (ny, nx). Real part is displayed.
+    params : dict
+        Measurement parameters extracted by eprload.
+    file_path : str
+        Path of the loaded file, used as window title.
+    """
+    import platform
+
+    import matplotlib
+
+    if platform.system() == "Darwin":
+        try:
+            matplotlib.use("TkAgg")
+        except Exception:
+            pass
+
+    import matplotlib.pyplot as plt
+    from matplotlib.widgets import RadioButtons, RangeSlider, Slider
+
+    data = np.real(y)
+    ny, nx = data.shape
+
+    if isinstance(x, (list, tuple)) and len(x) >= 2:
+        axis_h = np.asarray(x[0])  # horizontal axis (columns)
+        axis_v = np.asarray(x[1])  # vertical axis (rows)
+    else:
+        axis_h = np.arange(nx)
+        axis_v = np.arange(ny)
+
+    x_name = (params.get("XAXIS_NAME", "X") if params else "X") or "X"
+    x_unit = (params.get("XAXIS_UNIT", "") if params else "") or ""
+    y_name = (params.get("YAXIS_NAME", "Y") if params else "Y") or "Y"
+    y_unit = (params.get("YAXIS_UNIT", "") if params else "") or ""
+
+    x_label = f"{x_name} ({x_unit})" if x_unit else x_name
+    y_label = f"{y_name} ({y_unit})" if y_unit else y_name
+    fname = Path(file_path).name if file_path else "EPR 2D Data"
+
+    vmin0 = float(np.percentile(data, 2))
+    vmax0 = float(np.percentile(data, 98))
+    data_min = float(data.min())
+    data_max = float(data.max())
+
+    fig = plt.figure(figsize=(14, 7))
+    fig.subplots_adjust(left=0.07, right=0.97, top=0.93, bottom=0.30)
+    ax_map = fig.add_subplot(1, 2, 1)
+    ax_slice = fig.add_subplot(1, 2, 2)
+
+    mesh = ax_map.pcolormesh(
+        axis_h, axis_v, data,
+        shading="auto", cmap="RdBu_r", vmin=vmin0, vmax=vmax0,
+    )
+    fig.colorbar(mesh, ax=ax_map, label="Intensity (a.u.)", fraction=0.046)
+    ax_map.set_xlabel(x_label)
+    ax_map.set_ylabel(y_label)
+
+    (h_indicator,) = ax_map.plot([], [], "r--", lw=1.1, alpha=0.9)
+    (v_indicator,) = ax_map.plot([], [], "r--", lw=1.1, alpha=0.9)
+
+    (slice_line,) = ax_slice.plot([], [], lw=0.9, color="C0")
+    ax_slice.set_ylabel("Intensity (a.u.)")
+    ax_slice.grid(True, linestyle=":", alpha=0.5)
+    ax_slice.ticklabel_format(style="sci", axis="y", scilimits=(-3, 4))
+
+    ax_idx = fig.add_axes([0.07, 0.20, 0.58, 0.03])
+    ax_range = fig.add_axes([0.07, 0.11, 0.58, 0.03])
+    ax_radio = fig.add_axes([0.74, 0.04, 0.22, 0.20])
+
+    s_idx = Slider(ax_idx, "Slice", 0, ny - 1, valinit=ny // 2, valstep=1, valfmt="%d")
+    s_range = RangeSlider(
+        ax_range, "Vmin / Vmax", data_min, data_max, valinit=(vmin0, vmax0)
+    )
+    radio = RadioButtons(
+        ax_radio,
+        [f"Horizontal (fix {y_name})", f"Vertical (fix {x_name})"],
+        active=0,
+    )
+
+    state = {"horizontal": True}
+
+    def update(_=None):
+        horizontal = state["horizontal"]
+        idx = int(s_idx.val)
+        vmin, vmax = s_range.val
+
+        if horizontal:
+            idx = min(idx, ny - 1)
+            slice_vals = data[idx, :]
+            ax_val = axis_v[idx]
+            h_indicator.set_data([axis_h[0], axis_h[-1]], [ax_val, ax_val])
+            v_indicator.set_data([], [])
+            ax_slice.set_xlabel(x_label)
+            ax_slice.set_title(
+                f"Horizontal slice — {y_name} = {ax_val:.4g}  (index {idx})"
+            )
+            slice_line.set_data(axis_h, slice_vals)
+        else:
+            idx = min(idx, nx - 1)
+            slice_vals = data[:, idx]
+            ax_val = axis_h[idx]
+            v_indicator.set_data([ax_val, ax_val], [axis_v[0], axis_v[-1]])
+            h_indicator.set_data([], [])
+            ax_slice.set_xlabel(y_label)
+            ax_slice.set_title(
+                f"Vertical slice — {x_name} = {ax_val:.4g}  (index {idx})"
+            )
+            slice_line.set_data(axis_v, slice_vals)
+
+        ax_slice.relim()
+        ax_slice.autoscale_view()
+        mesh.set_clim(vmin, vmax)
+        fig.canvas.draw_idle()
+
+    def on_direction(_):
+        horizontal = "Horizontal" in radio.value_selected
+        state["horizontal"] = horizontal
+        n = ny if horizontal else nx
+        s_idx.valmax = n - 1
+        s_idx.ax.set_xlim(0, n - 1)
+        s_idx.eventson = False
+        s_idx.set_val(min(int(s_idx.val), n - 1))
+        s_idx.eventson = True
+        update()
+
+    s_idx.on_changed(update)
+    s_range.on_changed(update)
+    radio.on_clicked(on_direction)
+    update()
+
+    fig.suptitle(f"{fname} — 2D interactive slicer", fontsize=11)
+    fig.canvas.mpl_connect(
+        "key_press_event",
+        lambda e: plt.close("all") if e.key == "q" else None,
+    )
+
+    print(
+        f"Loaded: {fname}  |  {ny} × {nx} points"
+        "  |  Use sliders to explore  |  Press 'q' to quit"
+    )
+    plt.show(block=True)
+
+
+def cmd_view() -> None:
+    """Interactive EPR viewer: 1D plot or 2D slicer depending on data dimensionality."""
+    parser = argparse.ArgumentParser(
+        prog="epyrview",
+        description=(
+            "Interactive EPR viewer. Opens a 1D interactive plot for 1D data "
+            "or a 2D slicer with adjustable color scale for 2D data."
+        ),
+    )
+    parser.add_argument("file", help="EPR file to view (.dta, .dsc, .spc, .par)")
+    parser.add_argument(
+        "-s",
+        "--scaling",
+        default="",
+        help="Scaling string (n=scans, P=power, G=gain, T=temp, c=time)",
+    )
+    parser.add_argument("-v", "--verbose", action="store_true")
+
+    args = parser.parse_args()
+
+    if args.verbose:
+        from .logging_config import setup_logging
+
+        setup_logging("DEBUG")
+
+    file_path = Path(args.file)
+    if not file_path.exists():
+        logger.error(f"File not found: {file_path}")
+        sys.exit(1)
+
+    try:
+        logger.info(f"Loading {file_path.name}...")
+        x, y, params, loaded_path = eprload(
+            str(file_path),
+            scaling=args.scaling,
+            plot_if_possible=False,
+        )
+    except Exception as e:
+        logger.error(f"Failed to load file: {e}")
+        if args.verbose:
+            logger.debug("Full traceback:", exc_info=True)
+        sys.exit(1)
+
+    if y is None:
+        logger.error("No data could be extracted from file")
+        sys.exit(1)
+
+    if y.ndim == 1:
+        _view_1d(x, y, params, loaded_path)
+    elif y.ndim == 2:
+        _view_2d(x, y, params, loaded_path)
+    else:
+        logger.error(f"Unsupported data dimensionality: {y.ndim}D")
+        sys.exit(1)
 
 
 def cmd_convert():
@@ -589,13 +866,13 @@ def cmd_config():
                 if section_config:
                     import json
 
-                    logger.info(json.dumps(section_config, indent=2))
+                    print(json.dumps(section_config, indent=2))
                 else:
                     logger.error(f"Section '{args.section}' not found")
             else:
                 import json
 
-                logger.info(json.dumps(config._config, indent=2))
+                print(json.dumps(config._config, indent=2))
 
         elif args.action == "set":
             # Try to parse value as JSON first
@@ -608,25 +885,25 @@ def cmd_config():
 
             config.set(args.key, value)
             config.save()
-            logger.info(f"Set {args.key} = {value}")
+            print(f"Set {args.key} = {value}")
 
         elif args.action == "reset":
             if args.section and args.section != "all":
                 config.reset_section(args.section)
-                logger.info(f"Reset section: {args.section}")
+                print(f"Reset section: {args.section}")
             else:
                 config.reset_all()
-                logger.info("Reset all configuration to defaults")
+                print("Reset all configuration to defaults")
             config.save()
 
         elif args.action == "export":
             config.export_config(args.file)
-            logger.info(f"Configuration exported to {args.file}")
+            print(f"Configuration exported to {args.file}")
 
         elif args.action == "import":
             config.import_config(args.file)
             config.save()
-            logger.info(f"Configuration imported from {args.file}")
+            print(f"Configuration imported from {args.file}")
 
     except Exception as e:
         logger.error(f"Configuration error: {e}")
@@ -655,30 +932,30 @@ def cmd_info():
     from . import __version__
 
     # Show version info
-    logger.info(f"EPyR Tools Version: {__version__}")
-    logger.info(f"Configuration file: {config.get_config_file_path()}")
-    logger.info("")
+    print(f"EPyR Tools Version: {__version__}")
+    print(f"Configuration file: {config.get_config_file_path()}")
+    print()
 
     if args.config or args.all:
-        logger.info("=== Configuration ===")
-        logger.info(json.dumps(config._config, indent=2))
-        logger.info("")
+        print("=== Configuration ===")
+        print(json.dumps(config._config, indent=2))
+        print()
 
     if args.performance or args.all:
-        logger.info("=== Performance Information ===")
+        print("=== Performance Information ===")
         from .performance import get_performance_info
 
         perf_info = get_performance_info()
-        logger.info(json.dumps(perf_info, indent=2))
-        logger.info("")
+        print(json.dumps(perf_info, indent=2))
+        print()
 
     if args.plugins or args.all:
-        logger.info("=== Loaded Plugins ===")
+        print("=== Loaded Plugins ===")
         from .plugins import plugin_manager
 
         plugins_info = plugin_manager.list_plugins()
-        logger.info(json.dumps(plugins_info, indent=2))
-        logger.info("")
+        print(json.dumps(plugins_info, indent=2))
+        print()
 
 
 def cmd_isotopes():
@@ -696,6 +973,110 @@ def cmd_isotopes():
         run_gui()
     except Exception as e:
         logger.error(f"Failed to launch isotope GUI: {e}")
+        sys.exit(1)
+
+
+def _setup_matplotlib_backend(args) -> None:
+    """Configure the matplotlib backend for interactive mode."""
+    if not args.interactive:
+        return
+    import platform
+    import matplotlib
+
+    if platform.system() == "Darwin":
+        try:
+            matplotlib.use("TkAgg")
+            logger.info("Using TkAgg backend for interactive plotting on macOS")
+        except ImportError:
+            logger.warning("TkAgg not available, using default backend")
+    else:
+        try:
+            matplotlib.use("Qt5Agg")
+            logger.info("Using Qt5Agg backend for interactive plotting")
+        except ImportError:
+            try:
+                matplotlib.use("TkAgg")
+                logger.info("Using TkAgg backend for interactive plotting")
+            except ImportError:
+                logger.warning("No interactive backend available, using default")
+
+
+def _run_plot(args) -> None:
+    """Load and display EPR data with pre-parsed arguments."""
+    if args.verbose:
+        from .logging_config import setup_logging
+
+        setup_logging("DEBUG")
+
+    _setup_matplotlib_backend(args)
+
+    try:
+        logger.info("Loading EPR data...")
+        plot_with_eprload = not args.no_plot and not (args.interactive and args.measure)
+        x, y, params, file_path = eprload(
+            args.file,
+            scaling=args.scaling,
+            plot_if_possible=plot_with_eprload,
+            save_if_possible=args.save and not args.measure,
+        )
+
+        if x is None or y is None:
+            logger.error("Failed to load data or loading was cancelled")
+            sys.exit(1)
+
+        logger.info(f"Successfully loaded: {file_path}")
+        logger.info(f"Data shape: {y.shape}")
+
+        if hasattr(x, "shape"):
+            logger.info(f"X-axis shape: {x.shape}")
+        elif isinstance(x, (list, tuple)):
+            logger.info(f"X-axis shapes: {[ax.shape for ax in x]}")
+
+        logger.info(f"Parameters loaded: {len(params) if params else 0}")
+
+        if params:
+            key_params = ["MWFQ", "MWPW", "RCAG", "AVGS", "SPTP"]
+            found_params = {k: params.get(k) for k in key_params if k in params}
+            if found_params:
+                logger.info("Key parameters:")
+                for k, v in found_params.items():
+                    logger.info(f"  {k}: {v}")
+
+        if args.interactive and not args.no_plot:
+            if args.measure:
+                logger.info("Creating interactive plot with measurement tools...")
+                fig, ax = create_interactive_plot_with_measurements(
+                    x, y, params, file_path, enable_measurements=True
+                )
+                if args.save:
+                    from pathlib import Path
+
+                    save_path = (
+                        Path(file_path).with_suffix(".png")
+                        if file_path
+                        else Path("epr_plot.png")
+                    )
+                    fig.savefig(save_path, dpi=300)
+                    logger.info(f"Plot saved to {save_path}")
+                import matplotlib.pyplot as plt
+
+                plt.show(block=True)
+                logger.info("Interactive measurement plot closed.")
+            else:
+                import matplotlib.pyplot as plt
+
+                plt.show(block=True)
+                logger.info(
+                    "Interactive plot displayed. Close the plot window to exit."
+                )
+
+    except KeyboardInterrupt:
+        logger.info("Operation cancelled by user")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Error loading data: {e}")
+        if args.verbose:
+            logger.debug("Full traceback:", exc_info=True)
         sys.exit(1)
 
 
@@ -741,115 +1122,7 @@ def _plot_main(args_list=None):
         ),
     )
     parser.add_argument("-v", "--verbose", action="store_true")
-
-    args = parser.parse_args(args_list)
-
-    if args.verbose:
-        from .logging_config import setup_logging
-
-        setup_logging("DEBUG")
-
-    # Set up interactive backend if requested
-    if args.interactive:
-        import platform
-
-        import matplotlib
-
-        if platform.system() == "Darwin":  # macOS
-            try:
-                matplotlib.use("TkAgg")
-                logger.info("Using TkAgg backend for interactive plotting on macOS")
-            except ImportError:
-                logger.warning("TkAgg not available, using default backend")
-        else:
-            try:
-                matplotlib.use("Qt5Agg")
-                logger.info("Using Qt5Agg backend for interactive plotting")
-            except ImportError:
-                try:
-                    matplotlib.use("TkAgg")
-                    logger.info("Using TkAgg backend for interactive plotting")
-                except ImportError:
-                    logger.warning("No interactive backend available, using default")
-
-    try:
-        # Load the data
-        logger.info("Loading EPR data...")
-
-        # For measurement mode, disable default plotting
-        plot_with_eprload = not args.no_plot and not (args.interactive and args.measure)
-
-        x, y, params, file_path = eprload(
-            args.file,
-            scaling=args.scaling,
-            plot_if_possible=plot_with_eprload,
-            save_if_possible=args.save and not args.measure,
-        )
-
-        if x is None or y is None:
-            logger.error("Failed to load data or loading was cancelled")
-            sys.exit(1)
-
-        logger.info(f"Successfully loaded: {file_path}")
-        logger.info(f"Data shape: {y.shape}")
-
-        if hasattr(x, "shape"):
-            logger.info(f"X-axis shape: {x.shape}")
-        elif isinstance(x, (list, tuple)):
-            logger.info(f"X-axis shapes: {[ax.shape for ax in x]}")
-
-        logger.info(f"Parameters loaded: {len(params) if params else 0}")
-
-        # Show key parameters
-        if params:
-            key_params = ["MWFQ", "MWPW", "RCAG", "AVGS", "SPTP"]
-            found_params = {k: params.get(k) for k in key_params if k in params}
-            if found_params:
-                logger.info("Key parameters:")
-                for k, v in found_params.items():
-                    logger.info(f"  {k}: {v}")
-
-        # Handle interactive plotting with optional measurements
-        if args.interactive and not args.no_plot:
-            if args.measure:
-                # Use custom interactive plot with measurement tools
-                logger.info("Creating interactive plot with measurement tools...")
-                fig, ax = create_interactive_plot_with_measurements(
-                    x, y, params, file_path, enable_measurements=True
-                )
-
-                if args.save:
-                    from pathlib import Path
-
-                    save_path = (
-                        Path(file_path).with_suffix(".png")
-                        if file_path
-                        else Path("epr_plot.png")
-                    )
-                    fig.savefig(save_path, dpi=300)
-                    logger.info(f"Plot saved to {save_path}")
-
-                import matplotlib.pyplot as plt
-
-                plt.show(block=True)
-                logger.info("Interactive measurement plot closed.")
-            else:
-                # Standard interactive plot
-                import matplotlib.pyplot as plt
-
-                plt.show(block=True)
-                logger.info(
-                    "Interactive plot displayed. Close the plot window to exit."
-                )
-
-    except KeyboardInterrupt:
-        logger.info("Operation cancelled by user")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Error loading data: {e}")
-        if args.verbose:
-            logger.debug("Full traceback:", exc_info=True)
-        sys.exit(1)
+    _run_plot(parser.parse_args(args_list))
 
 
 def cmd_plot():
@@ -859,112 +1132,7 @@ def cmd_plot():
 
 def cmd_plot_with_args(args):
     """Load and plot EPR data files interactively with pre-parsed args."""
-    if args.verbose:
-        from .logging_config import setup_logging
-
-        setup_logging("DEBUG")
-
-    # Set up interactive backend if requested
-    if args.interactive:
-        import platform
-
-        import matplotlib
-
-        if platform.system() == "Darwin":  # macOS
-            try:
-                matplotlib.use("TkAgg")
-                logger.info("Using TkAgg backend for interactive plotting on macOS")
-            except ImportError:
-                logger.warning("TkAgg not available, using default backend")
-        else:
-            try:
-                matplotlib.use("Qt5Agg")
-                logger.info("Using Qt5Agg backend for interactive plotting")
-            except ImportError:
-                try:
-                    matplotlib.use("TkAgg")
-                    logger.info("Using TkAgg backend for interactive plotting")
-                except ImportError:
-                    logger.warning("No interactive backend available, using default")
-
-    try:
-        # Load the data
-        logger.info("Loading EPR data...")
-
-        # For measurement mode, disable default plotting
-        plot_with_eprload = not args.no_plot and not (args.interactive and args.measure)
-
-        x, y, params, file_path = eprload(
-            args.file,
-            scaling=args.scaling,
-            plot_if_possible=plot_with_eprload,
-            save_if_possible=args.save and not args.measure,
-        )
-
-        if x is None or y is None:
-            logger.error("Failed to load data or loading was cancelled")
-            sys.exit(1)
-
-        logger.info(f"Successfully loaded: {file_path}")
-        logger.info(f"Data shape: {y.shape}")
-
-        if hasattr(x, "shape"):
-            logger.info(f"X-axis shape: {x.shape}")
-        elif isinstance(x, (list, tuple)):
-            logger.info(f"X-axis shapes: {[ax.shape for ax in x]}")
-
-        logger.info(f"Parameters loaded: {len(params) if params else 0}")
-
-        # Show key parameters
-        if params:
-            key_params = ["MWFQ", "MWPW", "RCAG", "AVGS", "SPTP"]
-            found_params = {k: params.get(k) for k in key_params if k in params}
-            if found_params:
-                logger.info("Key parameters:")
-                for k, v in found_params.items():
-                    logger.info(f"  {k}: {v}")
-
-        # Handle interactive plotting with optional measurements
-        if args.interactive and not args.no_plot:
-            if args.measure:
-                # Use custom interactive plot with measurement tools
-                logger.info("Creating interactive plot with measurement tools...")
-                fig, ax = create_interactive_plot_with_measurements(
-                    x, y, params, file_path, enable_measurements=True
-                )
-
-                if args.save:
-                    from pathlib import Path
-
-                    save_path = (
-                        Path(file_path).with_suffix(".png")
-                        if file_path
-                        else Path("epr_plot.png")
-                    )
-                    fig.savefig(save_path, dpi=300)
-                    logger.info(f"Plot saved to {save_path}")
-
-                import matplotlib.pyplot as plt
-
-                plt.show(block=True)
-                logger.info("Interactive measurement plot closed.")
-            else:
-                # Standard interactive plot
-                import matplotlib.pyplot as plt
-
-                plt.show(block=True)
-                logger.info(
-                    "Interactive plot displayed. Close the plot window to exit."
-                )
-
-    except KeyboardInterrupt:
-        logger.info("Operation cancelled by user")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Error loading data: {e}")
-        if args.verbose:
-            logger.debug("Full traceback:", exc_info=True)
-        sys.exit(1)
+    _run_plot(args)
 
 
 def cmd_validate():
@@ -1043,16 +1211,16 @@ def cmd_validate():
                             )
                 else:
                     valid_files += 1
-                    logger.info(f"✓ {file_path.name} - Valid")
+                    print(f"✓ {file_path.name} - Valid")
             else:
                 logger.warning(f"Failed to extract valid data from {file_path}")
-                logger.info(f"✗ {file_path.name} - Invalid data")
+                print(f"✗ {file_path.name} - Invalid data")
 
         except Exception as e:
             logger.error(f"Validation failed for {file_path}: {e}")
-            logger.info(f"✗ {file_path.name} - Error: {e}")
+            print(f"✗ {file_path.name} - Error: {e}")
 
-    logger.info(f"Validation Summary: {valid_files}/{total_files} files valid")
+    print(f"Validation Summary: {valid_files}/{total_files} files valid")
 
     if valid_files < total_files:
         sys.exit(1)

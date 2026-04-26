@@ -16,14 +16,19 @@ import numpy as np
 from scipy import fft
 from scipy import signal as scipy_signal
 
-from ..logging_config import get_logger
+try:
+    from ..logging_config import get_logger
+except ImportError:
+    import logging
+
+    def get_logger(name):
+        return logging.getLogger(name)
 
 logger = get_logger(__name__)
 
 try:
     from .apowin import apowin
 except ImportError:
-    # Handle direct execution
     from apowin import apowin
 
 

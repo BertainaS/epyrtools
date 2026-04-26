@@ -14,8 +14,8 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "EPyR Tools"
 copyright = "2025, Sylvain Bertaina"
 author = "Sylvain Bertaina"
-release = "0.3.6"
-version = "0.3.6"
+release = "0.3.8"
+version = "0.3.8"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -64,6 +64,9 @@ autodoc_default_options = {
     "undoc-members": True,
     "exclude-members": "__weakref__",
 }
+
+# Render type hints inline in the parameter descriptions
+autodoc_typehints = "description"
 
 # Generate autosummary pages
 autosummary_generate = True

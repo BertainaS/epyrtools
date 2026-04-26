@@ -11,7 +11,7 @@ from . import lineshapes, signalprocessing
 from .baseline import *
 from .baseline import setup_inline_backend, setup_notebook_backend, setup_widget_backend
 from .config import config
-from .eprload import *
+from .eprload import eprload
 from .eprplot import *
 from .fair import *
 from .isotope_gui import run_gui as isotopes
@@ -23,11 +23,9 @@ from .physics import constants
 from .plugins import plugin_manager
 from .sub.utils import BrukerListFiles
 
-__version__ = "0.3.6"
+__version__ = "0.3.8"
 
 # Set up logging
 logger = get_logger(__name__)
 
-# Display version on import
-print(f"EPyR Tools v{__version__}")
-logger.debug(f"Package 'epyr' v{__version__} initialized.")
+logger.debug("Package 'epyr' v%s initialized.", __version__)

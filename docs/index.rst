@@ -5,7 +5,7 @@ EPyR Tools Documentation
    :target: https://opensource.org/licenses/MIT
    :alt: License
 
-.. image:: https://img.shields.io/badge/version-0.3.5-blue
+.. image:: https://img.shields.io/badge/version-0.3.8-blue
    :alt: Version
 
 .. image:: https://img.shields.io/badge/tests-100%2B%20passed-brightgreen

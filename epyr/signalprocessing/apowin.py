@@ -7,7 +7,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import special
 
-from ..logging_config import get_logger
+try:
+    from ..logging_config import get_logger
+except ImportError:
+    import logging
+
+    def get_logger(name):
+        return logging.getLogger(name)
 
 logger = get_logger(__name__)
 

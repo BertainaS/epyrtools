@@ -9,8 +9,16 @@ from typing import Optional, Union
 
 import numpy as np
 
-from ..logging_config import get_logger
-from .constants import bmagn, boltzm, clight, evolt, gfree, planck
+try:
+    from ..logging_config import get_logger
+    from .constants import bmagn, boltzm, clight, evolt, gfree, planck
+except ImportError:
+    import logging
+
+    def get_logger(name):
+        return logging.getLogger(name)
+
+    from constants import bmagn, boltzm, clight, evolt, gfree, planck
 
 logger = get_logger(__name__)
 

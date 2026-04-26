@@ -8,7 +8,13 @@ from typing import Optional, Tuple, Union
 
 import numpy as np
 
-from ..logging_config import get_logger
+try:
+    from ..logging_config import get_logger
+except ImportError:
+    import logging
+
+    def get_logger(name):
+        return logging.getLogger(name)
 
 logger = get_logger(__name__)
 

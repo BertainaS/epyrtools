@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 
-from epyr.eprload import eprload
+from ..eprload import eprload
 
 from ..logging_config import get_logger
 

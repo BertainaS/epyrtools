@@ -14,12 +14,28 @@ Based on the _plot_data function from eprload.py
 import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
 from .logging_config import get_logger
 
 logger = get_logger(__name__)
+
+
+def _axis_label(
+    params: Optional[Dict[str, Any]],
+    name_key: str,
+    unit_key: str,
+    default_name: str,
+    default_unit: str = "a.u.",
+) -> str:
+    """Build an axis label string from eprload params."""
+    name = params.get(name_key, default_name) if params else default_name
+    unit = params.get(unit_key, default_unit) if params else default_unit
+    if isinstance(unit, list):
+        unit = unit[0]
+    return f"{name} ({unit})"
 
 
 def plot_1d(
@@ -32,15 +48,23 @@ def plot_1d(
     """
     Plot 1D EPR data.
 
-    Args:
-        x: X-axis data from eprload (can be None, array, or list)
-        y: 1D spectral data array
-        params: Parameter dictionary from eprload
-        title: Plot title (optional)
-        ax: Matplotlib axes to plot on (optional)
+    Parameters
+    ----------
+    x : np.ndarray, list, or None
+        X-axis data from eprload. Falls back to point index if None or shape mismatch.
+    y : np.ndarray
+        1D EPR signal array.
+    params : dict, optional
+        Parameter dictionary from eprload, used to extract axis labels and units.
+    title : str, optional
+        Plot title.
+    ax : matplotlib.axes.Axes, optional
+        Axes to draw on. A new figure is created if not provided.
 
-    Returns:
-        Tuple of (figure, axes)
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+    ax : matplotlib.axes.Axes
     """
     if y is None or y.size == 0:
         raise ValueError("No data available to plot.")
@@ -65,12 +89,7 @@ def plot_1d(
         x_label = "Index (points)"
     else:
         absc = x
-        x_label = params.get("XAXIS_NAME", "X Axis") if params else "X Axis"
-        x_unit = params.get("XAXIS_UNIT", "a.u.") if params else "a.u."
-        if isinstance(x_unit, list):
-            x_unit = x_unit[0]
-        if x_unit and x_unit != "a.u.":
-            x_label += f" ({x_unit})"
+        x_label = _axis_label(params, "XAXIS_NAME", "XAXIS_UNIT", "X Axis")
 
     # Plot data
     if np.isrealobj(y):
@@ -106,22 +125,34 @@ def plot_2d_map(
     """
     Plot 2D EPR data as a color map.
 
-    Args:
-        x: Axis data from eprload (can be None, array, or list of arrays)
-        y: 2D spectral data array
-        params: Parameter dictionary from eprload
-        title: Plot title (optional)
-        ax: Matplotlib axes to plot on (optional)
-        cmap: Colormap name (default: "magma")
-        vmin: Minimum value for color scale (default: data min)
-        vmax: Maximum value for color scale (default: data max)
+    Parameters
+    ----------
+    x : np.ndarray, list, or None
+        Axis data from eprload. A list of two arrays sets both x and y axes.
+    y : np.ndarray
+        2D EPR signal array, shape (ny, nx).
+    params : dict, optional
+        Parameter dictionary from eprload, used to extract axis labels and units.
+    title : str, optional
+        Plot title.
+    ax : matplotlib.axes.Axes, optional
+        Axes to draw on. A new figure is created if not provided.
+    cmap : str, optional
+        Matplotlib colormap name (default: "magma").
+    vmin : float, optional
+        Lower bound of the color scale. Defaults to data minimum.
+    vmax : float, optional
+        Upper bound of the color scale. Defaults to data maximum.
 
-    Returns:
-        Tuple of (figure, axes)
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+    ax : matplotlib.axes.Axes
 
-    Examples:
-        >>> fig, ax = plot_2d_map(x, y, parm, vmin=-100, vmax=100)
-        >>> fig, ax = plot_2d_map(x, y, parm, vmin=0)  # clip negatives
+    Examples
+    --------
+    >>> fig, ax = plot_2d_map(x, y, params, vmin=-100, vmax=100)
+    >>> fig, ax = plot_2d_map(x, y, params, vmin=0)  # clip negatives
     """
     if y is None or y.size == 0:
         raise ValueError("No data available to plot.")
@@ -148,19 +179,13 @@ def plot_2d_map(
         x_axis, y_axis = x[0], x[1]
         if isinstance(x_axis, np.ndarray) and x_axis.size == nx:
             x_coords = x_axis
-            x_name = params.get("XAXIS_NAME", "X Axis") if params else "X Axis"
-            x_unit = params.get("XAXIS_UNIT", "a.u.") if params else "a.u."
-            x_label = f"{x_name} ({x_unit})"
+            x_label = _axis_label(params, "XAXIS_NAME", "XAXIS_UNIT", "X Axis")
         if isinstance(y_axis, np.ndarray) and y_axis.size == ny:
             y_coords = y_axis
-            y_name = params.get("YAXIS_NAME", "Y Axis") if params else "Y Axis"
-            y_unit = params.get("YAXIS_UNIT", "a.u.") if params else "a.u."
-            y_label = f"{y_name} ({y_unit})"
+            y_label = _axis_label(params, "YAXIS_NAME", "YAXIS_UNIT", "Y Axis")
     elif isinstance(x, np.ndarray) and x.size == nx:
         x_coords = x
-        x_name = params.get("XAXIS_NAME", "X Axis") if params else "X Axis"
-        x_unit = params.get("XAXIS_UNIT", "a.u.") if params else "a.u."
-        x_label = f"{x_name} ({x_unit})"
+        x_label = _axis_label(params, "XAXIS_NAME", "XAXIS_UNIT", "X Axis")
 
     # Plot data (real part if complex)
     plot_data = np.real(y)
@@ -193,27 +218,39 @@ def plot_2d_waterfall(
     clip_factor: Optional[float] = None,
 ) -> Tuple[plt.Figure, plt.Axes]:
     """
-    Plot 2D EPR data as waterfall plot.
+    Plot 2D EPR data as a waterfall plot.
 
-    Args:
-        x: Axis data from eprload (can be None, array, or list of arrays)
-        y: 2D spectral data array
-        params: Parameter dictionary from eprload
-        title: Plot title (optional)
-        ax: Matplotlib axes to plot on (optional)
-        offset_factor: Vertical offset between traces
-        max_traces: Maximum number of traces to plot (default: 20)
-        cmap: Colormap name (default: "viridis")
-        lw: Line width for traces (default: 0.75)
-        clip_factor: Clipping threshold as a fraction of
-            each trace's peak-to-peak amplitude. Values above
-            ``clip_factor * max(abs(trace))`` or below
-            ``-clip_factor * max(abs(trace))`` are clipped.
-            None means no clipping (default). Typical values:
-            0.5 clips at 50% of max amplitude.
+    Parameters
+    ----------
+    x : np.ndarray, list, or None
+        Axis data from eprload. A list of two arrays sets both x and y axes.
+    y : np.ndarray
+        2D EPR signal array, shape (ny, nx).
+    params : dict, optional
+        Parameter dictionary from eprload, used to extract axis labels and units.
+    title : str, optional
+        Plot title.
+    ax : matplotlib.axes.Axes, optional
+        Axes to draw on. A new figure is created if not provided.
+    offset_factor : float, optional
+        Vertical spacing between traces as a fraction of the total data range
+        (default: 0.5).
+    max_traces : int, optional
+        Maximum number of traces to display. If ny > max_traces, traces are
+        subsampled uniformly (default: 20).
+    cmap : str, optional
+        Matplotlib colormap used to color-code traces (default: "viridis").
+    lw : float, optional
+        Line width for each trace (default: 0.75).
+    clip_factor : float, optional
+        Clip each trace at ``clip_factor * max(|trace|)`` before adding the
+        vertical offset. None disables clipping (default). A value of 0.5
+        clips at 50% of the trace maximum.
 
-    Returns:
-        Tuple of (figure, axes)
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+    ax : matplotlib.axes.Axes
     """
     if y is None or y.size == 0:
         raise ValueError("No data available to plot.")
@@ -223,7 +260,7 @@ def plot_2d_waterfall(
 
     # Create figure if not provided
     if ax is None:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(layout="constrained")
     else:
         fig = ax.get_figure()
 
@@ -254,9 +291,7 @@ def plot_2d_waterfall(
         x_label = f"Index ({nx} points)"
     else:
         x_coords = x_axis
-        x_name = params.get("XAXIS_NAME", "X Axis") if params else "X Axis"
-        x_unit = params.get("XAXIS_UNIT", "a.u.") if params else "a.u."
-        x_label = f"{x_name} ({x_unit})"
+        x_label = _axis_label(params, "XAXIS_NAME", "XAXIS_UNIT", "X Axis")
 
     # Get y-axis parameter name for labeling
     y_param_name = params.get("YAXIS_NAME", "Parameter") if params else "Parameter"
@@ -266,10 +301,7 @@ def plot_2d_waterfall(
     data_range = np.ptp(plot_data)
     offset = data_range * offset_factor
 
-    # Create colormap
-    from matplotlib import cm
-
-    colormap = cm.get_cmap(cmap)
+    colormap = matplotlib.colormaps[cmap]
     colors = colormap(np.linspace(0, 1, len(trace_indices)))
 
     # Plot traces
@@ -309,7 +341,6 @@ def plot_2d_waterfall(
     if title:
         ax.set_title(title)
 
-    fig.tight_layout()
     return fig, ax
 
 
@@ -320,25 +351,34 @@ def plot_2d_slicer(
     title: Optional[str] = None,
     slice_direction: str = "horizontal",
     cmap: str = "magma",
-) -> None:
+) -> Dict[str, Any]:
     """
-    Interactive 2D EPR data slicer with slider control.
+    Interactive 2D EPR data slicer with a slider control.
 
-    Allows visualization of 2D EPR data slice by slice with an interactive
-    slicer to navigate in both directions.
+    Parameters
+    ----------
+    x : np.ndarray, list, or None
+        Axis data from eprload. A list of two arrays sets both x and y axes.
+    y : np.ndarray
+        2D EPR signal array, shape (ny, nx).
+    params : dict, optional
+        Parameter dictionary from eprload, used to extract axis labels and units.
+    title : str, optional
+        Plot title shown above the active slice panel.
+    slice_direction : {'horizontal', 'vertical'}, optional
+        Axis along which to slice (default: 'horizontal').
+    cmap : str, optional
+        Matplotlib colormap name for the overview panel (default: "magma").
 
-    Args:
-        x: X-axis data from eprload (can be None, array, or list)
-        y: 2D spectral data array (ny, nx)
-        params: Parameter dictionary from eprload
-        title: Plot title (optional)
-        slice_direction: 'horizontal' for horizontal slices,
-            'vertical' for vertical slices
-        cmap: Colormap name (default: "magma")
+    Returns
+    -------
+    dict
+        Keys: 'figure', 'ax_main', 'ax_overview', 'slider', 'line', 'slice_line'.
 
-    Note:
-        Uses matplotlib widgets for interactivity. Works in Jupyter
-        with %matplotlib widget or %matplotlib notebook.
+    Notes
+    -----
+    Requires an interactive matplotlib backend. In Jupyter, activate with
+    ``%matplotlib widget`` or ``%matplotlib notebook`` before calling.
     """
     if y is None or y.size == 0:
         raise ValueError("No data available to plot.")
@@ -386,24 +426,18 @@ def plot_2d_slicer(
         y_axis = np.arange(ny)
 
     # Determine axes and labels
+    x_label = _axis_label(params, "XAXIS_NAME", "XAXIS_UNIT", "Field", "G")
+    y_label = _axis_label(params, "YAXIS_NAME", "YAXIS_UNIT", "Parameter")
     if slice_direction == "horizontal":
         slice_values = y_axis
         plot_axis = x_axis
-        x_name = params.get("XAXIS_NAME", "Field") if params else "Field"
-        x_unit = params.get("XAXIS_UNIT", "G") if params else "G"
-        y_name = params.get("YAXIS_NAME", "Parameter") if params else "Parameter"
-        y_unit = params.get("YAXIS_UNIT", "a.u.") if params else "a.u."
-        plot_label = f"{x_name} ({x_unit})"
-        slice_label = f"{y_name} ({y_unit})"
+        plot_label = x_label
+        slice_label = y_label
     else:
         slice_values = x_axis
         plot_axis = y_axis
-        x_name = params.get("XAXIS_NAME", "Field") if params else "Field"
-        x_unit = params.get("XAXIS_UNIT", "G") if params else "G"
-        y_name = params.get("YAXIS_NAME", "Parameter") if params else "Parameter"
-        y_unit = params.get("YAXIS_UNIT", "a.u.") if params else "a.u."
-        plot_label = f"{y_name} ({y_unit})"
-        slice_label = f"{x_name} ({x_unit})"
+        plot_label = y_label
+        slice_label = x_label
 
     # Create figure and axes
     fig, (ax_main, ax_overview) = plt.subplots(
@@ -488,13 +522,8 @@ def plot_2d_slicer(
     # Connect slider to update function
     slider.on_changed(update_slice)
 
-    # User instructions
-    logger.info("🎛️  Interactive 2D EPR Viewer")
-    logger.info("=" * 50)
-    logger.info(f"Direction: {slice_direction}")
-    logger.info(f"Number of slices: {n_slices}")
-    logger.info("Use the slider to navigate between slices")
-    logger.info("Red line in overview shows current position")
+    logger.info("Interactive 2D EPR Viewer: direction=%s, slices=%d",
+                slice_direction, n_slices)
 
     # Show plot
     plt.show()

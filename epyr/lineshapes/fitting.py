@@ -1,12 +1,11 @@
 """
-EPR Signal Fitting Module
+EPR signal fitting module.
 
-Provides comprehensive fitting capabilities for EPR signals
-using various lineshape functions. Integrates with the eprload
-function and lineshapes module for complete analysis workflow.
+Fit EPR spectra with Gaussian, Lorentzian, Voigt, or pseudo-Voigt lineshapes.
+Supports absorption and derivative signals (orders 0-2), optional phase mixing,
+and affine baseline correction.
 """
 
-import math
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
@@ -15,18 +14,44 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 from ..logging_config import get_logger
-
-logger = get_logger(__name__)
-
 from .gaussian import gaussian
 from .lorentzian import lorentzian
 from .lshape import pseudo_voigt
 from .voigtian import voigtian
 
+logger = get_logger(__name__)
+
 
 @dataclass
 class FitResult:
-    """Container for fitting results"""
+    """
+    Container for lineshape fit results.
+
+    Attributes
+    ----------
+    shape_type : str
+        Name of the fitted lineshape model.
+    parameters : dict
+        Fitted parameter values keyed by parameter name.
+    parameter_errors : dict
+        Standard errors of fitted parameters (square root of covariance diagonal).
+    fitted_curve : np.ndarray
+        Model evaluated at the fitted points (x_fit).
+    residuals : np.ndarray
+        Data minus model at the fitted points.
+    r_squared : float
+        Coefficient of determination R².
+    chi_squared : float
+        Reduced chi-squared: sum of squared residuals divided by degrees of freedom.
+    success : bool
+        True if curve_fit converged.
+    message : str
+        Convergence message or error description.
+    covariance_matrix : np.ndarray or None
+        Full parameter covariance matrix returned by curve_fit.
+    x_fit : np.ndarray or None
+        X values used for fitting, after NaN removal and masking.
+    """
 
     shape_type: str
     parameters: Dict[str, float]
@@ -38,9 +63,10 @@ class FitResult:
     success: bool
     message: str
     covariance_matrix: Optional[np.ndarray] = None
+    x_fit: Optional[np.ndarray] = None
 
     def summary(self) -> str:
-        """Generate a summary string of the fit results"""
+        """Return a formatted string summarizing fit quality and parameters."""
         lines = [f"=== Fit Results - {self.shape_type.title()} ==="]
         lines.append(f"Success: {self.success}")
         if not self.success:
@@ -70,82 +96,70 @@ def fit_epr_signal(
     derivative: int = 0,
     fit_phase: bool = False,
     fit_baseline: bool = False,
+    mask: Optional[np.ndarray] = None,
     plot: bool = True,
     **fit_kwargs,
 ) -> FitResult:
     """
     Fit EPR signal with specified lineshape function.
 
-    Parameters:
-    -----------
-    x_data : array
-        X-axis data (magnetic field or frequency)
-    y_data : array
-        Y-axis data (EPR signal intensity)
-    shape_type : str, default='gaussian'
-        Type of lineshape to fit:
-        - 'gaussian': Gaussian lineshape
-        - 'lorentzian': Lorentzian lineshape
-        - 'voigt': Voigt profile (requires 2 width parameters)
-        - 'pseudo_voigt': Pseudo-Voigt profile
+    Parameters
+    ----------
+    x_data : np.ndarray
+        Magnetic field axis, in Gauss.
+    y_data : np.ndarray
+        EPR signal intensity (arbitrary units).
+    shape_type : str, optional
+        Lineshape model: 'gaussian', 'lorentzian', 'voigt', or 'pseudo_voigt'
+        (default: 'gaussian').
     initial_params : dict, optional
-        Initial parameter guesses. If None, auto-estimated.
-        Expected keys depend on shape_type and fit_phase:
-        - Basic: {'center', 'width', 'amplitude'}
-        - With phase: add 'phase'
-        - With baseline: add 'baseline_slope', 'baseline_offset'
-        - Voigt: {'center', 'gaussian_width', 'lorentzian_width', 'amplitude'}
-        - Pseudo-Voigt: {'center', 'width', 'amplitude', 'alpha'}
+        Initial parameter guesses. Auto-estimated from data if None.
+        Keys depend on shape_type: basic models use {'center', 'width', 'amplitude'};
+        voigt uses {'center', 'gaussian_width', 'lorentzian_width', 'amplitude'};
+        pseudo_voigt adds 'alpha'; phase fitting adds 'phase'; baseline fitting
+        adds 'baseline_slope' and 'baseline_offset'.
     bounds : dict, optional
-        Parameter bounds as {param: (min, max)}
-    derivative : int, default=0
-        Derivative order to use (0, 1, 2). This is a FIXED parameter, not fitted.
-    fit_phase : bool, default=False
-        Whether to fit the phase parameter (absorption/dispersion mixing)
-    fit_baseline : bool, default=False
-        Whether to include an affine baseline (a*x + b) in the fit model.
-        When True, two additional parameters are fitted:
-        - baseline_slope (a): slope of the linear baseline
-        - baseline_offset (b): constant offset of the baseline
-    plot : bool, default=True
-        Whether to create a plot of the results
-    **fit_kwargs : dict
-        Additional keywords passed to scipy.optimize.curve_fit
+        Parameter bounds as {name: (lower, upper)}, overriding data-derived defaults.
+    derivative : int, optional
+        Derivative order: 0 (absorption), 1, or 2. Fixed, not fitted (default: 0).
+    fit_phase : bool, optional
+        Fit the phase angle controlling absorption/dispersion mixing (default: False).
+    fit_baseline : bool, optional
+        Include an affine baseline ``a*x + b`` in the model. Adds 'baseline_slope'
+        and 'baseline_offset' as fitted parameters (default: False).
+    mask : np.ndarray of bool, optional
+        Boolean array of the same length as x_data. True selects a point for
+        fitting; False excludes it. Useful to reject artefacts or solvent peaks.
+        If None, all non-NaN points are used.
+    plot : bool, optional
+        Display a fit plot with residuals panel (default: True).
+    **fit_kwargs
+        Additional keyword arguments passed to scipy.optimize.curve_fit.
 
-    Returns:
-    --------
+    Returns
+    -------
     FitResult
-        Object containing fit parameters, statistics, and curves
+        Fit parameters, errors, statistics, fitted curve, and residuals.
+        fitted_curve and residuals are defined on x_fit (masked points only).
 
-    Examples:
-    ---------
-    >>> # Load EPR data
+    Examples
+    --------
     >>> from epyr import eprload
     >>> x, y, params, filepath = eprload('data.DTA')
-    >>>
-    >>> # Fit with Gaussian
     >>> result = fit_epr_signal(x, y, 'gaussian')
     >>> print(result.summary())
     >>>
-    >>> # Fit 1st derivative with phase adjustment
+    >>> # 1st derivative with phase
     >>> result = fit_epr_signal(x, y, 'gaussian', derivative=1, fit_phase=True)
     >>>
-    >>> # Fit with linear baseline correction
-    >>> result = fit_epr_signal(x, y, 'gaussian', fit_baseline=True)
+    >>> # Exclude a spectral artefact between 3480-3510 G
+    >>> mask = ~((x >= 3480) & (x <= 3510))
+    >>> result = fit_epr_signal(x, y, 'gaussian', mask=mask)
     >>>
-    >>> # Fit with custom initial parameters including phase
-    >>> initial = {'center': 3500, 'width': 10,
-    ...            'amplitude': 1000, 'phase': 0.1}
-    >>> result = fit_epr_signal(
-    ...     x, y, 'lorentzian',
-    ...     initial_params=initial, fit_phase=True)
-    >>>
-    >>> # Fit 2nd derivative with bounds
-    >>> bounds = {'center': (3400, 3600),
-    ...           'width': (5, 50), 'phase': (0, 3.14)}
-    >>> result = fit_epr_signal(
-    ...     x, y, 'gaussian', derivative=2,
-    ...     fit_phase=True, bounds=bounds)
+    >>> # 2nd derivative with explicit bounds
+    >>> bounds = {'center': (3400, 3600), 'width': (5, 50), 'phase': (0, 3.14)}
+    >>> result = fit_epr_signal(x, y, 'gaussian', derivative=2,
+    ...                         fit_phase=True, bounds=bounds)
     """
 
     # Input validation
@@ -166,6 +180,23 @@ def fit_epr_signal(
     x_clean = x_data[valid_mask]
     y_clean = y_data[valid_mask]
 
+    # Apply user mask
+    if mask is not None:
+        mask = np.asarray(mask, dtype=bool)
+        if mask.shape != x_data.shape:
+            raise ValueError(
+                f"mask shape {mask.shape} does not match x_data shape {x_data.shape}"
+            )
+        fit_mask = mask[valid_mask]
+        if not np.any(fit_mask):
+            raise ValueError("No valid data points after applying mask")
+        x_fit = x_clean[fit_mask]
+        y_fit = y_clean[fit_mask]
+    else:
+        fit_mask = np.ones(len(x_clean), dtype=bool)
+        x_fit = x_clean
+        y_fit = y_clean
+
     # Validate derivative parameter
     if not isinstance(derivative, int) or derivative < 0 or derivative > 2:
         raise ValueError("derivative must be 0, 1, or 2")
@@ -178,17 +209,17 @@ def fit_epr_signal(
     # Estimate initial parameters if not provided
     if initial_params is None:
         initial_params = _estimate_initial_params(
-            x_clean, y_clean, shape_type, derivative, fit_phase, fit_baseline
+            x_fit, y_fit, shape_type, derivative, fit_phase, fit_baseline
         )
 
     # Validate and complete initial parameters
     initial_params = _validate_initial_params(
-        initial_params, param_names, x_clean, y_clean
+        initial_params, param_names, x_fit, y_fit
     )
 
     # Setup parameter bounds
     lower_bounds, upper_bounds = _setup_bounds(
-        param_names, bounds, param_bounds, initial_params, x_clean, y_clean
+        param_names, bounds, param_bounds, initial_params, x_fit, y_fit
     )
 
     # Prepare parameters for fitting
@@ -200,20 +231,20 @@ def fit_epr_signal(
     default_kwargs.update(fit_kwargs)
 
     try:
-        # Perform the fit
+        # Perform the fit on masked points
         popt, pcov = curve_fit(
-            fit_func, x_clean, y_clean, p0=p0, bounds=bounds_tuple, **default_kwargs
+            fit_func, x_fit, y_fit, p0=p0, bounds=bounds_tuple, **default_kwargs
         )
 
-        # Calculate fitted curve and residuals
-        y_fitted = fit_func(x_clean, *popt)
-        residuals = y_clean - y_fitted
+        # Calculate fitted curve and residuals on fit points
+        y_fitted = fit_func(x_fit, *popt)
+        residuals = y_fit - y_fitted
 
         # Calculate statistics
         ss_res = np.sum(residuals**2)
-        ss_tot = np.sum((y_clean - np.mean(y_clean)) ** 2)
+        ss_tot = np.sum((y_fit - np.mean(y_fit)) ** 2)
         r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
-        chi_squared = ss_res / (len(y_clean) - len(popt))
+        chi_squared = ss_res / (len(y_fit) - len(popt))
 
         # Extract parameter values and errors
         param_dict = {name: value for name, value in zip(param_names, popt)}
@@ -237,12 +268,22 @@ def fit_epr_signal(
             success=True,
             message="Fit converged successfully",
             covariance_matrix=pcov,
+            x_fit=x_fit,
         )
 
         # Create plot if requested
         if plot:
             _plot_fit_results(
-                x_clean, y_clean, result, shape_type, derivative, fit_phase
+                x_fit,
+                y_fit,
+                result,
+                shape_type,
+                derivative,
+                fit_phase,
+                x_all=x_clean,
+                y_all=y_clean,
+                fit_func=fit_func,
+                popt=popt,
             )
 
         return result
@@ -262,68 +303,66 @@ def fit_epr_signal(
         )
 
 
+def _make_simple_lineshape(
+    func, derivative: int, fit_phase: bool
+) -> Tuple[callable, List[str], Dict[str, Tuple[float, float]]]:
+    """Build wrapper and metadata for single-width lineshapes (gaussian, lorentzian)."""
+    if fit_phase:
+        def _lineshape(x, center, width, amplitude, phase):
+            return amplitude * func(
+                x, center, width, derivative=derivative, phase=phase
+            )
+        param_names = ["center", "width", "amplitude", "phase"]
+    else:
+        def _lineshape(x, center, width, amplitude):
+            return amplitude * func(x, center, width, derivative=derivative)
+        param_names = ["center", "width", "amplitude"]
+
+    param_bounds = {
+        "center": (-np.inf, np.inf),
+        "width": (0.001, np.inf),
+        "amplitude": (-np.inf, np.inf),
+        "phase": (-np.pi, np.pi),
+    }
+    return _lineshape, param_names, param_bounds
+
+
 def _get_fit_function(
     shape_type: str, derivative: int, fit_phase: bool, fit_baseline: bool = False
 ) -> Tuple[callable, List[str], Dict[str, Tuple[float, float]]]:
-    """Get the appropriate fitting function and parameter information.
+    """
+    Build the fitting function and parameter metadata for a given lineshape.
 
     Parameters
     ----------
     shape_type : str
-        Lineshape type ('gaussian', 'lorentzian', 'voigt', 'pseudo_voigt')
+        Lineshape model ('gaussian', 'lorentzian', 'voigt', 'pseudo_voigt').
     derivative : int
-        Derivative order (0, 1, 2)
+        Derivative order (0, 1, or 2).
     fit_phase : bool
-        Whether to include phase as a fitted parameter
+        Include phase as a fitted parameter.
     fit_baseline : bool
-        Whether to include an affine baseline (a*x + b) in the model
+        Wrap the lineshape with an affine baseline (a*x + b).
+
+    Returns
+    -------
+    fit_func : callable
+        Wrapped lineshape compatible with scipy.optimize.curve_fit.
+    param_names : list of str
+        Ordered parameter names matching the function signature.
+    param_bounds : dict
+        Default bounds for each parameter as {name: (lower, upper)}.
     """
 
     if shape_type == "gaussian":
-        if fit_phase:
-
-            def _lineshape(x, center, width, amplitude, phase):
-                return amplitude * gaussian(
-                    x, center, width, derivative=derivative, phase=phase
-                )
-
-            param_names = ["center", "width", "amplitude", "phase"]
-        else:
-
-            def _lineshape(x, center, width, amplitude):
-                return amplitude * gaussian(x, center, width, derivative=derivative)
-
-            param_names = ["center", "width", "amplitude"]
-
-        param_bounds = {
-            "center": (-np.inf, np.inf),
-            "width": (0.001, np.inf),
-            "amplitude": (-np.inf, np.inf),
-            "phase": (-np.pi, np.pi),
-        }
+        _lineshape, param_names, param_bounds = _make_simple_lineshape(
+            gaussian, derivative, fit_phase
+        )
 
     elif shape_type == "lorentzian":
-        if fit_phase:
-
-            def _lineshape(x, center, width, amplitude, phase):
-                return amplitude * lorentzian(
-                    x, center, width, derivative=derivative, phase=phase
-                )
-
-            param_names = ["center", "width", "amplitude", "phase"]
-        else:
-
-            def _lineshape(x, center, width, amplitude):
-                return amplitude * lorentzian(x, center, width, derivative=derivative)
-
-            param_names = ["center", "width", "amplitude"]
-
-        param_bounds = {
-            "center": (-np.inf, np.inf),
-            "width": (0.001, np.inf),
-            "amplitude": (-np.inf, np.inf),
-            "phase": (-np.pi, np.pi),
-        }
+        _lineshape, param_names, param_bounds = _make_simple_lineshape(
+            lorentzian, derivative, fit_phase
+        )
 
     elif shape_type == "voigt":
         if fit_phase:
@@ -424,10 +463,31 @@ def _estimate_initial_params(
     fit_phase: bool = False,
     fit_baseline: bool = False,
 ) -> Dict[str, float]:
-    """Estimate initial parameters from data.
+    """
+    Estimate initial fit parameters from the data.
 
-    Handles absorption (derivative=0), first derivative, and second derivative
-    signals with appropriate heuristics for center, width, and amplitude.
+    Dispatches to derivative-specific estimators for center, width, and amplitude,
+    then appends shape-specific and optional parameters (phase, baseline).
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Magnetic field axis, in Gauss.
+    y : np.ndarray
+        EPR signal values.
+    shape_type : str
+        Lineshape model ('gaussian', 'lorentzian', 'voigt', 'pseudo_voigt').
+    derivative : int, optional
+        Signal derivative order (0, 1, or 2). Default 0.
+    fit_phase : bool, optional
+        Include a phase parameter estimate. Default False.
+    fit_baseline : bool, optional
+        Include affine baseline parameter estimates. Default False.
+
+    Returns
+    -------
+    dict
+        Initial parameter estimates keyed by parameter name.
     """
 
     if derivative == 0:
@@ -459,24 +519,14 @@ def _estimate_initial_params(
     if shape_type == "pseudo_voigt":
         initial_params["alpha"] = 0.5  # 50/50 mix
 
-    # Add phase parameter if fitting phase
     if fit_phase:
-        if len(y) > 2:
-            peak_region = np.abs(x - center) < width
-            if np.sum(peak_region) > 2:
-                y_peak = y[peak_region]
-                x_peak = x[peak_region]
-                if len(y_peak) > 2:
-                    gradient_estimate = np.gradient(y_peak, x_peak)
-                    avg_gradient = np.mean(gradient_estimate)
-                    if np.abs(avg_gradient) > np.abs(np.mean(y_peak)) * 0.1:
-                        initial_params["phase"] = np.pi / 4
-                    else:
-                        initial_params["phase"] = 0.0
-                else:
-                    initial_params["phase"] = 0.0
-            else:
-                initial_params["phase"] = 0.0
+        peak_region = np.abs(x - center) < width
+        if np.sum(peak_region) > 2:
+            y_peak, x_peak = y[peak_region], x[peak_region]
+            avg_grad = np.mean(np.gradient(y_peak, x_peak))
+            # Use π/4 when a dispersive component is detectable in the peak region
+            dispersive = np.abs(avg_grad) > np.abs(np.mean(y_peak)) * 0.1
+            initial_params["phase"] = np.pi / 4 if dispersive else 0.0
         else:
             initial_params["phase"] = 0.0
 
@@ -499,7 +549,25 @@ def _estimate_initial_params(
 def _estimate_absorption_params(
     x: np.ndarray, y: np.ndarray
 ) -> Tuple[float, float, float]:
-    """Estimate center, width, amplitude for absorption-like (derivative=0) signals."""
+    """
+    Estimate center, width, and amplitude for an absorption signal (derivative=0).
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Magnetic field axis, in Gauss.
+    y : np.ndarray
+        EPR absorption signal.
+
+    Returns
+    -------
+    center : float
+        Field position of the peak, in Gauss.
+    width : float
+        Estimated FWHM, in Gauss.
+    amplitude : float
+        Signed peak-to-peak amplitude.
+    """
 
     amplitude = np.max(y) - np.min(y)
     if amplitude == 0:
@@ -535,12 +603,30 @@ def _estimate_absorption_params(
 def _estimate_first_derivative_params(
     x: np.ndarray, y: np.ndarray, shape_type: str
 ) -> Tuple[float, float, float]:
-    """Estimate center, width, amplitude for first derivative signals.
+    """
+    Estimate center, width, and amplitude for a first-derivative EPR signal.
 
-    For a 1st derivative EPR signal, the center is at the zero-crossing
-    between the positive and negative extrema. The width is estimated from
-    the peak separation, and the amplitude is computed by comparing
-    the data peak-to-peak with that of a unit-amplitude model.
+    The center is at the zero-crossing between the positive and negative extrema.
+    Width is estimated from the extrema separation; amplitude is scaled by comparing
+    the data peak-to-peak with a unit-amplitude model derivative.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Magnetic field axis, in Gauss.
+    y : np.ndarray
+        First-derivative EPR signal.
+    shape_type : str
+        Lineshape model, used to evaluate the unit-amplitude reference derivative.
+
+    Returns
+    -------
+    center : float
+        Estimated line center, in Gauss.
+    width : float
+        Estimated linewidth, in Gauss.
+    amplitude : float
+        Estimated amplitude scaling factor.
     """
 
     idx_max = np.argmax(y)
@@ -568,11 +654,29 @@ def _estimate_first_derivative_params(
 def _estimate_second_derivative_params(
     x: np.ndarray, y: np.ndarray, shape_type: str
 ) -> Tuple[float, float, float]:
-    """Estimate center, width, amplitude for second derivative signals.
+    """
+    Estimate center, width, and amplitude for a second-derivative EPR signal.
 
-    For a 2nd derivative, the central extremum is at the line center.
-    The width is estimated from the distance between the central peak
-    and the side lobes.
+    The central extremum (largest |y|) gives the line center. Width is estimated
+    from the separation between the central peak and the flanking side lobes.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Magnetic field axis, in Gauss.
+    y : np.ndarray
+        Second-derivative EPR signal.
+    shape_type : str
+        Lineshape model, used to evaluate the unit-amplitude reference.
+
+    Returns
+    -------
+    center : float
+        Estimated line center, in Gauss.
+    width : float
+        Estimated linewidth, in Gauss.
+    amplitude : float
+        Estimated amplitude scaling factor.
     """
 
     # Central extremum (largest absolute value) gives the center
@@ -615,10 +719,32 @@ def _estimate_amplitude_from_model(
     shape_type: str,
     derivative: int,
 ) -> float:
-    """Estimate the amplitude scaling factor by computing the model peak-to-peak.
+    """
+    Estimate the amplitude scaling factor from the model peak-to-peak.
 
-    Computes the lineshape with unit amplitude and estimated width/center,
+    Evaluates the lineshape at unit amplitude with the estimated center and width,
     then scales to match the observed data peak-to-peak.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Magnetic field axis, in Gauss.
+    center : float
+        Estimated line center, in Gauss.
+    width : float
+        Estimated linewidth, in Gauss.
+    data_peak_to_peak : float
+        Observed peak-to-peak amplitude of the signal.
+    shape_type : str
+        Lineshape model used to compute the reference curve.
+    derivative : int
+        Derivative order of the reference curve (0, 1, or 2).
+
+    Returns
+    -------
+    float
+        Amplitude scaling factor. Returns data_peak_to_peak if the model
+        peak-to-peak is zero or an exception occurs.
     """
 
     try:
@@ -654,7 +780,25 @@ def _validate_initial_params(
     x: np.ndarray,
     y: np.ndarray,
 ) -> Dict[str, float]:
-    """Validate and complete initial parameters"""
+    """
+    Fill in missing initial parameters with data-derived defaults.
+
+    Parameters
+    ----------
+    initial_params : dict
+        Partial or complete parameter dict provided by the caller or estimator.
+    param_names : list of str
+        Full list of parameters required by the fit function.
+    x : np.ndarray
+        Magnetic field axis, used to derive fallback values.
+    y : np.ndarray
+        EPR signal, used to derive fallback values.
+
+    Returns
+    -------
+    dict
+        Complete parameter dict with all entries in param_names present.
+    """
 
     validated = initial_params.copy()
 
@@ -687,7 +831,32 @@ def _setup_bounds(
     x: np.ndarray,
     y: np.ndarray,
 ) -> Tuple[List[float], List[float]]:
-    """Setup parameter bounds for fitting"""
+    """
+    Build ordered lower and upper bound lists for scipy.optimize.curve_fit.
+
+    User-supplied bounds override defaults; remaining infinite bounds are
+    replaced with data-range-derived values to keep the fit physically meaningful.
+
+    Parameters
+    ----------
+    param_names : list of str
+        Ordered parameter names matching the fit function signature.
+    user_bounds : dict or None
+        Caller-supplied bounds as {name: (lower, upper)}.
+    default_bounds : dict
+        Default bounds per parameter as {name: (lower, upper)}.
+    initial_params : dict
+        Current initial values; used to ensure each value lies inside its bounds.
+    x : np.ndarray
+        Magnetic field axis, used to derive data-range bounds.
+    y : np.ndarray
+        EPR signal, used to derive data-range bounds.
+
+    Returns
+    -------
+    lower_bounds : list of float
+    upper_bounds : list of float
+    """
 
     lower_bounds = []
     upper_bounds = []
@@ -755,55 +924,6 @@ def _setup_bounds(
     return lower_bounds, upper_bounds
 
 
-def _format_significant_figures(value: float, n_sig: int) -> str:
-    """
-    Format a number to n significant figures.
-
-    Parameters:
-    -----------
-    value : float
-        Number to format
-    n_sig : int
-        Number of significant figures
-
-    Returns:
-    --------
-    str
-        Formatted number string
-    """
-    if value == 0:
-        return "0"
-
-    # Handle negative values
-    if value < 0:
-        return "-" + _format_significant_figures(-value, n_sig)
-
-    # Find the order of magnitude
-    order = math.floor(math.log10(abs(value)))
-
-    # Scale the number to have the first significant digit in the ones place
-    scaled = value / (10**order)
-
-    # Round to n_sig decimal places
-    rounded = round(scaled, n_sig - 1)
-
-    # Scale back
-    result = rounded * (10**order)
-
-    # Format based on the order of magnitude
-    if order >= 4 or order < -3:
-        # Use scientific notation for very large or very small numbers
-        return f"{result:.{n_sig-1}e}"
-    elif order >= 0:
-        # Use regular notation, with appropriate decimal places
-        decimal_places = max(0, n_sig - 1 - order)
-        return f"{result:.{decimal_places}f}"
-    else:
-        # For numbers < 1, show enough decimal places
-        decimal_places = n_sig - 1 - order
-        return f"{result:.{decimal_places}f}"
-
-
 def _plot_fit_results(
     x: np.ndarray,
     y: np.ndarray,
@@ -811,22 +931,80 @@ def _plot_fit_results(
     shape_type: str,
     derivative: int = 0,
     fit_phase: bool = False,
+    x_all: Optional[np.ndarray] = None,
+    y_all: Optional[np.ndarray] = None,
+    fit_func=None,
+    popt=None,
 ):
-    """Create a plot showing the fit results"""
+    """
+    Plot data, fitted curve, and residuals for a single fit.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        X values used for fitting (masked subset).
+    y : np.ndarray
+        Y values used for fitting (masked subset).
+    result : FitResult
+        Fit result containing parameters, statistics, and curves.
+    shape_type : str
+        Lineshape model name, shown in the plot title.
+    derivative : int, optional
+        Derivative order, shown in the plot title (default: 0).
+    fit_phase : bool, optional
+        If True, the fitted phase value is shown in the title (default: False).
+    x_all : np.ndarray, optional
+        Full valid x array before masking. Excluded points are shown in gray
+        and the model is drawn over this range.
+    y_all : np.ndarray, optional
+        Full valid y array before masking.
+    fit_func : callable, optional
+        Fit function used to evaluate the model over x_all.
+    popt : np.ndarray, optional
+        Optimal parameter vector from curve_fit.
+    """
 
     fig, (ax1, ax2) = plt.subplots(
         2, 1, figsize=(6, 4), gridspec_kw={"height_ratios": [3, 1]}
     )
 
-    # Main plot
-    ax1.plot(x, y, "o", markersize=4, alpha=0.7, label="Data", color="#1f77b4")
+    has_excluded = x_all is not None and len(x_all) > len(x)
+
+    # Show excluded points in gray background
+    if has_excluded:
+        ax1.plot(
+            x_all,
+            y_all,
+            "o",
+            markersize=4,
+            alpha=0.3,
+            color="gray",
+            label="Excluded",
+            zorder=1,
+        )
+
+    # Main plot - fitted data points
     ax1.plot(
-        x,
-        result.fitted_curve,
+        x, y, "o", markersize=4, alpha=0.7, label="Data (fitted)", color="#1f77b4",
+        zorder=2,
+    )
+
+    # Model curve over full x range when available, otherwise only over fit points
+    if fit_func is not None and popt is not None and x_all is not None:
+        x_model = x_all
+        y_model = fit_func(x_model, *popt)
+    else:
+        x_model = x
+        y_model = result.fitted_curve
+
+    ax1.plot(
+        x_model,
+        y_model,
         "-",
         linewidth=2,
         label=f"{shape_type.title()} fit",
         color="#d62728",
+        zorder=3,
     )
 
     ax1.set_xlabel("Magnetic Field / G")
@@ -850,19 +1028,13 @@ def _plot_fit_results(
         f"χ² = {result.chi_squared:.2e}",
     ]
 
-    # Add fitted parameters with 4 significant figures
-    # and errors with 2 significant figures
     for param, value in result.parameters.items():
-        # Format value to 4 significant figures
-        value_str = _format_significant_figures(value, 4)
-
+        value_str = f"{value:.4g}"
         if (
             param in result.parameter_errors
             and result.parameter_errors[param] is not None
         ):
-            error = result.parameter_errors[param]
-            # Format error to 2 significant figures
-            error_str = _format_significant_figures(error, 2)
+            error_str = f"{result.parameter_errors[param]:.2g}"
             results_lines.append(f"{param}: {value_str} ± {error_str}")
         else:
             results_lines.append(f"{param}: {value_str}")
@@ -898,30 +1070,36 @@ def fit_multiple_shapes(
     derivative: int = 0,
     fit_phase: bool = False,
     fit_baseline: bool = False,
+    mask: Optional[np.ndarray] = None,
     plot: bool = True,
 ) -> Dict[str, FitResult]:
     """
     Fit EPR signal with multiple lineshape types and compare results.
 
-    Parameters:
-    -----------
-    x_data, y_data : arrays
-        EPR signal data
-    shapes : list, optional
-        List of shapes to try. Default: ['gaussian', 'lorentzian', 'pseudo_voigt']
-    derivative : int, default=0
-        Derivative order to use (0, 1, 2). Fixed parameter.
-    fit_phase : bool, default=False
-        Whether to fit the phase parameter
-    fit_baseline : bool, default=False
-        Whether to include an affine baseline (a*x + b) in the fit model
-    plot : bool
-        Whether to create comparison plot
+    Parameters
+    ----------
+    x_data : np.ndarray
+        Magnetic field axis, in Gauss.
+    y_data : np.ndarray
+        EPR signal intensity.
+    shapes : list of str, optional
+        Lineshape models to fit. Default: ['gaussian', 'lorentzian', 'pseudo_voigt'].
+    derivative : int, optional
+        Derivative order (0, 1, or 2). Fixed, not fitted (default: 0).
+    fit_phase : bool, optional
+        Fit the phase parameter in each model (default: False).
+    fit_baseline : bool, optional
+        Include an affine baseline in each model (default: False).
+    mask : np.ndarray of bool, optional
+        Boolean array selecting points to include (True = include).
+        Passed unchanged to each fit_epr_signal call.
+    plot : bool, optional
+        Display a side-by-side comparison plot (default: True).
 
-    Returns:
-    --------
+    Returns
+    -------
     dict
-        Dictionary of {shape_type: FitResult} for all attempted fits
+        Mapping of shape name to FitResult for all attempted fits.
     """
 
     if shapes is None:
@@ -938,6 +1116,7 @@ def fit_multiple_shapes(
                 derivative=derivative,
                 fit_phase=fit_phase,
                 fit_baseline=fit_baseline,
+                mask=mask,
                 plot=False,
             )
             results[shape] = result
@@ -985,7 +1164,18 @@ def fit_multiple_shapes(
 
 
 def _plot_comparison(x: np.ndarray, y: np.ndarray, results: Dict[str, FitResult]):
-    """Plot comparison of different fits"""
+    """
+    Plot fitted curves and residuals for multiple lineshape models.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Full X data passed to fit_multiple_shapes.
+    y : np.ndarray
+        Full Y data passed to fit_multiple_shapes.
+    results : dict
+        Mapping of shape name to FitResult; only successful fits are drawn.
+    """
 
     fig, (ax1, ax2) = plt.subplots(
         2, 1, figsize=(12, 10), gridspec_kw={"height_ratios": [3, 1]}
@@ -1000,8 +1190,9 @@ def _plot_comparison(x: np.ndarray, y: np.ndarray, results: Dict[str, FitResult]
     for i, (shape, result) in enumerate(results.items()):
         if result.success:
             color = colors[i % len(colors)]
+            x_plot = result.x_fit if result.x_fit is not None else x
             ax1.plot(
-                x,
+                x_plot,
                 result.fitted_curve,
                 "-",
                 linewidth=2,
@@ -1019,8 +1210,9 @@ def _plot_comparison(x: np.ndarray, y: np.ndarray, results: Dict[str, FitResult]
     for i, (shape, result) in enumerate(results.items()):
         if result.success:
             color = colors[i % len(colors)]
+            x_plot = result.x_fit if result.x_fit is not None else x
             ax2.plot(
-                x,
+                x_plot,
                 result.residuals,
                 "o-",
                 markersize=2,

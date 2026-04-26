@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "epyr-tools"
-version = "0.3.6"
+version = "0.3.8"
 description = "Electron Paramagnetic Resonance (EPR) Tools in Python"
 readme = "README.md"
 license = {text = "MIT"}
@@ -86,6 +86,7 @@ epyr-info = "epyr.cli:cmd_info"
 epyr-isotopes = "epyr.cli:cmd_isotopes"
 epyr-plot = "epyr.cli:cmd_plot"
 epyr-validate = "epyr.cli:cmd_validate"
+epyrview = "epyr.cli:cmd_view"
 
 [tool.setuptools.packages.find]
 where = ["."]

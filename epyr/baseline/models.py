@@ -115,7 +115,7 @@ def polynomial_1d(x, *coeffs):
     Returns:
         np.ndarray: Polynomial values
     """
-    result = np.zeros_like(x)
+    result = np.zeros_like(x, dtype=float)
     for i, coeff in enumerate(coeffs):
         result += coeff * (x**i)
     return result

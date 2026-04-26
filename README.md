@@ -12,7 +12,7 @@
 
 | License | Tests | Documentation | Version |
 |---------|-------|---------------|---------|
-| [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) | ![Tests Passing](https://img.shields.io/badge/tests-100%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.3.5-blue) |
+| [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) | ![Tests Passing](https://img.shields.io/badge/tests-100%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.3.8-blue) |
 
 **EPyR Tools** is a comprehensive Python package for Electron Paramagnetic Resonance (EPR) spectroscopy data analysis. It provides a complete toolkit for loading, processing, analyzing, and visualizing EPR data from Bruker spectrometers, with a focus on FAIR (Findable, Accessible, Interoperable, and Reusable) data principles.
 

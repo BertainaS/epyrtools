@@ -17,12 +17,9 @@ from tkinter import messagebox, ttk
 import pandas as pd
 
 from .logging_config import get_logger
+from .physics import NMAGN, PLANCK
 
 logger = get_logger(__name__)
-
-# --- Constants ---
-PLANCK = 6.62607015e-34  # J⋅s (CODATA 2018)
-NMAGN = 5.0507837461e-27  # J⋅T⁻¹ (Nuclear magneton, CODATA 2018)
 
 
 # --- Helper Functions ---
