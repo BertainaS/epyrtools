@@ -15,16 +15,32 @@ import numpy as np
 def create_region_mask_1d(
     x: np.ndarray, regions: List[Tuple[float, float]], mode: str = "exclude"
 ) -> np.ndarray:
-    """
-    Create a boolean mask for 1D data based on selected regions.
+    """Boolean mask for 1D data, marking which points to keep for a fit.
 
-    Args:
-        x: X-coordinate array
-        regions: List of regions as [(x1, x2), ...]
-        mode: 'exclude' to exclude regions, 'include' to include only regions
+    Parameters
+    ----------
+    x : np.ndarray
+        Field or time axis.
+    regions : list of (float, float)
+        ``[(x_low, x_high), ...]``. Bounds are inclusive; order within a
+        pair does not matter.
+    mode : {'exclude', 'include'}, optional
+        ``'exclude'`` masks out the listed regions (default); ``'include'``
+        keeps only those regions.
 
-    Returns:
-        Boolean mask array (True = use for fitting)
+    Returns
+    -------
+    np.ndarray of bool
+        ``True`` where the point should be used for fitting.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from epyr.baseline import create_region_mask_1d
+    >>> x = np.arange(10)
+    >>> mask = create_region_mask_1d(x, [(3, 5)], mode="exclude")
+    >>> mask.astype(int)
+    array([1, 1, 1, 0, 0, 0, 1, 1, 1, 1])
     """
     if mode == "exclude":
         mask = np.ones(len(x), dtype=bool)
@@ -46,17 +62,31 @@ def create_region_mask_2d(
     regions: List[Tuple[Tuple[float, float], Tuple[float, float]]],
     mode: str = "exclude",
 ) -> np.ndarray:
-    """
-    Create a boolean mask for 2D data based on selected regions.
+    """Boolean mask for 2D data, marking which points to keep for a fit.
 
-    Args:
-        X: X-coordinate meshgrid
-        Y: Y-coordinate meshgrid
-        regions: List of regions as [((x1,x2), (y1,y2)), ...]
-        mode: 'exclude' to exclude regions, 'include' to include only regions
+    Parameters
+    ----------
+    X, Y : np.ndarray
+        Coordinate meshgrids, identical shape.
+    regions : list of ((float, float), (float, float))
+        ``[((x_lo, x_hi), (y_lo, y_hi)), ...]``. Inclusive bounds.
+    mode : {'exclude', 'include'}, optional
+        ``'exclude'`` masks out the listed rectangles (default);
+        ``'include'`` keeps only those rectangles.
 
-    Returns:
-        Boolean mask array (True = use for fitting)
+    Returns
+    -------
+    np.ndarray of bool
+        Same shape as ``X``. ``True`` where the point should be used.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from epyr.baseline import create_region_mask_2d
+    >>> X, Y = np.meshgrid(np.arange(5), np.arange(5))
+    >>> mask = create_region_mask_2d(X, Y, [((1, 3), (1, 3))], mode="exclude")
+    >>> int(mask.sum())  # 25 - 3*3 inner block
+    16
     """
     if mode == "exclude":
         mask = np.ones_like(X, dtype=bool)

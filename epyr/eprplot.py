@@ -65,6 +65,18 @@ def plot_1d(
     -------
     fig : matplotlib.figure.Figure
     ax : matplotlib.axes.Axes
+
+    Examples
+    --------
+    >>> from epyr import eprload, plot_1d
+    >>> x, y, params, _ = eprload("examples/data/130406SB_CaWO4_Er_CW_5K_20.DSC")
+    >>> fig, ax = plot_1d(x, y, params, title="CaWO4:Er, 5 K")
+
+    Reuse an existing axes (subplot composition):
+
+    >>> import matplotlib.pyplot as plt
+    >>> fig, axes = plt.subplots(1, 2)
+    >>> plot_1d(x, y, params, ax=axes[0])  # doctest: +SKIP
     """
     if y is None or y.size == 0:
         raise ValueError("No data available to plot.")
@@ -251,6 +263,16 @@ def plot_2d_waterfall(
     -------
     fig : matplotlib.figure.Figure
     ax : matplotlib.axes.Axes
+
+    Examples
+    --------
+    >>> from epyr import eprload, plot_2d_waterfall
+    >>> x, y, params, _ = eprload("examples/data/Rabi2D_GdCaWO4_13dB_3057G.DSC")
+    >>> fig, ax = plot_2d_waterfall(x, y, params, max_traces=10)
+
+    Tighter spacing with strong clipping (useful for noisy backgrounds):
+
+    >>> fig, ax = plot_2d_waterfall(x, y, params, offset_factor=0.2, clip_factor=0.3)
     """
     if y is None or y.size == 0:
         raise ValueError("No data available to plot.")
@@ -379,6 +401,13 @@ def plot_2d_slicer(
     -----
     Requires an interactive matplotlib backend. In Jupyter, activate with
     ``%matplotlib widget`` or ``%matplotlib notebook`` before calling.
+
+    Examples
+    --------
+    >>> from epyr import eprload, plot_2d_slicer
+    >>> x, y, params, _ = eprload("examples/data/Rabi2D_GdCaWO4_13dB_3057G.DSC")
+    >>> handles = plot_2d_slicer(x, y, params, slice_direction="vertical")
+    >>> handles["slider"].set_val(50)  # programmatic slider control  # doctest: +SKIP
     """
     if y is None or y.size == 0:
         raise ValueError("No data available to plot.")

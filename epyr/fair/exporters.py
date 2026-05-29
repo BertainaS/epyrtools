@@ -33,12 +33,31 @@ def save_to_json(
     pars: Dict[str, Any],
     original_file_path: str,
 ) -> None:
-    """Save structured metadata to JSON file.
+    """Write parameter metadata to ``<basename>.json``.
 
-    Args:
-        output_basename: Base path for output files (without extension)
-        pars: Raw parameters dictionary
-        original_file_path: Path to original data file
+    The output contains the source-file path, the FAIR-normalized
+    metadata, and any unmapped Bruker keys preserved verbatim.
+
+    Parameters
+    ----------
+    output_basename : pathlib.Path
+        Base path; ``.json`` is appended.
+    pars : dict
+        Raw Bruker parameters as returned by :func:`epyr.eprload`.
+    original_file_path : str
+        Source-file path kept as provenance.
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    >>> from pathlib import Path
+    >>> from epyr import eprload
+    >>> from epyr.fair import save_to_json
+    >>> x, y, params, fp = eprload("examples/data/130406SB_CaWO4_Er_CW_5K_20.DSC")
+    >>> save_to_json(Path("/tmp/demo"), params, fp)  # doctest: +SKIP
     """
     json_file = output_basename.with_suffix(".json")
     fair_meta, unmapped_meta = process_parameters(pars)
@@ -73,14 +92,37 @@ def save_to_csv(
     pars: Dict[str, Any],
     original_file_path: str,
 ) -> None:
-    """Save data to CSV file.
+    """Write EPR data and a metadata header to ``<basename>.csv``.
 
-    Args:
-        output_basename: Base path for output files (without extension)
-        x: Abscissa data array(s) or None
-        y: Intensity data array
-        pars: Raw parameters dictionary
-        original_file_path: Path to original data file
+    The header carries microwave frequency, modulation amplitude, sample
+    name, and the path to the source file, in commented (``#``) lines
+    before the column data.
+
+    Parameters
+    ----------
+    output_basename : pathlib.Path
+        Base path; ``.csv`` is appended.
+    x : np.ndarray, list of np.ndarray, or None
+        Abscissa from :func:`epyr.eprload`. Lists (2D) are written as
+        long-format rows.
+    y : np.ndarray
+        Signal array.
+    pars : dict
+        Raw Bruker parameters.
+    original_file_path : str
+        Source-file path kept as provenance in the CSV header.
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    >>> from pathlib import Path
+    >>> from epyr import eprload
+    >>> from epyr.fair import save_to_csv
+    >>> x, y, params, fp = eprload("examples/data/130406SB_CaWO4_Er_CW_5K_20.DSC")
+    >>> save_to_csv(Path("/tmp/demo"), x, y, params, fp)  # doctest: +SKIP
     """
     csv_file = output_basename.with_suffix(".csv")
     fair_meta, unmapped_meta = process_parameters(pars)
@@ -291,14 +333,43 @@ def save_to_hdf5(
     pars: Dict[str, Any],
     original_file_path: str,
 ) -> None:
-    """Save data and structured metadata to an HDF5 file.
+    """Write data and metadata to ``<basename>.h5``.
 
-    Args:
-        output_basename: Base path for output files (without extension)
-        x: Abscissa data array(s) or None
-        y: Intensity data array
-        pars: Raw parameters dictionary
-        original_file_path: Path to original data file
+    Datasets:
+        ``/intensity``  : signal array (``y``)
+        ``/abscissa``   : abscissa array (1D) or group ``/axis_0``,
+                          ``/axis_1`` (2D)
+
+    Metadata is written as attributes on the root group: the FAIR-mapped
+    parameters, unmapped raw parameters, and the source-file path.
+
+    Parameters
+    ----------
+    output_basename : pathlib.Path
+        Base path; ``.h5`` is appended.
+    x : np.ndarray, list of np.ndarray, or None
+        Abscissa from :func:`epyr.eprload`.
+    y : np.ndarray
+        Signal array. Complex data is stored as two real datasets,
+        ``/intensity_real`` and ``/intensity_imag``.
+    pars : dict
+        Raw Bruker parameters.
+    original_file_path : str
+        Source path kept as an HDF5 attribute.
+
+    Returns
+    -------
+    None
+        A ``UserWarning`` is emitted (no exception) if ``h5py`` is not
+        installed; the file is then not written.
+
+    Examples
+    --------
+    >>> from pathlib import Path
+    >>> from epyr import eprload
+    >>> from epyr.fair import save_to_hdf5
+    >>> x, y, params, fp = eprload("examples/data/Rabi2D_GdCaWO4_13dB_3057G.DSC")
+    >>> save_to_hdf5(Path("/tmp/demo"), x, y, params, fp)  # doctest: +SKIP
     """
     if not HAS_H5PY:
         warnings.warn(
@@ -469,17 +540,36 @@ def save_to_jpg(
     pars: Dict[str, Any],
     original_file_path: str,
 ) -> None:
-    """Save EPR data visualization to JPG file(s).
+    """Write a preview figure to ``<basename>.jpg``.
 
-    For 1D data, generates a single plot.
-    For 2D data, generates both map and waterfall plots.
+    For 1D data, a single ``plot_1d`` figure. For 2D data, two files:
+    ``<basename>_map.jpg`` and ``<basename>_waterfall.jpg``.
 
-    Args:
-        output_basename: Base path for output files (without extension)
-        x: Abscissa data array(s) or None
-        y: Intensity data array
-        pars: Raw parameters dictionary
-        original_file_path: Path to original data file
+    Parameters
+    ----------
+    output_basename : pathlib.Path
+        Base path; the JPG suffix is appended.
+    x : np.ndarray, list of np.ndarray, or None
+        Abscissa from :func:`epyr.eprload`.
+    y : np.ndarray
+        Signal array (1D or 2D).
+    pars : dict
+        Raw Bruker parameters, used for axis labels.
+    original_file_path : str
+        Source path, used as the figure title.
+
+    Returns
+    -------
+    None
+        Uses the ``Agg`` non-interactive backend; safe in scripts.
+
+    Examples
+    --------
+    >>> from pathlib import Path
+    >>> from epyr import eprload
+    >>> from epyr.fair import save_to_jpg
+    >>> x, y, params, fp = eprload("examples/data/130406SB_CaWO4_Er_CW_5K_20.DSC")
+    >>> save_to_jpg(Path("/tmp/demo"), x, y, params, fp)  # doctest: +SKIP
     """
     try:
         import matplotlib

@@ -16,13 +16,34 @@ from .parameter_mapping import BRUKER_PARAM_MAP
 
 
 def process_parameters(pars: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """Process raw parameters using BRUKER_PARAM_MAP.
+    """Split raw Bruker parameters into FAIR-mapped and unmapped buckets.
 
-    Args:
-        pars: Raw parameters dictionary from Bruker files
+    Uses :data:`epyr.fair.BRUKER_PARAM_MAP` to translate Bruker keys
+    (DSC / SPL / DSL sections) into FAIR field names with explicit units
+    and descriptions. Unit references (``'refer to XUNI'``) are resolved
+    against the source dictionary.
 
-    Returns:
-        Tuple of (fair_metadata, unmapped_parameters)
+    Parameters
+    ----------
+    pars : dict
+        Raw parameters from :func:`epyr.eprload`.
+
+    Returns
+    -------
+    fair_metadata : dict
+        ``{fair_name: {'value', 'unit', 'description'}, ...}``, including
+        a ``conversion_info`` entry with timestamp and EPyR version.
+    unmapped_parameters : dict
+        Pass-through of keys not present in ``BRUKER_PARAM_MAP``.
+
+    Examples
+    --------
+    >>> from epyr import eprload
+    >>> from epyr.fair import process_parameters
+    >>> x, y, params, _ = eprload("examples/data/130406SB_CaWO4_Er_CW_5K_20.DSC")
+    >>> fair, unmapped = process_parameters(params)
+    >>> "microwave_frequency" in fair
+    True
     """
     fair_metadata = {}
     unmapped_parameters = {}

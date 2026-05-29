@@ -292,6 +292,16 @@ def BrukerListFiles(path, recursive=False):
     ------
     NotADirectoryError
         If ``path`` is not an existing directory.
+
+    Examples
+    --------
+    >>> from epyr import BrukerListFiles
+    >>> files = BrukerListFiles("examples/data")
+    >>> any(p.name.endswith(".DTA") for p in files)
+    True
+    >>> all_files = BrukerListFiles("examples/data", recursive=True)
+    >>> len(all_files) >= len(files)
+    True
     """
     exts = {".dta", ".DTA", ".spc", ".SPC"}
     path = Path(path)

@@ -1,40 +1,59 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Mathematical models for baseline correction.
+"""Mathematical models for baseline correction.
 
-This module contains the mathematical functions used for baseline fitting
-in EPR data analysis. These are pure mathematical functions without any
-data processing logic.
+Pure functions used by :mod:`epyr.baseline.correction` and the automatic
+model-selection code; no data processing logic lives here. All models are
+parameterized so that scipy.optimize.curve_fit can call them directly.
 """
+
+from typing import Callable, List, Tuple
 
 import numpy as np
 
 
-def polynomial_2d(xy, *coeffs):
-    """
-    2D polynomial function for curve_fit.
+def polynomial_2d(xy: Tuple[np.ndarray, np.ndarray], *coeffs: float) -> np.ndarray:
+    """Evaluate a 2D polynomial surface on flattened coordinates.
 
-    Args:
-        xy: tuple of (x, y) coordinate arrays (flattened)
-        coeffs: polynomial coefficients
+    The polynomial order is inferred from the number of coefficients:
+    a square layout ``(order+1)**2`` is tried first, falling back to a
+    rectangular ``(nx+1)*(ny+1)`` decomposition.
 
-    Returns:
-        Flattened polynomial surface values
+    Parameters
+    ----------
+    xy : tuple of (np.ndarray, np.ndarray)
+        Flattened x and y coordinate arrays of identical shape.
+    *coeffs : float
+        Polynomial coefficients, ordered as ``c[i*(order_y+1)+j]`` for
+        the ``x**i * y**j`` term.
+
+    Returns
+    -------
+    np.ndarray
+        Flattened surface values, same shape as ``xy[0]``.
+
+    Raises
+    ------
+    ValueError
+        If ``len(coeffs)`` does not factor as ``(nx+1)*(ny+1)`` with
+        ``nx, ny < 10``.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from epyr.baseline.models import polynomial_2d
+    >>> x, y = np.meshgrid(np.linspace(0, 1, 5), np.linspace(0, 1, 5))
+    >>> z = polynomial_2d((x.ravel(), y.ravel()), 1.0, 2.0, 3.0, 4.0)  # bilinear
+    >>> z.shape
+    (25,)
     """
     x, y = xy
     result = np.zeros_like(x)
-
-    # Determine polynomial order from number of coefficients
-    # For order (nx, ny): num_coeffs = (nx+1) * (ny+1)
     num_coeffs = len(coeffs)
 
-    # Find polynomial orders (assume square for simplicity, or deduce from coeffs)
-    # For now, assume same order in both directions
+    # Infer polynomial order from coefficient count
     order = int(np.sqrt(num_coeffs)) - 1
     if (order + 1) ** 2 != num_coeffs:
-        # If not square, try rectangular
-        for nx in range(10):  # reasonable limit
+        # Not square -> search for rectangular factorisation
+        for nx in range(10):
             for ny in range(10):
                 if (nx + 1) * (ny + 1) == num_coeffs:
                     order_x, order_y = nx, ny
@@ -49,7 +68,6 @@ def polynomial_2d(xy, *coeffs):
     else:
         order_x = order_y = order
 
-    # Calculate polynomial
     coeff_idx = 0
     for i in range(order_x + 1):
         for j in range(order_y + 1):
@@ -59,61 +77,122 @@ def polynomial_2d(xy, *coeffs):
     return result
 
 
-def stretched_exponential_1d(x, A, tau, beta, offset=0):
-    """
-    Stretched exponential decay function for baseline fitting.
+def stretched_exponential_1d(
+    x: np.ndarray,
+    A: float,
+    tau: float,
+    beta: float,
+    offset: float = 0.0,
+) -> np.ndarray:
+    r"""Stretched-exponential (Kohlrausch-Williams-Watts) decay.
 
-    This function represents a stretched exponential decay commonly observed
-    in EPR relaxation measurements, particularly T2 echo decay data.
+    .. math::
 
-    Args:
-        x: Time or field array
-        A: Amplitude (positive for decay)
-        tau: Decay time constant (characteristic time scale)
-        beta: Stretching exponent (0 < beta <= 5.0)
-              - beta = 1: Pure exponential decay
-              - beta < 1: Sub-exponential (slower than exponential)
-              - beta > 1: Super-exponential (faster than exponential)
-        offset: Constant offset
+        y(x) = \mathrm{offset} + A \exp\!\left[-(x/\tau)^{\beta}\right]
 
-    Returns:
-        np.ndarray: Stretched exponential values = offset + A * exp(-(x/tau)^beta)
+    Commonly used for T2 echo decay in disordered systems.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Independent variable (time, often in microseconds).
+    A : float
+        Amplitude.
+    tau : float
+        Characteristic decay time, same unit as ``x``.
+    beta : float
+        Stretching exponent in (0, 5]. ``beta = 1`` recovers a pure
+        exponential; ``beta < 1`` is sub-exponential; ``beta > 1`` super.
+    offset : float, optional
+        Constant baseline. Default 0.
+
+    Returns
+    -------
+    np.ndarray
+        Decay values, same shape as ``x``.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from epyr.baseline.models import stretched_exponential_1d
+    >>> t = np.linspace(0, 5, 100)  # microseconds
+    >>> y = stretched_exponential_1d(t, A=1.0, tau=1.5, beta=0.7)
+    >>> y[0], round(y[-1], 4)
+    (1.0, 0.098)
     """
     return offset + A * np.exp(-((x / tau) ** beta))
 
 
-def bi_exponential_1d(x, A1, tau1, A2, tau2, offset=0):
-    """
-    Bi-exponential decay function for baseline fitting.
+def bi_exponential_1d(
+    x: np.ndarray,
+    A1: float,
+    tau1: float,
+    A2: float,
+    tau2: float,
+    offset: float = 0.0,
+) -> np.ndarray:
+    r"""Sum of two exponential decays.
 
-    This function represents the sum of two exponential decays, useful for
-    systems with multiple relaxation pathways or decay components.
+    .. math::
 
-    Args:
-        x: Time or field array
-        A1: Amplitude of first exponential component
-        tau1: Decay time constant of first exponential
-        A2: Amplitude of second exponential component
-        tau2: Decay time constant of second exponential
-        offset: Constant offset
+        y(x) = \mathrm{offset} + A_1 e^{-x/\tau_1} + A_2 e^{-x/\tau_2}
 
-    Returns:
-        np.ndarray: Bi-exponential values = offset + A1*exp(-x/tau1) + A2*exp(-x/tau2)
+    Useful when a system has two well-separated relaxation channels.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Independent variable.
+    A1, A2 : float
+        Component amplitudes.
+    tau1, tau2 : float
+        Component decay times, same unit as ``x``. Order does not matter.
+    offset : float, optional
+        Constant baseline. Default 0.
+
+    Returns
+    -------
+    np.ndarray
+        Decay values.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from epyr.baseline.models import bi_exponential_1d
+    >>> t = np.linspace(0, 10, 200)
+    >>> y = bi_exponential_1d(t, A1=0.7, tau1=0.5, A2=0.3, tau2=4.0, offset=0.05)
+    >>> round(y[0], 3), round(y[-1], 4)
+    (1.05, 0.0747)
     """
     return offset + A1 * np.exp(-x / tau1) + A2 * np.exp(-x / tau2)
 
 
-def polynomial_1d(x, *coeffs):
-    """
-    1D polynomial function for baseline fitting.
+def polynomial_1d(x: np.ndarray, *coeffs: float) -> np.ndarray:
+    r"""Evaluate a 1D polynomial.
 
-    Args:
-        x: Independent variable array
-        coeffs: Polynomial coefficients [a0, a1, a2, ..., an]
-                Result = a0 + a1*x + a2*x^2 + ... + an*x^n
+    .. math::
 
-    Returns:
-        np.ndarray: Polynomial values
+        y(x) = a_0 + a_1 x + a_2 x^2 + \ldots + a_n x^n
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Independent variable.
+    *coeffs : float
+        Coefficients in ascending order of degree, ``[a0, a1, ..., an]``.
+
+    Returns
+    -------
+    np.ndarray
+        Polynomial values (float).
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from epyr.baseline.models import polynomial_1d
+    >>> x = np.linspace(-1, 1, 5)
+    >>> polynomial_1d(x, 1.0, 0.0, 2.0)  # 1 + 2*x**2
+    array([3. , 1.5, 1. , 1.5, 3. ])
     """
     result = np.zeros_like(x, dtype=float)
     for i, coeff in enumerate(coeffs):
@@ -121,18 +200,39 @@ def polynomial_1d(x, *coeffs):
     return result
 
 
-def exponential_1d(x, A, tau, offset=0):
-    """
-    Simple exponential decay function.
+def exponential_1d(
+    x: np.ndarray, A: float, tau: float, offset: float = 0.0
+) -> np.ndarray:
+    r"""Single exponential decay.
 
-    Args:
-        x: Time or field array
-        A: Amplitude
-        tau: Decay time constant
-        offset: Constant offset
+    .. math::
 
-    Returns:
-        np.ndarray: Exponential values = offset + A * exp(-x/tau)
+        y(x) = \mathrm{offset} + A \exp(-x/\tau)
+
+    Parameters
+    ----------
+    x : np.ndarray
+        Independent variable.
+    A : float
+        Amplitude.
+    tau : float
+        Decay time, same unit as ``x``.
+    offset : float, optional
+        Constant baseline. Default 0.
+
+    Returns
+    -------
+    np.ndarray
+        Decay values.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from epyr.baseline.models import exponential_1d
+    >>> t = np.linspace(0, 5, 50)
+    >>> y = exponential_1d(t, A=1.0, tau=1.0)
+    >>> round(y[0], 3), round(y[-1], 4)
+    (1.0, 0.0067)
     """
     return offset + A * np.exp(-x / tau)
 
@@ -167,16 +267,37 @@ MODEL_INFO = {
 }
 
 
-def get_model_function(model_name: str, dimension: str = "1d"):
-    """
-    Get the mathematical function for a given model.
+def get_model_function(
+    model_name: str, dimension: str = "1d"
+) -> Callable[..., np.ndarray]:
+    """Return the callable for a registered model.
 
-    Args:
-        model_name: Name of the model ('polynomial', 'stretched_exponential', etc.)
-        dimension: '1d' or '2d'
+    Parameters
+    ----------
+    model_name : str
+        Key from :data:`MODEL_INFO` (``'polynomial'``,
+        ``'stretched_exponential'``, ``'bi_exponential'``, ``'exponential'``).
+    dimension : {'1d', '2d'}, optional
+        Function variant. Most models only provide ``'1d'``; only the
+        polynomial model supports ``'2d'``. Default ``'1d'``.
 
-    Returns:
-        Callable: Mathematical function
+    Returns
+    -------
+    callable
+        The model function, ready to pass to ``scipy.optimize.curve_fit``.
+
+    Raises
+    ------
+    ValueError
+        If ``model_name`` is unknown or the requested ``dimension`` variant
+        does not exist.
+
+    Examples
+    --------
+    >>> from epyr.baseline.models import get_model_function
+    >>> f = get_model_function("stretched_exponential")
+    >>> f.__name__
+    'stretched_exponential_1d'
     """
     if model_name not in MODEL_INFO:
         raise ValueError(f"Unknown model: {model_name}")
@@ -188,6 +309,19 @@ def get_model_function(model_name: str, dimension: str = "1d"):
     return MODEL_INFO[model_name][func_key]
 
 
-def list_available_models() -> list:
-    """Get list of available baseline models."""
+def list_available_models() -> List[str]:
+    """Return the names of registered baseline models.
+
+    Returns
+    -------
+    list of str
+        Model keys usable with :func:`get_model_function` and
+        :data:`MODEL_INFO`.
+
+    Examples
+    --------
+    >>> from epyr.baseline.models import list_available_models
+    >>> sorted(list_available_models())
+    ['bi_exponential', 'exponential', 'polynomial', 'stretched_exponential']
+    """
     return list(MODEL_INFO.keys())

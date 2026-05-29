@@ -46,28 +46,60 @@ def baseline_polynomial_1d(
     region_mode: str = "exclude",
     interactive: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Polynomial baseline correction for 1D EPR data.
+    """Polynomial baseline correction for 1D EPR data.
 
-    Fits a polynomial baseline to specified regions and subtracts it from
-    the entire dataset. Ideal for CW EPR spectra with smooth baseline drifts.
+    Fits a polynomial to selected baseline regions and subtracts it from
+    the full dataset. Suited to CW EPR spectra with smooth drift.
 
-    Args:
-        x: X-axis data from eprload (can be None)
-        y: 1D spectral data array from eprload
-        params: Parameter dictionary from eprload (optional)
-        order: Polynomial order (typically 1-4)
-        exclude_center: If True, exclude center region from fitting
-        center_fraction: Fraction of data to exclude from center
-        manual_regions: List of manually selected regions as [(x1, x2), ...]
-        region_mode: 'exclude' to exclude
-            manual_regions, 'include' to use only
-            manual_regions
-        interactive: If True, open interactive
-            region selector
+    Parameters
+    ----------
+    x : np.ndarray or None
+        Field axis from :func:`epyr.eprload`. If None or length mismatch,
+        falls back to point indices.
+    y : np.ndarray
+        1D spectrum from :func:`epyr.eprload`.
+    params : dict, optional
+        Parameter dictionary from :func:`epyr.eprload` (unused for the
+        fit itself; reserved for future axis-aware extensions).
+    order : int, optional
+        Polynomial order. Typical range 1-4. Default 2.
+    exclude_center : bool, optional
+        Exclude a centred fraction of the data from fitting (where the
+        signal is expected). Default True.
+    center_fraction : float, optional
+        Width of the excluded central window, as a fraction of the data.
+        Default 0.3.
+    manual_regions : list of (float, float), optional
+        Explicit (x_low, x_high) regions. Combined with ``region_mode``.
+    region_mode : {'exclude', 'include'}, optional
+        ``'exclude'`` removes ``manual_regions`` from the fit;
+        ``'include'`` keeps only those regions. Default ``'exclude'``.
+    interactive : bool, optional
+        Launch the matplotlib region selector. Requires an interactive
+        backend. Default False.
 
-    Returns:
-        tuple: (corrected_data, baseline)
+    Returns
+    -------
+    corrected : np.ndarray
+        Baseline-subtracted spectrum.
+    baseline : np.ndarray
+        Fitted polynomial evaluated on the full axis.
+
+    Examples
+    --------
+    >>> from epyr import eprload, baseline_polynomial_1d
+    >>> x, y, params, _ = eprload("examples/data/130406SB_CaWO4_Er_CW_5K_20.DSC")
+    >>> corrected, baseline = baseline_polynomial_1d(x, y, params, order=3)
+    >>> corrected.shape == y.shape
+    True
+
+    Fit only on user-defined wings (exclude resonance region):
+
+    >>> wings = [(3300, 3400), (3550, 3700)]
+    >>> corrected, _ = baseline_polynomial_1d(
+    ...     x, y, params, order=2,
+    ...     manual_regions=wings, region_mode="include",
+    ... )
     """
     if y is None or y.ndim != 1:
         raise ValueError("y must be a 1D array")
@@ -153,37 +185,52 @@ def baseline_polynomial_2d(
     interactive: bool = False,
     use_real_part: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Polynomial baseline correction for 2D EPR data.
+    """Polynomial baseline correction for 2D EPR data.
 
-    Fits a 2D polynomial surface to specified regions and subtracts it from
-    the entire dataset. Useful for 2D EPR measurements
-    like DEER, Rabi oscillations, etc.
+    Fits a 2D polynomial surface to selected regions and subtracts it from
+    the full dataset. Useful for 2D experiments (DEER, Rabi 2D, etc.).
 
-    Args:
-        x: X-axis coordinates (None, 1D arrays,
-            or meshgrids)
-        y: 2D spectral data array
-        params: Parameter dictionary from eprload
-            (optional)
-        order: Polynomial order (int for same order
-            in both directions, or (order_x, order_y))
-        exclude_center: If True, exclude center
-            region from fitting
-        center_fraction: Fraction of data to exclude
-            from center
-        manual_regions: List of manually selected
-            regions as [((x1,x2), (y1,y2)), ...]
-        region_mode: 'exclude' to exclude
-            manual_regions, 'include' to use only
-            manual_regions
-        interactive: If True, open interactive
-            region selector
-        use_real_part: If True, use real part of
-            complex data
+    Parameters
+    ----------
+    x : np.ndarray, list of np.ndarray, or None
+        Axis data from :func:`epyr.eprload`. A two-element list ``[xa, ya]``
+        sets both axes. None falls back to indices.
+    y : np.ndarray
+        2D spectrum, shape ``(ny, nx)``.
+    params : dict, optional
+        Parameter dictionary from :func:`epyr.eprload`.
+    order : int or (int, int), optional
+        Polynomial order. ``int`` applies the same order to both axes;
+        a tuple sets ``(order_x, order_y)`` independently. Default 1.
+    exclude_center : bool, optional
+        Exclude a centred rectangular block of the data from the fit.
+        Default True.
+    center_fraction : float, optional
+        Width of that block along each axis, as a fraction. Default 0.3.
+    manual_regions : list of ((x1, x2), (y1, y2)), optional
+        Explicit rectangular regions.
+    region_mode : {'exclude', 'include'}, optional
+        How to combine ``manual_regions`` with the fit mask. Default
+        ``'exclude'``.
+    interactive : bool, optional
+        Launch the matplotlib 2D region selector. Default False.
+    use_real_part : bool, optional
+        For complex data, fit on ``y.real``. Default False.
 
-    Returns:
-        tuple: (corrected_data, baseline)
+    Returns
+    -------
+    corrected : np.ndarray
+        Baseline-subtracted surface.
+    baseline : np.ndarray
+        Fitted polynomial evaluated on the full grid.
+
+    Examples
+    --------
+    >>> from epyr import eprload, baseline_polynomial_2d
+    >>> x, y, params, _ = eprload("examples/data/Rabi2D_GdCaWO4_13dB_3057G.DSC")
+    >>> corrected, baseline = baseline_polynomial_2d(x, y, params, order=(2, 1))
+    >>> corrected.shape == y.shape
+    True
     """
     if y is None or y.ndim != 2:
         raise ValueError("y must be a 2D array")
@@ -419,38 +466,59 @@ def baseline_stretched_exponential_1d(
     beta_range: Tuple[float, float] = (0.01, 5.0),
     initial_guess: Optional[Dict[str, float]] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Stretched exponential baseline correction for 1D EPR data.
+    r"""Stretched-exponential baseline correction for 1D EPR data.
 
-    Fits and removes a stretched exponential baseline of the form:
-    baseline = offset + A * exp(-(x/tau)^beta)
+    Fits and removes a baseline of the form
 
-    Particularly useful for EPR relaxation data (T1, T2 measurements) where
-    the signal decays with a stretched exponential characteristic.
+    .. math::
 
-    Args:
-        x: X-axis data from eprload (can be None)
-        y: 1D spectral data array from eprload
-        params: Parameter dictionary from eprload (optional)
-        use_real_part: If True, fit only real part of complex data
-        exclude_initial: Number of initial points to exclude from fitting
-        exclude_final: Number of final points to exclude from fitting
-        manual_regions: List of manually selected
-            regions as [(x1, x2), ...]
-        region_mode: 'exclude' to exclude
-            manual_regions, 'include' to use only
-            manual_regions
-        interactive: If True, open interactive
-            region selector
-        beta_range: Range for stretching exponent
-            (min, max)
-        initial_guess: Dictionary with initial
-            parameter guesses
-            {'A': ..., 'tau': ..., 'beta': ...,
-            'offset': ...}
+        b(x) = \mathrm{offset} + A \exp\!\left[-(x/\tau)^{\beta}\right]
 
-    Returns:
-        tuple: (corrected_data, baseline)
+    Typical use: T2 echo decay envelope removal before peak analysis.
+
+    Parameters
+    ----------
+    x : np.ndarray or None
+        Time axis from :func:`epyr.eprload`. Falls back to indices if None
+        or length mismatch.
+    y : np.ndarray
+        1D signal from :func:`epyr.eprload`.
+    params : dict, optional
+        Parameter dictionary from :func:`epyr.eprload`.
+    use_real_part : bool, optional
+        For complex ``y``, fit on ``y.real``. Default True.
+    exclude_initial, exclude_final : int, optional
+        Drop the first / last N points from the fit. Default 0.
+    manual_regions : list of (float, float), optional
+        Explicit (x_low, x_high) windows.
+    region_mode : {'exclude', 'include'}, optional
+        Combine ``manual_regions`` with the fit mask. Default ``'exclude'``.
+    interactive : bool, optional
+        Launch the matplotlib region selector. Default False.
+    beta_range : (float, float), optional
+        Bounds on the stretching exponent. Default ``(0.01, 5.0)``.
+    initial_guess : dict, optional
+        Seed values, any subset of ``{'A', 'tau', 'beta', 'offset'}``.
+
+    Returns
+    -------
+    corrected : np.ndarray
+        Baseline-subtracted signal.
+    baseline : np.ndarray
+        Fitted baseline on the full axis.
+
+    Examples
+    --------
+    >>> from epyr import eprload, baseline_stretched_exponential_1d
+    >>> path = "examples/data/ESEdecay_2D_rotgon_035_07.3K_h80_9.73687GHz_B3.DSC"
+    >>> x, y, params, _ = eprload(path)
+    >>> # take a single trace from the 2D dataset
+    >>> trace = y[0]
+    >>> corrected, baseline = baseline_stretched_exponential_1d(
+    ...     x[0], trace, params, exclude_initial=5,
+    ... )
+    >>> corrected.shape == trace.shape
+    True
     """
     try:
         # Prepare data
@@ -582,34 +650,58 @@ def baseline_bi_exponential_1d(
     tau_ratio_min: float = 2.5,
     initial_guess: Optional[Dict[str, float]] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Bi-exponential baseline correction for 1D EPR data.
+    r"""Bi-exponential baseline correction for 1D EPR data.
 
-    Fits and removes a bi-exponential baseline of the form:
-    baseline = offset + A1*exp(-x/tau1) + A2*exp(-x/tau2)
+    Fits and removes a baseline of the form
 
-    Useful for EPR data with multiple decay components or relaxation pathways.
+    .. math::
 
-    Args:
-        x: X-axis data from eprload (can be None)
-        y: 1D spectral data array from eprload
-        params: Parameter dictionary from eprload (optional)
-        use_real_part: If True, fit only real part of complex data
-        exclude_initial: Number of initial points to exclude from fitting
-        exclude_final: Number of final points to exclude from fitting
-        manual_regions: List of manually selected
-            regions as [(x1, x2), ...]
-        region_mode: 'exclude' to exclude
-            manual_regions, 'include' to use only
-            manual_regions
-        interactive: If True, open interactive
-            region selector
-        tau_ratio_min: Minimum ratio between tau2
-            and tau1 to ensure component separation
-        initial_guess: Dictionary with initial parameter guesses
+        b(x) = \mathrm{offset} + A_1 e^{-x/\tau_1} + A_2 e^{-x/\tau_2}
 
-    Returns:
-        tuple: (corrected_data, baseline)
+    Suited to decays with two well-separated relaxation channels.
+
+    Parameters
+    ----------
+    x : np.ndarray or None
+        Time axis from :func:`epyr.eprload`. Falls back to indices if None.
+    y : np.ndarray
+        1D signal from :func:`epyr.eprload`.
+    params : dict, optional
+        Parameter dictionary from :func:`epyr.eprload`.
+    use_real_part : bool, optional
+        For complex ``y``, fit on ``y.real``. Default True.
+    exclude_initial, exclude_final : int, optional
+        Drop the first / last N points from the fit. Default 0.
+    manual_regions : list of (float, float), optional
+        Explicit (x_low, x_high) windows.
+    region_mode : {'exclude', 'include'}, optional
+        How to combine ``manual_regions`` with the fit mask.
+    interactive : bool, optional
+        Launch the matplotlib region selector. Default False.
+    tau_ratio_min : float, optional
+        Minimum ratio ``tau2 / tau1`` enforced during fitting to keep
+        the two components separable. Default 2.5.
+    initial_guess : dict, optional
+        Seed values, any subset of ``{'A1', 'tau1', 'A2', 'tau2', 'offset'}``.
+
+    Returns
+    -------
+    corrected : np.ndarray
+        Baseline-subtracted signal.
+    baseline : np.ndarray
+        Fitted baseline on the full axis.
+
+    Examples
+    --------
+    >>> from epyr import eprload, baseline_bi_exponential_1d
+    >>> path = "examples/data/ESEdecay_2D_rotgon_035_07.3K_h80_9.73687GHz_B3.DSC"
+    >>> x, y, params, _ = eprload(path)
+    >>> trace = y[0]
+    >>> corrected, baseline = baseline_bi_exponential_1d(
+    ...     x[0], trace, params, tau_ratio_min=3.0,
+    ... )
+    >>> corrected.shape == trace.shape
+    True
     """
     try:
         # Prepare data

@@ -25,29 +25,48 @@ def convert_bruker_to_fair(
     include_metadata: bool = True,
     scaling: str = "",
 ) -> bool:
-    """Load Bruker EPR data using eprload and convert to FAIR formats.
+    """Load a Bruker file and convert it to FAIR-compliant formats.
 
-    This is the main conversion function that handles the complete workflow
-    from loading Bruker data to saving in FAIR-compliant formats with
-    structured metadata.
+    End-to-end pipeline: :func:`epyr.eprload` -> parameter normalization
+    -> writing one or more output files next to the input.
 
-    Args:
-        input_file: Path to Bruker data file (.dta, .dsc, .spc, .par).
-        output_dir: Directory to save converted files. If None, saves in
-            same directory as input file.
-        formats: List of formats to generate. Options: 'csv', 'json', 'hdf5', 'jpg'.
-            Each format can be specified independently:
-            - 'csv': Export data to CSV file
-            - 'json': Export metadata to JSON file
-            - 'hdf5': Export data and metadata to HDF5 file
-            - 'jpg': Export visualization (1D: single plot, 2D: map + waterfall)
-            Multiple formats can be combined (e.g., ['csv', 'json', 'hdf5', 'jpg']).
-            Defaults to ['csv', 'json'].
-        include_metadata: Whether to include metadata in output files.
-        scaling: Scaling options passed to eprload (e.g., 'nPGT').
+    Parameters
+    ----------
+    input_file : str or pathlib.Path
+        Path to a Bruker data file (``.dta``, ``.dsc``, ``.spc``, ``.par``).
+    output_dir : str or pathlib.Path, optional
+        Where to write the converted files. Defaults to the input file's
+        directory. Created if missing.
+    formats : list of str, optional
+        Subset of ``['csv', 'json', 'hdf5', 'jpg']``. Default
+        ``['csv', 'json']``.
 
-    Returns:
-        True if conversion successful, False otherwise.
+        - ``csv``  : data array
+        - ``json`` : metadata only
+        - ``hdf5`` : data + metadata in one file
+        - ``jpg``  : preview figure (1D plot or 2D map + waterfall)
+    include_metadata : bool, optional
+        Whether CSV files should carry the parameter dictionary as
+        commented header lines. Default True.
+    scaling : str, optional
+        Scaling code passed through to :func:`epyr.eprload`. Default ``""``.
+
+    Returns
+    -------
+    bool
+        True on success, False if loading or writing failed (errors are
+        logged, not raised).
+
+    Examples
+    --------
+    >>> from epyr.fair import convert_bruker_to_fair
+    >>> ok = convert_bruker_to_fair(
+    ...     "examples/data/130406SB_CaWO4_Er_CW_5K_20.DSC",
+    ...     output_dir="/tmp/epyr_out",
+    ...     formats=["json", "hdf5"],
+    ... )  # doctest: +SKIP
+    >>> ok  # doctest: +SKIP
+    True
     """
     if formats is None:
         formats = ["csv", "json"]
@@ -111,28 +130,40 @@ def save_fair(
     original_file_path: str,
     output_formats: Optional[List[str]] = None,
 ) -> None:
-    """Save already-loaded EPR data to one or more FAIR formats.
+    """Write already-loaded EPR data to one or more FAIR formats.
 
-    This function is useful when you have already loaded EPR data and want
-    to save it in FAIR formats without going through the loading process again.
+    Use this when data is already in memory (e.g., after processing) and
+    you want to write outputs without re-reading the Bruker file.
 
-    Args:
-        output_basename: Base path for output files (without extension).
-        x: Abscissa data array(s) or None.
-        y: Ordinate data array.
-        params: Dictionary of parameters from the original file.
-        original_file_path: Full path of the original loaded file.
-        output_formats: List of formats to save. Options: 'csv', 'json', 'hdf5', 'jpg'.
-            Each format can be specified independently:
-            - 'csv': Export data to CSV file
-            - 'json': Export metadata to JSON file
-            - 'hdf5': Export data and metadata to HDF5 file
-            - 'jpg': Export visualization (1D: single plot, 2D: map + waterfall)
-            - 'csv_json': Export both CSV and JSON (backward compatibility)
-            Defaults to ['csv', 'json'].
+    Parameters
+    ----------
+    output_basename : str or pathlib.Path
+        Base path (no extension); each format appends its own.
+    x : np.ndarray, list of np.ndarray, or None
+        Abscissa as returned by :func:`epyr.eprload`.
+    y : np.ndarray
+        Signal data.
+    params : dict
+        Parameter dictionary from the original file.
+    original_file_path : str
+        Full path of the source file, kept as provenance in the outputs.
+    output_formats : list of str, optional
+        Subset of ``['csv', 'json', 'hdf5', 'jpg', 'csv_json']``.
+        Default ``['csv', 'json']``.
 
-    Returns:
-        None. Files are saved to disk.
+    Returns
+    -------
+    None
+        Outputs are written to disk under ``output_basename``.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from epyr.fair import save_fair
+    >>> x = np.linspace(3300, 3400, 100)
+    >>> y = np.random.randn(100)
+    >>> save_fair("/tmp/demo", x, y, {"MWFQ": 9.4e9},
+    ...           "demo.dsc", ["json"])  # doctest: +SKIP
     """
     if output_formats is None:
         output_formats = ["csv", "json"]
@@ -158,24 +189,39 @@ def batch_convert_directory(
     output_formats: Optional[List[str]] = None,
     recursive: bool = False,
 ) -> None:
-    """Convert all Bruker EPR files in a directory to FAIR formats.
+    """Convert every Bruker file in a directory to FAIR formats.
 
-    Args:
-        input_directory: Directory containing Bruker EPR files.
-        output_directory: Directory to save converted files. If None, saves
-            alongside original files.
-        file_extensions: List of file extensions to process.
-            Defaults to ['.dsc', '.spc', '.par'].
-        scaling: Scaling options passed to eprload.
-        output_formats: List of formats to generate.
-            Options: 'csv', 'json', 'hdf5', 'jpg'.
-            Each format can be specified independently.
-            For 2D data, 'jpg' creates both map and waterfall
-            visualizations. Defaults to ['csv', 'json'].
-        recursive: If True, search subdirectories recursively.
+    Parameters
+    ----------
+    input_directory : str or pathlib.Path
+        Directory to scan.
+    output_directory : str or pathlib.Path, optional
+        Where to write the converted files. Defaults to alongside each
+        input file. Created if missing.
+    file_extensions : list of str, optional
+        Which extensions count as Bruker files. Default
+        ``['.dsc', '.spc', '.par']``.
+    scaling : str, optional
+        Scaling code passed through to :func:`epyr.eprload`.
+    output_formats : list of str, optional
+        Subset of ``['csv', 'json', 'hdf5', 'jpg']``. Default
+        ``['csv', 'json']``.
+    recursive : bool, optional
+        Also descend into subdirectories. Default False.
 
-    Returns:
-        None. Prints progress and summary.
+    Returns
+    -------
+    None
+        Progress and a final per-file summary are logged.
+
+    Examples
+    --------
+    >>> from epyr.fair import batch_convert_directory
+    >>> batch_convert_directory(
+    ...     "examples/data",
+    ...     output_directory="/tmp/epyr_batch",
+    ...     output_formats=["json"],
+    ... )  # doctest: +SKIP
     """
     if file_extensions is None:
         file_extensions = [".dsc", ".spc", ".par"]

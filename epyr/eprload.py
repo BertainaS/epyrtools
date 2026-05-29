@@ -306,6 +306,27 @@ def eprload(
         parameter inconsistencies are found.
     IOError
         If reading files fails.
+
+    Examples
+    --------
+    Load a CW EPR file and inspect its shape:
+
+    >>> from epyr import eprload
+    >>> x, y, params, path = eprload("examples/data/130406SB_CaWO4_Er_CW_5K_20.DSC")
+    >>> y.shape
+    (1024,)
+    >>> params["MWFQ"]  # microwave frequency, Hz
+    9387600000.0
+
+    Apply gain + averages scaling and keep only the real part:
+
+    >>> x, y, _, _ = eprload("file.DSC", scaling="nG", return_type="real")
+
+    Load a 2D dataset (returns a list of axes for x):
+
+    >>> x, y, _, _ = eprload("examples/data/Rabi2D_GdCaWO4_13dB_3057G.DSC")
+    >>> y.shape, len(x)
+    ((500, 1024), 2)
     """
     # Initialize outputs
     x, y, pars, loaded_file_path = None, None, None, None

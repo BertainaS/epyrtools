@@ -446,18 +446,38 @@ def compare_models_detailed(
     models: Optional[List[str]] = None,
     **kwargs,
 ) -> Dict[str, Dict[str, Any]]:
-    """
-    Detailed comparison of all baseline models with full metrics.
+    """Fit every candidate baseline model and return detailed metrics.
 
-    Args:
-        x: X-axis data
-        y: Y-data array
-        params: Parameter dictionary
-        models: List of models to compare
-        **kwargs: Additional arguments passed to baseline correction functions
+    Parameters
+    ----------
+    x : np.ndarray or None
+        Axis from :func:`epyr.eprload`. Falls back to indices if None.
+    y : np.ndarray
+        1D signal.
+    params : dict, optional
+        Parameter dictionary from :func:`epyr.eprload`.
+    models : list of str, optional
+        Subset of ``['polynomial', 'stretched_exponential', 'bi_exponential']``.
+        Default: all three.
+    **kwargs
+        Passed through to the underlying ``baseline_*`` functions
+        (``use_real_part``, ``exclude_initial``, ``manual_regions``, etc.).
 
-    Returns:
-        dict: Detailed results for each model
+    Returns
+    -------
+    dict
+        ``{model_name: {'aic': ..., 'r_squared': ..., 'parameters': ...}}``
+        for each model that converged.
+
+    Examples
+    --------
+    >>> from epyr import eprload
+    >>> from epyr.baseline import compare_models_detailed
+    >>> path = "examples/data/ESEdecay_2D_rotgon_035_07.3K_h80_9.73687GHz_B3.DSC"
+    >>> x, y, params, _ = eprload(path)
+    >>> results = compare_models_detailed(x[0], y[0], params)
+    >>> set(results) <= {"polynomial", "stretched_exponential", "bi_exponential"}
+    True
     """
     if models is None:
         models = ["polynomial", "stretched_exponential", "bi_exponential"]
@@ -517,15 +537,28 @@ def compare_models_detailed(
 def get_model_recommendations(
     data_type: str = None, experiment_type: str = None
 ) -> List[str]:
-    """
-    Get recommended models based on data characteristics.
+    """Suggest baseline models given the experiment type.
 
-    Args:
-        data_type: 'cw' for continuous wave, 'pulsed' for pulsed EPR
-        experiment_type: 't1', 't2', 'echo', 'rabi', etc.
+    Parameters
+    ----------
+    data_type : {'cw', 'pulsed'}, optional
+        Continuous-wave or pulsed EPR.
+    experiment_type : str, optional
+        Sub-type when ``data_type='pulsed'``. Known values: ``'t1'``,
+        ``'t2'``, ``'echo'``, ``'rabi'``, ``'nutation'``.
 
-    Returns:
-        list: Recommended models in order of preference
+    Returns
+    -------
+    list of str
+        Recommended model names, in order of preference.
+
+    Examples
+    --------
+    >>> from epyr.baseline import get_model_recommendations
+    >>> get_model_recommendations("cw")
+    ['polynomial']
+    >>> get_model_recommendations("pulsed", "t2")
+    ['stretched_exponential', 'bi_exponential', 'polynomial']
     """
     if data_type == "cw":
         return ["polynomial"]
@@ -551,19 +584,45 @@ def auto_baseline_with_recommendations(
     experiment_type: str = None,
     **kwargs,
 ) -> Tuple[np.ndarray, np.ndarray, Dict[str, Any]]:
-    """
-    Automatic baseline correction with intelligent model recommendations.
+    """Automatic baseline correction, restricted to models that fit the experiment.
 
-    Args:
-        x: X-axis data
-        y: Y-data array
-        params: Parameter dictionary
-        data_type: Type of EPR data ('cw' or 'pulsed')
-        experiment_type: Specific experiment type ('t1', 't2', 'echo', 'rabi', etc.)
-        **kwargs: Additional arguments
+    Wraps :func:`baseline_auto_1d` after pruning the candidate-model list via
+    :func:`get_model_recommendations`.
 
-    Returns:
-        tuple: (corrected_data, baseline, model_info)
+    Parameters
+    ----------
+    x : np.ndarray or None
+        Axis from :func:`epyr.eprload`.
+    y : np.ndarray
+        1D signal.
+    params : dict, optional
+        Parameter dictionary from :func:`epyr.eprload`.
+    data_type : {'cw', 'pulsed'}, optional
+        Used to filter the candidate models.
+    experiment_type : str, optional
+        Refines the filter for pulsed experiments.
+    **kwargs
+        Passed through to :func:`baseline_auto_1d`.
+
+    Returns
+    -------
+    corrected : np.ndarray
+    baseline : np.ndarray
+    info : dict
+        Best-model metadata (name, score, parameters, fit metrics).
+
+    Examples
+    --------
+    >>> from epyr import eprload
+    >>> from epyr.baseline import auto_baseline_with_recommendations
+    >>> x, y, params, _ = eprload(
+    ...     "examples/data/ESEdecay_2D_rotgon_035_07.3K_h80_9.73687GHz_B3.DSC"
+    ... )
+    >>> corrected, baseline, info = auto_baseline_with_recommendations(
+    ...     x[0], y[0], params, data_type="pulsed", experiment_type="t2", verbose=False,
+    ... )
+    >>> info["best_model"] in {"polynomial", "stretched_exponential", "bi_exponential"}
+    True
     """
     recommended_models = get_model_recommendations(data_type, experiment_type)
 

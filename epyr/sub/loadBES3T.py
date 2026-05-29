@@ -17,7 +17,10 @@ from .utils import (
     read_dsc_file,
 )
 
-# Format mappings (Bruker code → numpy dtype string)
+# Format mappings (Bruker code -> numpy dtype string).
+# Short codes ('f8', 'i4', ...) are required because they get concatenated with
+# the endian prefix ('<' or '>'); the long forms ('float64', 'int32') only work
+# without a prefix and would raise "data type '<float64' not understood".
 _DATA_FORMAT_MAP = {
     "C": "i1",  # int8
     "S": "i2",  # int16

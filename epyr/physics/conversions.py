@@ -195,17 +195,26 @@ def frequency_field_conversion_table(
     frequencies_ghz: Optional[List[float]] = None,
     g_factors: Optional[List[float]] = None,
 ) -> None:
-    """
-    Print a conversion table between frequency and magnetic field.
+    """Log a frequency-vs-field conversion table for common EPR bands.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     frequencies_ghz : list of float, optional
-        Frequencies in GHz to include in table
-        Default: Common EPR frequencies [1, 3, 9.5, 34, 95, 263]
+        Microwave frequencies in GHz. Default ``[1, 3, 9.5, 34, 95, 263]``
+        (L, S, X, Q, W, J bands).
     g_factors : list of float, optional
-        g-factors to include in table
-        Default: [2.000, 2.002, 2.005, 2.010]
+        Electron g-factors to use for the conversion. Default
+        ``[2.000, 2.002, 2.005, 2.010]``.
+
+    Returns
+    -------
+    None
+        Output goes through the module logger; nothing is returned.
+
+    Examples
+    --------
+    >>> from epyr.physics import frequency_field_conversion_table
+    >>> frequency_field_conversion_table(frequencies_ghz=[9.5])  # X-band only
     """
     if frequencies_ghz is None:
         frequencies_ghz = [1, 3, 9.5, 34, 95, 263]  # Common EPR bands
@@ -234,14 +243,22 @@ def frequency_field_conversion_table(
 
 
 def energy_conversion_table(energies_cm_inv: Optional[List[float]] = None) -> None:
-    """
-    Print a conversion table between different energy units.
+    """Log an energy conversion table covering cm⁻¹, MHz, GHz, eV, K, meV.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     energies_cm_inv : list of float, optional
-        Energies in cm^-1 to include in table
-        Default: [1, 10, 100, 1000, 5000, 10000]
+        Wavenumbers in cm⁻¹. Default ``[1, 10, 100, 1000, 5000, 10000]``,
+        covering the typical EPR / zero-field-splitting range.
+
+    Returns
+    -------
+    None
+
+    Examples
+    --------
+    >>> from epyr.physics import energy_conversion_table
+    >>> energy_conversion_table(energies_cm_inv=[1, 1000])
     """
     if energies_cm_inv is None:
         energies_cm_inv = [1, 10, 100, 1000, 5000, 10000]
