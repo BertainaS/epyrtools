@@ -46,7 +46,7 @@ dev = [
     "pytest>=6.0.0",
     "pytest-cov>=2.10.0",
     "pytest-benchmark>=4.0.0",
-    "black>=23.0.0",
+    "black>=24.0.0,!=25.1.0",
     "flake8>=6.0.0",
     "flake8-docstrings>=1.7.0",
     "flake8-import-order>=0.18.0",
@@ -105,7 +105,7 @@ python_functions = "test_*"
 addopts = "--cov=epyr --cov-report=html --cov-report=term-missing"
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false

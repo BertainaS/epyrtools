@@ -7,7 +7,7 @@ and affine baseline correction.
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -213,9 +213,7 @@ def fit_epr_signal(
         )
 
     # Validate and complete initial parameters
-    initial_params = _validate_initial_params(
-        initial_params, param_names, x_fit, y_fit
-    )
+    initial_params = _validate_initial_params(initial_params, param_names, x_fit, y_fit)
 
     # Setup parameter bounds
     lower_bounds, upper_bounds = _setup_bounds(
@@ -241,8 +239,8 @@ def fit_epr_signal(
         residuals = y_fit - y_fitted
 
         # Calculate statistics
-        ss_res = np.sum(residuals**2)
-        ss_tot = np.sum((y_fit - np.mean(y_fit)) ** 2)
+        ss_res: float = float(np.sum(residuals**2))
+        ss_tot: float = float(np.sum((y_fit - np.mean(y_fit)) ** 2))
         r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
         chi_squared = ss_res / (len(y_fit) - len(popt))
 
@@ -304,18 +302,23 @@ def fit_epr_signal(
 
 
 def _make_simple_lineshape(
-    func, derivative: int, fit_phase: bool
-) -> Tuple[callable, List[str], Dict[str, Tuple[float, float]]]:
+    func: Callable[..., np.ndarray], derivative: int, fit_phase: bool
+) -> Tuple[Callable[..., np.ndarray], List[str], Dict[str, Tuple[float, float]]]:
     """Build wrapper and metadata for single-width lineshapes (gaussian, lorentzian)."""
+    _lineshape: Callable[..., np.ndarray]
     if fit_phase:
-        def _lineshape(x, center, width, amplitude, phase):
+
+        def _lineshape(x, center, width, amplitude, phase):  # type: ignore[misc]
             return amplitude * func(
                 x, center, width, derivative=derivative, phase=phase
             )
+
         param_names = ["center", "width", "amplitude", "phase"]
     else:
-        def _lineshape(x, center, width, amplitude):
+
+        def _lineshape(x, center, width, amplitude):  # type: ignore[misc]
             return amplitude * func(x, center, width, derivative=derivative)
+
         param_names = ["center", "width", "amplitude"]
 
     param_bounds = {
@@ -329,7 +332,7 @@ def _make_simple_lineshape(
 
 def _get_fit_function(
     shape_type: str, derivative: int, fit_phase: bool, fit_baseline: bool = False
-) -> Tuple[callable, List[str], Dict[str, Tuple[float, float]]]:
+) -> Tuple[Callable[..., np.ndarray], List[str], Dict[str, Tuple[float, float]]]:
     """
     Build the fitting function and parameter metadata for a given lineshape.
 
@@ -353,6 +356,7 @@ def _get_fit_function(
     param_bounds : dict
         Default bounds for each parameter as {name: (lower, upper)}.
     """
+    _lineshape: Callable[..., np.ndarray]
 
     if shape_type == "gaussian":
         _lineshape, param_names, param_bounds = _make_simple_lineshape(
@@ -367,7 +371,7 @@ def _get_fit_function(
     elif shape_type == "voigt":
         if fit_phase:
 
-            def _lineshape(
+            def _lineshape(  # type: ignore[misc]
                 x, center, gaussian_width, lorentzian_width, amplitude, phase
             ):
                 return amplitude * voigtian(
@@ -387,9 +391,14 @@ def _get_fit_function(
             ]
         else:
 
-            def _lineshape(x, center, gaussian_width, lorentzian_width, amplitude):
+            def _lineshape(  # type: ignore[misc]
+                x, center, gaussian_width, lorentzian_width, amplitude
+            ):
                 return amplitude * voigtian(
-                    x, center, (gaussian_width, lorentzian_width), derivative=derivative
+                    x,
+                    center,
+                    (gaussian_width, lorentzian_width),
+                    derivative=derivative,
                 )
 
             param_names = ["center", "gaussian_width", "lorentzian_width", "amplitude"]
@@ -405,7 +414,9 @@ def _get_fit_function(
     elif shape_type == "pseudo_voigt":
         if fit_phase:
 
-            def _lineshape(x, center, width, amplitude, alpha, phase):
+            def _lineshape(  # type: ignore[misc]
+                x, center, width, amplitude, alpha, phase
+            ):
                 return amplitude * pseudo_voigt(
                     x, center, width, eta=alpha, derivative=derivative, phase=phase
                 )
@@ -413,7 +424,7 @@ def _get_fit_function(
             param_names = ["center", "width", "amplitude", "alpha", "phase"]
         else:
 
-            def _lineshape(x, center, width, amplitude, alpha):
+            def _lineshape(x, center, width, amplitude, alpha):  # type: ignore[misc]
                 return amplitude * pseudo_voigt(
                     x, center, width, eta=alpha, derivative=derivative
                 )
@@ -569,33 +580,33 @@ def _estimate_absorption_params(
         Signed peak-to-peak amplitude.
     """
 
-    amplitude = np.max(y) - np.min(y)
+    amplitude = float(y.max() - y.min())
     if amplitude == 0:
         amplitude = 1.0
 
-    if np.abs(np.min(y)) > np.abs(np.max(y)):
+    if abs(y.min()) > abs(y.max()):
         amplitude = -amplitude
-        peak_idx = np.argmin(y)
+        peak_idx = int(np.argmin(y))
     else:
-        peak_idx = np.argmax(y)
+        peak_idx = int(np.argmax(y))
 
-    center = x[peak_idx]
+    center = float(x[peak_idx])
 
     # Estimate FWHM
     if amplitude > 0:
-        half_max = np.min(y) + amplitude / 2
+        half_max = y.min() + amplitude / 2
         above_half = y >= half_max
     else:
-        half_max = np.max(y) + amplitude / 2
+        half_max = y.max() + amplitude / 2
         above_half = y <= half_max
 
     if np.sum(above_half) > 1:
         indices = np.where(above_half)[0]
-        width = x[indices[-1]] - x[indices[0]]
+        width = float(x[indices[-1]] - x[indices[0]])
         if width <= 0:
-            width = (x[-1] - x[0]) / 10
+            width = float(x[-1] - x[0]) / 10
     else:
-        width = (x[-1] - x[0]) / 10
+        width = float(x[-1] - x[0]) / 10
 
     return center, width, amplitude
 
@@ -643,7 +654,7 @@ def _estimate_first_derivative_params(
     width = max(peak_sep * 1.4, np.diff(x).mean() * 3)
 
     # Estimate amplitude by comparing data with unit-amplitude model derivative
-    peak_to_peak = np.max(y) - np.min(y)
+    peak_to_peak = float(y.max() - y.min())
     amplitude = _estimate_amplitude_from_model(
         x, center, width, peak_to_peak, shape_type, derivative=1
     )
@@ -703,7 +714,7 @@ def _estimate_second_derivative_params(
         width = (x[-1] - x[0]) / 10
 
     # Estimate amplitude from model comparison
-    peak_to_peak = np.max(y) - np.min(y)
+    peak_to_peak = float(y.max() - y.min())
     amplitude = _estimate_amplitude_from_model(
         x, center, width, peak_to_peak, shape_type, derivative=2
     )
@@ -765,7 +776,7 @@ def _estimate_amplitude_from_model(
         else:
             return data_peak_to_peak
 
-        model_ptp = np.max(y_model) - np.min(y_model)
+        model_ptp = float(y_model.max() - y_model.min())
         if model_ptp > 0:
             return data_peak_to_peak / model_ptp
         else:
@@ -808,7 +819,7 @@ def _validate_initial_params(
             if name == "center":
                 validated[name] = x[np.argmax(np.abs(y))]
             elif name == "amplitude":
-                validated[name] = np.max(y) - np.min(y)
+                validated[name] = float(y.max() - y.min())
             elif "width" in name:
                 validated[name] = (x[-1] - x[0]) / 10
             elif name == "alpha":
@@ -878,28 +889,29 @@ def _setup_bounds(
             if upper == np.inf:
                 upper = x.max() + (x.max() - x.min())
         elif name == "amplitude":
+            data_ptp = float(y.max() - y.min())
             if lower == -np.inf:
-                lower = -10 * (np.max(y) - np.min(y))
+                lower = -10 * data_ptp
             if upper == np.inf:
-                upper = 10 * (np.max(y) - np.min(y))
+                upper = 10 * data_ptp
         elif "width" in name:
             if upper == np.inf:
-                upper = x.max() - x.min()
+                upper = float(x.max() - x.min())
         elif name == "baseline_slope":
             # Slope bounded by data range ratio
-            y_range = np.max(y) - np.min(y) if np.max(y) != np.min(y) else 1.0
-            x_range = x.max() - x.min() if x.max() != x.min() else 1.0
+            y_range = float(y.max() - y.min()) if y.max() != y.min() else 1.0
+            x_range = float(x.max() - x.min()) if x.max() != x.min() else 1.0
             max_slope = 10 * y_range / x_range
             if lower == -np.inf:
                 lower = -max_slope
             if upper == np.inf:
                 upper = max_slope
         elif name == "baseline_offset":
-            y_range = np.max(y) - np.min(y) if np.max(y) != np.min(y) else 1.0
+            y_range = float(y.max() - y.min()) if y.max() != y.min() else 1.0
             if lower == -np.inf:
-                lower = np.min(y) - 10 * y_range
+                lower = float(y.min()) - 10 * y_range
             if upper == np.inf:
-                upper = np.max(y) + 10 * y_range
+                upper = float(y.max()) + 10 * y_range
 
         # Ensure initial value is within bounds
         init_val = initial_params[name]
@@ -985,7 +997,13 @@ def _plot_fit_results(
 
     # Main plot - fitted data points
     ax1.plot(
-        x, y, "o", markersize=4, alpha=0.7, label="Data (fitted)", color="#1f77b4",
+        x,
+        y,
+        "o",
+        markersize=4,
+        alpha=0.7,
+        label="Data (fitted)",
+        color="#1f77b4",
         zorder=2,
     )
 

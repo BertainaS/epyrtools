@@ -1,9 +1,8 @@
 """
 Bruker EPR parameter mapping to FAIR format names and descriptions.
 
-This module contains the comprehensive mapping from Bruker proprietary parameter
-names (DSC, SPL, DSL sections) to human-readable FAIR format names with units
-and descriptions.
+This module maps Bruker proprietary parameter names (DSC, SPL, DSL sections)
+to human-readable FAIR format names, units, and descriptions.
 
 The mapping supports:
 - DSC Section (Data Set Codes): File format and axis information

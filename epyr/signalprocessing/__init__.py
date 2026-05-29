@@ -2,10 +2,9 @@
 Signal Processing Module for EPR Time-Domain Data
 ================================================
 
-This module provides comprehensive tools for frequency analysis
-of time-dependent EPR signals, optimized for pulse EPR experiments
-including Rabi oscillations, DEER spectroscopy, HYSCORE,
-and other advanced time-domain techniques.
+This module provides frequency-analysis tools for time-dependent EPR
+signals, with optimisations for pulse-EPR experiments: Rabi oscillations,
+DEER, HYSCORE, and related techniques.
 
 Key Features
 ------------
@@ -21,7 +20,7 @@ Key Features
 
 Main Functions
 --------------
-analyze_frequencies : 1D FFT-based frequency analysis with comprehensive visualization
+analyze_frequencies : 1D FFT-based frequency analysis with four-panel plot
 analyze_frequencies_2d : 2D FFT analysis with row-by-row or full 2D processing modes
 power_spectrum : Power spectral density using Welch or periodogram methods
 spectrogram_analysis : Time-frequency analysis for evolving spectral content

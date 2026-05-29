@@ -11,7 +11,6 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 
 from ..eprload import eprload
-
 from ..logging_config import get_logger
 
 logger = get_logger(__name__)

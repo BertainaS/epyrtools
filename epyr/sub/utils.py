@@ -1,4 +1,9 @@
-# sub/utils.py
+"""Shared utilities for the Bruker BES3T and ESP loaders.
+
+Implements parameter-file parsing (.DSC / .par), binary matrix reading
+from .DTA / .spc payloads, and directory listing for Bruker file sets.
+"""
+
 import re
 import warnings
 from pathlib import Path
@@ -140,8 +145,7 @@ def parse_field_params(parameters: dict) -> dict:
                 pass
             # Try converting to float
             try:
-                # Use regex for more robust float check if needed,
-                # but direct conversion attempt is usually fine
+                # Regex-gated float() so non-numeric strings stay as strings.
                 if _NUMBER_RE.match(value):
                     parsed_params[key] = float(value)
                 else:
@@ -160,19 +164,25 @@ def get_matrix(
     byte_order: str,
     is_complex: Union[bool, np.ndarray],
 ) -> np.ndarray:
-    """
-    Reads binary data from a file into a NumPy array.
+    """Read binary EPR data from disk into a NumPy array.
 
-    Args:
-        data_file_path: Path to the data file (.DTA, .spc).
-        dimensions: List of dimensions [nx, ny, nz].
-        number_format: String representing numpy dtype ('int8', 'int16', etc.).
-        byte_order: 'ieee-be' (big) or 'ieee-le' (little).
-        is_complex: Boolean indicating if the data is complex.
-            Can be array for multi-channel.
+    Parameters
+    ----------
+    data_file_path : pathlib.Path
+        Path to the binary data file (.DTA / .spc).
+    dimensions : list of int
+        Three-element list ``[nx, ny, nz]``.
+    number_format_code : str
+        NumPy short dtype code (``'i1'``, ``'i2'``, ``'i4'``, ``'f4'``, ``'f8'``).
+    byte_order : str
+        ``'ieee-be'`` (big-endian) or ``'ieee-le'`` (little-endian).
+    is_complex : bool or np.ndarray
+        Whether the payload is complex. An array allows per-channel flags.
 
-    Returns:
-        NumPy array with the data.
+    Returns
+    -------
+    np.ndarray
+        Loaded data, reshaped to the requested dimensions.
     """
     if not data_file_path.is_file():
         raise FileNotFoundError(f"Data file not found: {data_file_path}")
@@ -264,16 +274,24 @@ def get_matrix(
 
 
 def BrukerListFiles(path, recursive=False):
-    """
-    List all Bruker EPR data files (.DTA, .dta, .SPC, .spc) in the given directory.
+    """List Bruker EPR data files (.DTA, .dta, .SPC, .spc) in ``path``.
 
-    Args:
-        path (str or Path): Path to the folder containing Bruker files.
-        recursive (bool, optional): If True, search subfolders
-            recursively. Defaults to False.
+    Parameters
+    ----------
+    path : str or pathlib.Path
+        Directory to scan.
+    recursive : bool, optional
+        If True, also descend into subdirectories. Default is False.
 
-    Returns:
-        list[Path]: Sorted list of Path objects for found files.
+    Returns
+    -------
+    list of pathlib.Path
+        Sorted list of matching files.
+
+    Raises
+    ------
+    NotADirectoryError
+        If ``path`` is not an existing directory.
     """
     exts = {".dta", ".DTA", ".spc", ".SPC"}
     path = Path(path)

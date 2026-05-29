@@ -11,10 +11,9 @@ import os
 import platform
 import traceback
 
+import pandas as pd
 import tkinter as tk
 from tkinter import messagebox, ttk
-
-import pandas as pd
 
 from .logging_config import get_logger
 from .physics import NMAGN, PLANCK
@@ -1031,8 +1030,8 @@ class IsotopesGUI:
         # Sorting logic
         try:
             if col_id in numeric_cols_for_sort:
-                # Key function for robust numeric sort
-                # (handles errors, empty strings)
+                # Numeric sort key; falls back to inf on parse errors so empty
+                # / non-numeric entries sort to the end.
                 def sort_key_numeric(item_tuple):
                     value_str = item_tuple[0]
                     try:

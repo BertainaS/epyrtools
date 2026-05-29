@@ -299,10 +299,13 @@ def optimize_numpy_operations():
 
 
 def get_performance_info() -> Dict[str, Any]:
-    """Get comprehensive performance information.
+    """Return current system performance metrics.
 
-    Returns:
-        Dict with system performance metrics
+    Returns
+    -------
+    dict
+        Keys include ``memory``, ``cpu_count``, and ``config`` (cache and
+        memory-monitor settings).
     """
     memory_info = MemoryMonitor.get_memory_info()
 

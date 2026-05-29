@@ -201,7 +201,7 @@ def get_baseline_regions_1d(
     region_mode: str = "exclude",
 ) -> np.ndarray:
     """
-    Create a comprehensive baseline mask for 1D data combining all exclusion criteria.
+    Build a 1D baseline mask combining all exclusion criteria.
 
     Args:
         x: X-coordinate array
@@ -253,7 +253,7 @@ def get_baseline_regions_2d(
     region_mode: str = "exclude",
 ) -> np.ndarray:
     """
-    Create a comprehensive baseline mask for 2D data combining all exclusion criteria.
+    Build a 2D baseline mask combining all exclusion criteria.
 
     Args:
         X: X-coordinate meshgrid

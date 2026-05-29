@@ -363,8 +363,13 @@ def _view_2d(
     ax_slice = fig.add_subplot(1, 2, 2)
 
     mesh = ax_map.pcolormesh(
-        axis_h, axis_v, data,
-        shading="auto", cmap="RdBu_r", vmin=vmin0, vmax=vmax0,
+        axis_h,
+        axis_v,
+        data,
+        shading="auto",
+        cmap="RdBu_r",
+        vmin=vmin0,
+        vmax=vmax0,
     )
     fig.colorbar(mesh, ax=ax_map, label="Intensity (a.u.)", fraction=0.046)
     ax_map.set_xlabel(x_label)
@@ -407,7 +412,7 @@ def _view_2d(
             v_indicator.set_data([], [])
             ax_slice.set_xlabel(x_label)
             ax_slice.set_title(
-                f"Horizontal slice — {y_name} = {ax_val:.4g}  (index {idx})"
+                f"Horizontal slice: {y_name} = {ax_val:.4g}  (index {idx})"
             )
             slice_line.set_data(axis_h, slice_vals)
         else:
@@ -418,7 +423,7 @@ def _view_2d(
             h_indicator.set_data([], [])
             ax_slice.set_xlabel(y_label)
             ax_slice.set_title(
-                f"Vertical slice — {x_name} = {ax_val:.4g}  (index {idx})"
+                f"Vertical slice: {x_name} = {ax_val:.4g}  (index {idx})"
             )
             slice_line.set_data(axis_v, slice_vals)
 
@@ -443,7 +448,7 @@ def _view_2d(
     radio.on_clicked(on_direction)
     update()
 
-    fig.suptitle(f"{fname} — 2D interactive slicer", fontsize=11)
+    fig.suptitle(f"{fname}: 2D interactive slicer", fontsize=11)
     fig.canvas.mpl_connect(
         "key_press_event",
         lambda e: plt.close("all") if e.key == "q" else None,
@@ -981,6 +986,7 @@ def _setup_matplotlib_backend(args) -> None:
     if not args.interactive:
         return
     import platform
+
     import matplotlib
 
     if platform.system() == "Darwin":

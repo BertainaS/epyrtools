@@ -1,14 +1,18 @@
-# eprload.py
+"""Unified entry point for loading Bruker EPR data files.
+
+Exposes :func:`eprload`, which auto-detects BES3T (.dta/.dsc) or ESP/WinEPR
+(.spc/.par) format and dispatches to the appropriate loader in
+:mod:`epyr.sub`. Tkinter is imported for the optional file-picker dialog.
+"""
 
 import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import tkinter as tk
-from tkinter import filedialog
-
 import matplotlib.pyplot as plt
 import numpy as np
+import tkinter as tk
+from tkinter import filedialog
 
 from .logging_config import get_logger
 from .performance import MemoryMonitor, get_global_cache
@@ -29,13 +33,17 @@ except ImportError:
 
 
 def _select_file_dialog(initial_dir: Path) -> Optional[Path]:
-    """Open file dialog to select EPR data file.
+    """Open a file dialog to select an EPR data file.
 
-    Args:
-        initial_dir: Initial directory for file dialog
+    Parameters
+    ----------
+    initial_dir : pathlib.Path
+        Initial directory shown by the dialog.
 
-    Returns:
-        Selected file path or None if cancelled
+    Returns
+    -------
+    pathlib.Path or None
+        Selected file path, or ``None`` if the user cancelled.
     """
     root = tk.Tk()
     root.withdraw()  # Hide the main tkinter window
@@ -57,13 +65,17 @@ def _select_file_dialog(initial_dir: Path) -> Optional[Path]:
 
 
 def _find_file_with_extension(file_path: Path) -> Optional[Path]:
-    """Find file, trying known EPR extensions if needed.
+    """Find a file, trying known EPR extensions if needed.
 
-    Args:
-        file_path: Path to search for
+    Parameters
+    ----------
+    file_path : pathlib.Path
+        Path to search for, with or without extension.
 
-    Returns:
-        Found file path or None if not found
+    Returns
+    -------
+    pathlib.Path or None
+        Found file path, or ``None`` if no candidate exists.
     """
     # First, check if file exists as-is
     if file_path.is_file():
@@ -82,13 +94,17 @@ def _find_file_with_extension(file_path: Path) -> Optional[Path]:
 
 
 def _get_file_extension(file_path: Path) -> str:
-    """Get file extension, handling filenames with multiple dots.
+    """Return the EPR file extension, tolerating filenames with multiple dots.
 
-    Args:
-        file_path: Path to extract extension from
+    Parameters
+    ----------
+    file_path : pathlib.Path
+        Path to extract the extension from.
 
-    Returns:
-        File extension (e.g., '.dta', '.DSC')
+    Returns
+    -------
+    str
+        Extension (e.g. ``'.dta'``, ``'.DSC'``), or ``''`` if none matches.
     """
     # Get the filename and check known extensions
     filename = file_path.name
@@ -101,16 +117,25 @@ def _get_file_extension(file_path: Path) -> str:
 
 
 def _determine_file_format(file_path: Path) -> Tuple[Path, str]:
-    """Determine EPR file format and ensure extension exists.
+    """Resolve the data file and identify its Bruker format.
 
-    Args:
-        file_path: Path to the data file
+    Parameters
+    ----------
+    file_path : pathlib.Path
+        Path to the data file (with or without extension).
 
-    Returns:
-        Tuple of (validated_file_path, file_format)
+    Returns
+    -------
+    tuple of (pathlib.Path, str)
+        Resolved file path and format tag (``'BrukerBES3T'`` or
+        ``'BrukerESP'``).
 
-    Raises:
-        ValueError: If file format is unsupported or file not found
+    Raises
+    ------
+    FileNotFoundError
+        If no candidate file is found.
+    ValueError
+        If the file extension is not a supported Bruker format.
     """
     # Try to find the file with or without extension
     found_file = _find_file_with_extension(file_path)
@@ -147,13 +172,17 @@ def _determine_file_format(file_path: Path) -> Tuple[Path, str]:
 
 
 def _validate_scaling(scaling: str) -> None:
-    """Validate scaling parameter string.
+    """Check that ``scaling`` only contains supported flag characters.
 
-    Args:
-        scaling: Scaling string to validate
+    Parameters
+    ----------
+    scaling : str
+        Scaling specification (subset of ``'nPGTc'``).
 
-    Raises:
-        ValueError: If scaling contains invalid characters
+    Raises
+    ------
+    ValueError
+        If ``scaling`` contains any character outside ``'nPGTc'``.
     """
     if scaling:
         valid_scaling_chars = "nPGTc"
@@ -170,18 +199,27 @@ def _load_data_by_format(file_path: Path, file_format: str, scaling: str) -> Tup
     Optional[Union[np.ndarray, List[np.ndarray]]],
     Optional[Dict[str, Any]],
 ]:
-    """Load data using appropriate format loader.
+    """Dispatch to the loader matching ``file_format``.
 
-    Args:
-        file_path: Path to the data file
-        file_format: Format type ("BrukerBES3T" or "BrukerESP")
-        scaling: Scaling parameter string
+    Parameters
+    ----------
+    file_path : pathlib.Path
+        Path to the data file.
+    file_format : str
+        Format tag (``'BrukerBES3T'`` or ``'BrukerESP'``).
+    scaling : str
+        Scaling specification passed through to the loader.
 
-    Returns:
-        Tuple of (y_data, x_data, parameters)
+    Returns
+    -------
+    tuple
+        ``(y_data, x_data, parameters)``. Each entry may be ``None`` if
+        the loader could not produce it.
 
-    Raises:
-        Various exceptions from loading functions
+    Raises
+    ------
+    ValueError
+        If ``file_format`` is not recognized.
     """
     # Get extension without using with_suffix() to handle multiple dots correctly
     file_extension = _get_file_extension(file_path)
@@ -202,60 +240,72 @@ def _load_data_by_format(file_path: Path, file_format: str, scaling: str) -> Tup
 
 
 def eprload(
-    file_name=None,
-    scaling="",
-    plot_if_possible=False,
-    save_if_possible=False,
-    return_type="default",
-):
+    file_name: Optional[Union[str, Path]] = None,
+    scaling: str = "",
+    plot_if_possible: bool = False,
+    save_if_possible: bool = False,
+    return_type: str = "default",
+) -> Tuple[
+    Optional[Union[np.ndarray, List[np.ndarray]]],
+    Optional[np.ndarray],
+    Optional[Dict[str, Any]],
+    Optional[str],
+]:
     """
     Load experimental EPR data from Bruker BES3T or ESP formats.
 
-    Args:
-        file_name (str or Path, optional): Path to the data file
-            (.dta, .dsc, .spc, .par) or a directory.
-            If None or a directory, a file browser is shown.
-            Defaults to None (opens browser in cwd).
-        scaling (str, optional): String of characters specifying
-            scaling operations (only for Bruker files).
-            Each character enables a scaling operation:
-                'n': Divide by number of scans (AVGS/JSD).
-                'P': Divide by sqrt of MW power in mW (MWPW/MP).
-                'G': Divide by receiver gain (RCAG/RRG).
-                'T': Multiply by temperature in Kelvin (STMP/TE).
-                'c': Divide by conversion/sampling time in ms
-                    (SPTP/RCT).
-            Defaults to "" (no scaling).
-        plot_if_possible (bool, optional): If True and data is loaded
-            successfully, a simple plot is generated using matplotlib.
-            Defaults to False.
-        return_type (str, optional): Specifies which component of
-            the signal to return.
-            Options:
-                "default": Return y as-is (both real and imaginary
-                    parts if complex).
-                "real": Return only the real part of y (np.real(y)).
-                "imag": Return only the imaginary part of y
-                    (np.imag(y)).
-            Defaults to "default".
+    Parameters
+    ----------
+    file_name : str or Path, optional
+        Path to the data file (.dta, .dsc, .spc, .par) or a directory.
+        If None or a directory, a file browser is shown. Default is None
+        (opens browser in the current working directory).
+    scaling : str, optional
+        String of characters specifying scaling operations (Bruker files only).
+        Each character enables one operation:
 
-    Returns:
-        tuple:
-            - x (np.ndarray or list of np.ndarray): Abscissa data
-                (or list for 2D).
-            - y (np.ndarray): Ordinate data.
-            - pars (dict): Dictionary of parameters from the
-                descriptor/parameter file.
-            - file_path (str): The full path of the loaded file.
-            - On failure (e.g., user cancel, file error):
-                (None, None, None, None)
+        - ``'n'`` : divide by number of scans (AVGS/JSD)
+        - ``'P'`` : divide by sqrt of microwave power in mW (MWPW/MP)
+        - ``'G'`` : divide by receiver gain (RCAG/RRG)
+        - ``'T'`` : multiply by temperature in Kelvin (STMP/TE)
+        - ``'c'`` : divide by conversion/sampling time in ms (SPTP/RCT)
 
-    Raises:
-        FileNotFoundError: If the specified file or directory
-            does not exist.
-        ValueError: If the file format is unsupported, scaling is
-            invalid, or parameter inconsistencies are found.
-        IOError: If there are problems reading files.
+        Default is "" (no scaling).
+    plot_if_possible : bool, optional
+        If True and data loads successfully, generate a matplotlib plot.
+        Default is False.
+    save_if_possible : bool, optional
+        Reserved for future use. Default is False.
+    return_type : {'default', 'real', 'imag'}, optional
+        Component of the signal to return:
+
+        - ``'default'`` : return y as-is (real + imaginary if complex)
+        - ``'real'``    : return only ``np.real(y)``
+        - ``'imag'``    : return only ``np.imag(y)``
+
+        Default is "default".
+
+    Returns
+    -------
+    x : np.ndarray or list of np.ndarray or None
+        Abscissa data; list of axes for 2D datasets. None on failure.
+    y : np.ndarray or None
+        Ordinate data (signal). None on failure.
+    pars : dict or None
+        Parameters extracted from the descriptor/parameter file.
+        None on failure.
+    file_path : str or None
+        Resolved absolute path of the loaded file. None on failure.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the specified file or directory does not exist.
+    ValueError
+        If the file format is unsupported, scaling is invalid, or
+        parameter inconsistencies are found.
+    IOError
+        If reading files fails.
     """
     # Initialize outputs
     x, y, pars, loaded_file_path = None, None, None, None

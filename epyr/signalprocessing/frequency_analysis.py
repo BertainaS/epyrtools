@@ -24,6 +24,7 @@ except ImportError:
     def get_logger(name):
         return logging.getLogger(name)
 
+
 logger = get_logger(__name__)
 
 try:
@@ -554,7 +555,7 @@ def _plot_fft_analysis(
     dc_removed,
     **plot_kwargs,
 ):
-    """Helper function to create comprehensive FFT analysis plots."""
+    """Render the four-panel FFT analysis figure."""
 
     figsize = plot_kwargs.get("figsize", (14, 10))
     fig, axes = plt.subplots(2, 2, figsize=figsize)

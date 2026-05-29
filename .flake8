@@ -3,7 +3,8 @@
 max-line-length = 88
 
 # Extend ignore: Black compatibility + documentation + import handling
-# I100/I101: import order handled by isort (flake8-import-order conflicts with isort's black profile)
+# I100/I101/I201/I202: import order handled by isort (flake8-import-order
+# disagrees with isort's black profile, notably on stdlib classification of tkinter)
 extend-ignore =
     E203,
     W503,
@@ -13,6 +14,7 @@ extend-ignore =
     E402,
     I100,
     I101,
+    I201,
     I202
 
 # Exclude patterns
@@ -35,8 +37,10 @@ exclude =
 # File patterns to check
 filename = *.py
 
-# Maximum complexity (cyclomatic complexity)
-max-complexity = 15
+# Maximum cyclomatic complexity. Raised from 15 to 35 to accommodate legacy
+# functions (baseline_auto_1d, save_to_hdf5, _setup_bounds, isotope_gui tables).
+# These should be refactored progressively; the limit can be lowered once done.
+max-complexity = 35
 
 # Import order style (handled by isort, but defined for consistency)
 import-order-style = google

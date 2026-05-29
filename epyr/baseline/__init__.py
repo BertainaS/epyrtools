@@ -6,8 +6,8 @@ EPyR Tools - Baseline Correction Package
 
 Modern, modular baseline correction for EPR spectroscopy data.
 
-This package provides a comprehensive suite of baseline correction methods
-specifically designed for EPR data from epyr.eprload():
+This package provides baseline correction methods designed for EPR data
+returned by epyr.eprload():
 
 Features:
 ---------
@@ -102,7 +102,7 @@ from .selection import (
 __version__ = "0.3.6"
 __author__ = "EPyR Tools Development Team"
 
-# Define comprehensive public API
+# Public API
 __all__ = [
     # Core correction functions (most commonly used)
     "baseline_polynomial_1d",
@@ -149,7 +149,7 @@ __all__ = [
 
 
 def get_help():
-    """Display comprehensive help for the baseline correction package."""
+    """Print a usage guide for the baseline correction package."""
     help_text = """
     📋 EPyR Baseline Correction Package - Help
     ========================================

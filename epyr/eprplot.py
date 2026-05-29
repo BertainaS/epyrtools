@@ -522,8 +522,9 @@ def plot_2d_slicer(
     # Connect slider to update function
     slider.on_changed(update_slice)
 
-    logger.info("Interactive 2D EPR Viewer: direction=%s, slices=%d",
-                slice_direction, n_slices)
+    logger.info(
+        "Interactive 2D EPR Viewer: direction=%s, slices=%d", slice_direction, n_slices
+    )
 
     # Show plot
     plt.show()

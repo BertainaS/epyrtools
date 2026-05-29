@@ -362,7 +362,7 @@ def validate_fair_dataset(
     Returns:
         Combined ValidationResult
     """
-    logger.info("Starting comprehensive FAIR dataset validation")
+    logger.info("Starting FAIR dataset validation")
 
     combined_result = ValidationResult()
 
