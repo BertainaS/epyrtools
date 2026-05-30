@@ -1,0 +1,46 @@
+Version 0.3.8
+=============
+
+**Release Date:** April 26, 2026
+
+**Status:** Stable release
+
+Overview
+--------
+
+EPyR Tools v0.3.8 focuses on documentation quality and a refactor of the
+fitting module. Several CLI output bugs that prevented ``pytest`` from
+capturing user messages are also fixed.
+
+Highlights
+----------
+
+Fitting module refactor
+~~~~~~~~~~~~~~~~~~~~~~~
+
+- ``epyr.lineshapes.fitting`` split into focused private helpers for the
+  fit-function factory, initial-parameter estimation per derivative order,
+  and bound construction.
+- Public API unchanged: ``fit_epr_signal``, ``fit_multiple_shapes``,
+  ``FitResult`` keep their previous signatures and behaviour.
+- Improved support for derivative + phase + affine-baseline combinations.
+
+Documentation quality
+~~~~~~~~~~~~~~~~~~~~~
+
+- Docstrings audited and tightened across the public surface.
+- Mathematical conventions and physical units stated explicitly where
+  they were previously implicit.
+- LaTeX equations rendered in docstrings for the lineshape family.
+
+CLI output fixes
+~~~~~~~~~~~~~~~~
+
+- CLI user messages now go through ``print()`` instead of
+  ``logger.info()`` so that ``capsys`` captures them in tests. Internal
+  diagnostics still use the logger.
+- ``np.zeros_like`` and similar calls now pass ``dtype=float`` explicitly
+  when inputs may be integer arrays, avoiding NumPy 2.x compatibility
+  warnings.
+
+No backwards-incompatible changes.

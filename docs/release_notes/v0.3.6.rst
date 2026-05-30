@@ -1,0 +1,26 @@
+Version 0.3.6
+=============
+
+**Release Date:** February 26, 2026
+
+**Status:** Maintenance release
+
+Overview
+--------
+
+EPyR Tools v0.3.6 is a code-quality release. No new user-facing features;
+removal of dead code, alignment of test APIs with the lineshape refactor,
+and one waterfall-plot ergonomic improvement.
+
+Highlights
+----------
+
+- ``plot_2d_waterfall`` gains a ``clip_factor`` option to clip each trace
+  at a fraction of its peak before applying the vertical offset; useful for
+  busy 2D datasets where the noise floor dominates the visual baseline.
+- Internal cleanup: dead code removal, ``voigtian`` test API alignment,
+  formatting (black + isort) applied across the codebase.
+- ``.flake8`` excludes ``.ipynb_checkpoints`` and disables noisy
+  ``flake8-import-order`` rules that conflict with ``isort``'s Black profile.
+
+No API breaks; existing code continues to work unchanged.

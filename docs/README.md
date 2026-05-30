@@ -35,9 +35,12 @@ EPyR Tools Architecture
 ├── Plugin System (epyr.plugins)
 ├── FAIR Data Standards (epyr.fair)
 ├── Baseline Correction (epyr.baseline)
-├── Visualization (epyr.plot)
+├── Visualization (epyr.eprplot)
+├── Lineshape Analysis (epyr.lineshapes)
+├── Signal Processing (epyr.signalprocessing)
+├── Physics & Constants (epyr.physics)
 ├── GUI Applications (epyr.isotope_gui)
-└── Utilities (epyr.constants, epyr.sub)
+└── Utilities (epyr.sub)
 ```
 
 ## Key Features by Module

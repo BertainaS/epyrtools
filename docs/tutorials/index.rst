@@ -3,6 +3,20 @@ Tutorials and Examples
 
 Learn EPyR Tools through hands-on tutorials and practical examples.
 
+Clean End-to-End Scripts
+------------------------
+
+For users who want short, runnable, copy-pasteable scripts:
+
+.. toctree::
+   :maxdepth: 1
+
+   clean_examples
+
+These five scripts in ``examples/clean/`` cover loading + plotting,
+baseline + fitting, FFT windowing, the 2D slicer, and Rabi frequency
+analysis. They are the recommended starting point.
+
 Interactive Notebooks
 ----------------------
 

@@ -8,13 +8,14 @@ Main Modules
 
 .. toctree::
    :maxdepth: 2
-   
+
    epyr.eprload
    epyr.baseline
    epyr.fair
    epyr.lineshapes
    epyr.plot
-   epyr.constants
+   epyr.signalprocessing
+   epyr.physics
    epyr.isotope_gui
 
 Complete Module Index
@@ -23,11 +24,16 @@ Complete Module Index
 .. autosummary::
    :toctree: generated/
    :recursive:
-   
+
    epyr.eprload
    epyr.baseline
    epyr.fair
    epyr.lineshapes
-   epyr.plot
-   epyr.constants
+   epyr.eprplot
+   epyr.signalprocessing
+   epyr.physics
    epyr.isotope_gui
+   epyr.cli
+   epyr.config
+   epyr.performance
+   epyr.plugins

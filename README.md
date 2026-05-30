@@ -403,18 +403,21 @@ epyrtools/
 │   │   ├── lshape.py             # General lineshape functions
 │   │   ├── convspec.py           # Spectrum convolution tools
 │   │   └── lineshape_class.py    # Unified lineshape interface
-│   ├── constants.py              # EPR physical constants
-│   ├── plot.py                   # Advanced EPR plotting
-│   ├── isotope_gui/             # Interactive isotope database
-│   └── sub/                     # Utility modules
-│       ├── loadBES3T.py         # BES3T format loader
-│       ├── loadESP.py           # ESP format loader
+│   ├── physics/                  # Physical constants and unit conversions
+│   │   ├── constants.py          # CODATA 2022 constants (SI and CGS)
+│   │   ├── conversions.py        # Frequency/field conversions (MHz↔mT, etc.)
+│   │   └── units.py              # unitconvert() interface
+│   ├── eprplot.py                # EPR plotting (1D, 2D map, waterfall, slicer)
+│   ├── isotope_gui.py            # Interactive isotope database GUI
+│   └── sub/                     # Bruker format loaders
+│       ├── loadBES3T.py         # BES3T format loader (.DTA / .DSC)
+│       ├── loadESP.py           # ESP / WinEPR loader (.spc / .par)
 │       └── utils.py             # File handling utilities
 ├── docs/                        # Sphinx API documentation
-├── examples/                    # Comprehensive tutorial system
+├── examples/                    # Tutorials and example data
 │   ├── notebooks/               # Interactive Jupyter tutorials
-│   │   └── Getting_Started.ipynb    # Complete beginner tutorial
-│   ├── scripts/                 # Python automation examples
+│   ├── clean/                   # Five end-to-end standalone scripts
+│   ├── scripts/                 # Other Python automation examples
 │   └── data/                    # EPR measurement files
 │       ├── *.DSC, *.DTA        # BES3T format files
 │       ├── *.par, *.spc        # ESP format files

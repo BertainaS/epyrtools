@@ -411,24 +411,41 @@ def baseline_polynomial(
 - `corrected_data`: Baseline-corrected intensity data
 - `baseline`: Fitted baseline data
 
-## Constants Module
+## Physics Module
 
-### epyr.constants
+### epyr.physics
 
-Physical constants and unit conversions for EPR.
+Physical constants (CODATA 2022) and EPR / NMR unit conversions.
 
 ```python
-# Fundamental constants
-ELECTRON_G_FACTOR: float
-BOHR_MAGNETON: float
-PLANCK_CONSTANT: float
+# Fundamental constants (SI)
+GFREE: float    # free-electron g-factor (2.00231930436092)
+BMAGN: float    # Bohr magneton (9.2740100657e-24 J/T)
+PLANCK: float   # Planck constant (6.62607015e-34 J·s)
+HBAR: float     # reduced Planck constant
+CLIGHT: float   # speed of light
+BOLTZM: float   # Boltzmann constant
+NMAGN: float    # nuclear magneton
+# ... and the *_CGS variants
 
-# Unit conversions
-def gauss_to_tesla(value: float) -> float
-def tesla_to_gauss(value: float) -> float
-def frequency_to_field(frequency: float, g_factor: float = 2.0023) -> float
-def field_to_frequency(field: float, g_factor: float = 2.0023) -> float
+# EPR-specific helpers
+def gamma_hz(g_factor: float = 2.0023) -> float
+def magnetic_field_to_frequency(B_tesla: float, g: float = 2.0023) -> float
+def frequency_to_magnetic_field(freq_hz: float, g: float = 2.0023) -> float
+def thermal_energy(T_kelvin: float) -> float
+
+# Direct unit conversions
+def mhz_to_mt(freq_mhz: float, g_factor: float = 2.0023) -> float
+def mt_to_mhz(field_mt: float, g_factor: float = 2.0023) -> float
+def cm_inv_to_mhz(wavenumber_cm_inv: float) -> float
+def mhz_to_cm_inv(freq_mhz: float) -> float
+
+# General-purpose converter
+def unitconvert(value, from_unit: str, to_unit: str) -> float
 ```
+
+Backwards-compatible callable accessors (``planck()``, ``bmagn()``, ...) are
+also available; prefer the upper-case constants for readability.
 
 ## Isotope GUI Module
 

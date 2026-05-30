@@ -5,40 +5,50 @@ Release Notes
    :maxdepth: 2
    :caption: Version History:
 
+   release_notes/unreleased
+   release_notes/v0.3.8
+   release_notes/v0.3.6
    release_notes/v0.3.5
    release_notes/v0.2.0
 
-Version 0.3.5 (Latest)
-----------------------
+Unreleased
+----------
+
+Post-0.3.8 development on ``main``: Bruker loader refactor (complexity 60
+and 89 split into small private helpers), full type annotations on
+``eprload()``, explicit imports in ``epyr/__init__.py``, NumPy docstrings
+with worked examples on 53% of the public API, and tooling fixes
+(``make format`` / ``make quality-fix`` both return 0).
+
+See :doc:`release_notes/unreleased` for the full list.
+
+Version 0.3.8
+-------------
+
+**Release Date:** April 2026
+
+Documentation-quality release with a fitting-module refactor and CLI
+output fixes. ``epyr.lineshapes.fitting`` split into focused private
+helpers; public API unchanged. See :doc:`release_notes/v0.3.8`.
+
+Version 0.3.6
+-------------
 
 **Release Date:** February 2026
 
-**Status:** Stable release with analytical Voigt derivatives and plotting improvements
+Maintenance release: dead-code removal, test-API alignment with the
+lineshape refactor, ``plot_2d_waterfall`` ``clip_factor`` option, and
+``.flake8`` tuning. See :doc:`release_notes/v0.3.6`.
 
-EPyR Tools v0.3.5 focuses on **lineshape fitting accuracy** and **visualization quality**.
+Version 0.3.5
+-------------
 
-Key Highlights
-~~~~~~~~~~~~~~
+**Release Date:** February 2026
 
-**Lineshape Fitting**
-
-- Analytical Voigt derivatives via Faddeeva function identities (replaces numerical approach)
-- Pseudo-Voigt now fully supports derivatives and phase fitting
-- Robust initial parameter estimation for 1st and 2nd derivative signals
-
-**Visualization**
-
-- Fixed ``plot_2d_map`` colorbar crash with matplotlib 3.8+
-- Added ``vmin``/``vmax`` color scale control for 2D maps
-- Thinner default line width (0.75) for cleaner plots
-- JPG export: 200 DPI, ``RdBu_r`` colormap, symmetric 98th percentile scale
-
-**Bug Fixes**
-
-- Fixed ``baseline_polynomial_2d`` meshgrid shape mismatch
-- Fixed ``lshape()`` Dawson function returning complex values with phase
-
-For complete details, see :doc:`release_notes/v0.3.5`.
+Analytical Voigt derivatives via Faddeeva-function identities, pseudo-Voigt
+derivative and phase support, matplotlib 3.8+ compatibility for
+``plot_2d_map`` and ``vmin``/``vmax`` color scale control. See
+:doc:`release_notes/v0.3.5`.
 
 Previous Versions
 -----------------
@@ -69,7 +79,8 @@ For complete details, see :doc:`release_notes/v0.2.0`.
 Version 0.1.x
 ~~~~~~~~~~~~~
 
-Early development versions focusing on core EPR data loading and basic analysis capabilities.
+Early development versions focusing on core EPR data loading and basic
+analysis capabilities.
 
 - Initial Bruker file format support
 - Basic plotting functionality

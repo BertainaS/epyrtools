@@ -1,0 +1,76 @@
+Unreleased
+==========
+
+**Status:** Post-0.3.8 development
+
+These changes are on ``main`` but have not yet been packaged for PyPI.
+
+Bruker loader refactor
+----------------------
+
+``epyr/sub/loadBES3T.py`` and ``epyr/sub/loadESP.py`` were heavy monolithic
+functions (cyclomatic complexity 60 and 89, respectively). They are now
+split into small private helpers covering file resolution, header parsing,
+abscissa construction, and the scaling pipeline:
+
+- ``loadBES3T``: helpers for IKKF complexity, dimensions, byte order,
+  number format, companion-axis files, linear/non-linear abscissa, and
+  per-channel scaling (``'n'``, ``'P'``, ``'G'``, ``'T'``, ``'c'``).
+- ``loadESP``: helpers for the JSS flag, dimension resolution from the
+  conflicting ``ANZ`` / ``SSX`` / ``SSY`` / ``RES`` / ``REY`` / ``XPLS``
+  keys, abscissa source selection (GST/GSI vs HCF/HSW vs XXLB/XXWI),
+  and the power-sweep ``'P'`` scaling on the Y-axis.
+
+Every public behavior of the loaders is preserved. The 10 example files in
+``examples/data/`` load identically before and after the refactor.
+
+API surface
+-----------
+
+- ``eprload()`` is now fully type-annotated.
+- ``epyr/__init__.py`` no longer uses ``from .X import *``: imports are
+  explicit, with the public surface defined by ``__all__`` in each
+  submodule. The names exported are unchanged from a user perspective.
+
+Tooling
+-------
+
+- ``make format`` now uses Black >= 24, != 25.1.0 (pinned to avoid a
+  grammar-table crash on initialization).
+- ``mypy`` target Python version bumped from 3.8 to 3.9.
+- ``.flake8`` ignores ``I201`` (isort vs flake8-import-order disagree on
+  ``tkinter``); max cyclomatic complexity raised to 35 with a comment
+  noting which functions still need to be split.
+- ``flake8``, ``mypy``, ``isort`` and ``black`` all pass cleanly on the
+  ``epyr/`` tree (``make quality-fix`` returns 0).
+
+Documentation
+-------------
+
+- Public-API docstring example coverage rose from 18% to 53%. Functions
+  enriched include ``eprload``, the ``plot_*`` family, the baseline
+  ``models``, the ``baseline_*`` correction functions, the FAIR exporters
+  (``save_to_csv``, ``save_to_json``, ``save_to_hdf5``, ``save_to_jpg``,
+  ``convert_bruker_to_fair``, ``batch_convert_directory``), and the
+  ``physics`` conversion helpers.
+- Remaining Google-style ``Args:`` / ``Returns:`` blocks converted to
+  NumPy format.
+- ``epyr/sub/__init__.py``, ``epyr/sub/utils.py`` and ``epyr/eprload.py``
+  gained module docstrings.
+- The ReST page ``docs/api/epyr.constants.rst`` was replaced by
+  ``docs/api/epyr.physics.rst`` to reflect the actual module layout.
+  ``epyr.constants`` remains importable as an alias for
+  ``epyr.physics.constants``.
+- ``examples/clean/`` exposes five standalone end-to-end scripts covering
+  load + plot, baseline + fitting, FFT windowing, the 2D slicer, and Rabi
+  frequency analysis.
+
+Repository hygiene
+------------------
+
+- Stale root-level ``test_*.png`` and ``test_epr.txt`` artifacts removed.
+- ``epyr/.ipynb_checkpoints/`` (containing an old ``eprplot``
+  checkpoint) deleted.
+- ``.gitignore`` extended for root-level ``test_*.png`` / ``test_*.txt``.
+
+No backwards-incompatible changes.

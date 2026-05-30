@@ -97,7 +97,7 @@ We follow PEP 8 with some specific conventions:
    from pathlib import Path
    from typing import Tuple, Optional, List
 
-   from epyr.constants import PHYSICAL_CONSTANTS
+   from epyr.physics import PLANCK, BMAGN
 
 
    def process_epr_data(
@@ -363,13 +363,13 @@ When adding EPR-specific functionality:
            resonance: elementary theory and practical applications.
            John Wiley & Sons.
        """
-       from epyr.constants import PLANCK_CONSTANT, BOHR_MAGNETON
+       from epyr.physics import PLANCK, BMAGN
 
        # Convert Gauss to Tesla
        field_tesla = field_gauss * 1e-4
 
        # g = hν / (μB * B)
-       return (PLANCK_CONSTANT * frequency_hz) / (BOHR_MAGNETON * field_tesla)
+       return (PLANCK * frequency_hz) / (BMAGN * field_tesla)
 
 Common Contribution Areas
 ~~~~~~~~~~~~~~~~~~~~~~~~~
