@@ -123,7 +123,7 @@ from .physics import (
 from .plugins import plugin_manager
 from .sub.utils import BrukerListFiles
 
-__version__ = "0.3.8"
+__version__ = "0.3.9"
 
 logger = get_logger(__name__)
 logger.debug("Package 'epyr' v%s initialized.", __version__)

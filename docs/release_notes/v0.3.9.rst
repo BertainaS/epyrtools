@@ -1,9 +1,9 @@
-Unreleased
-==========
+Version 0.3.9
+=============
 
-**Status:** Post-0.3.8 development
+**Release Date:** May 30, 2026
 
-These changes are on ``main`` but have not yet been packaged for PyPI.
+**Status:** Stable release
 
 Bruker loader refactor
 ----------------------

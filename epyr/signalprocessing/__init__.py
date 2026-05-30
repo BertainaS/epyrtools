@@ -117,5 +117,5 @@ __all__ = [
     "spectrogram_analysis",  # Time-frequency analysis
 ]
 
-__version__ = "0.3.6"
+__version__ = "0.3.9"
 __author__ = "EPyR Tools Development Team"

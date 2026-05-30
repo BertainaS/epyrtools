@@ -5,22 +5,22 @@ Release Notes
    :maxdepth: 2
    :caption: Version History:
 
-   release_notes/unreleased
+   release_notes/v0.3.9
    release_notes/v0.3.8
    release_notes/v0.3.6
    release_notes/v0.3.5
    release_notes/v0.2.0
 
-Unreleased
-----------
+Version 0.3.9 (Latest)
+----------------------
 
-Post-0.3.8 development on ``main``: Bruker loader refactor (complexity 60
-and 89 split into small private helpers), full type annotations on
-``eprload()``, explicit imports in ``epyr/__init__.py``, NumPy docstrings
-with worked examples on 53% of the public API, and tooling fixes
-(``make format`` / ``make quality-fix`` both return 0).
+**Release Date:** May 2026
 
-See :doc:`release_notes/unreleased` for the full list.
+Bruker loader refactor (cyclomatic complexity 60 and 89 split into small
+private helpers), full type annotations on ``eprload()``, explicit
+imports in ``epyr/__init__.py``, NumPy docstrings with worked examples
+on 53% of the public API, and tooling fixes (``make format`` and
+``make quality-fix`` both return 0). See :doc:`release_notes/v0.3.9`.
 
 Version 0.3.8
 -------------
