@@ -240,3 +240,68 @@ class TestFitMultipleDecays:
         results = fit_multiple_decays(t, y, plot=True)
         assert all(r.success for r in results.values())
         plt.close("all")
+
+
+@pytest.mark.deep
+class TestFitRelaxationEdgeCases:
+    def test_decay_time_much_shorter_than_time_range(self):
+        t = np.linspace(0, 100, 200)
+        y = mono_exponential(t, amplitude=5.0, T=0.5, offset=1.0)
+        result = fit_relaxation(t, y, model="mono_exponential", plot=False)
+        assert result.success
+        assert result.parameters["T"] == pytest.approx(0.5, rel=1e-2)
+
+    def test_decay_time_much_longer_than_time_range(self):
+        t = np.linspace(0, 100, 200)
+        y = mono_exponential(t, amplitude=5.0, T=10000.0, offset=1.0)
+        result = fit_relaxation(t, y, model="mono_exponential", plot=False)
+        # The decay is nearly linear over this range, so individual
+        # parameters are not well constrained; only require convergence
+        # and a good fit, not exact parameter recovery.
+        assert result.success
+        assert result.r_squared > 0.999
+
+    def test_beta_near_lower_bound(self):
+        t = np.linspace(0.1, 100, 200)
+        y = stretched_exponential(t, amplitude=4.0, T=25.0, beta=0.1, offset=0.5)
+        result = fit_relaxation(t, y, model="stretched_exponential", plot=False)
+        assert result.success
+        assert result.parameters["beta"] == pytest.approx(0.1, rel=1e-2)
+
+    def test_beta_above_one_compressed_exponential(self):
+        t = np.linspace(0.1, 100, 200)
+        y = stretched_exponential(t, amplitude=4.0, T=25.0, beta=2.0, offset=0.5)
+        result = fit_relaxation(t, y, model="stretched_exponential", plot=False)
+        assert result.success
+        assert result.parameters["beta"] == pytest.approx(2.0, rel=1e-2)
+
+    def test_negative_offset(self):
+        t = np.linspace(0, 100, 200)
+        y = mono_exponential(t, amplitude=5.0, T=15.0, offset=-3.0)
+        result = fit_relaxation(t, y, model="mono_exponential", plot=False)
+        assert result.success
+        assert result.parameters["offset"] == pytest.approx(-3.0, rel=1e-2)
+
+
+@pytest.mark.scientific
+class TestFitRelaxationAnalyticCrossCheck:
+    def test_mono_exponential_matches_log_linear_regression(self):
+        rng = np.random.default_rng(2)
+        t = np.linspace(0, 100, 200)
+        T_true = 18.0
+        amplitude_true = 6.0
+        offset_true = 0.8
+        y_true = mono_exponential(
+            t, amplitude=amplitude_true, T=T_true, offset=offset_true
+        )
+        y = y_true + 0.01 * amplitude_true * rng.standard_normal(t.size)
+
+        result = fit_relaxation(t, y, model="mono_exponential", plot=False)
+        assert result.success
+
+        # Closed-form solution: with the true offset known, log(|y - offset|)
+        # is linear in t with slope -1 / T.
+        slope, _ = np.polyfit(t, np.log(np.abs(y - offset_true)), 1)
+        T_analytic = -1.0 / slope
+
+        assert result.parameters["T"] == pytest.approx(T_analytic, rel=0.08)
