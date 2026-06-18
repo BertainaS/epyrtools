@@ -204,7 +204,7 @@ def fit_relaxation(
 
         ss_res: float = float(np.sum(residuals**2))
         ss_tot: float = float(np.sum((y_fit - np.mean(y_fit)) ** 2))
-        r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
+        r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
         chi_squared = ss_res / (len(y_fit) - len(popt))
 
         param_dict = {name: value for name, value in zip(param_names, popt)}
