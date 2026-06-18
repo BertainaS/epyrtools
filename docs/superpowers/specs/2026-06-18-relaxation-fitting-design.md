@@ -69,8 +69,9 @@ Notes on naming:
 
 Mirrors `lineshapes.fitting.FitResult` field-for-field: `model`, `parameters`,
 `parameter_errors`, `fitted_curve`, `residuals`, `r_squared`, `chi_squared`,
-`success`, `message`, `covariance_matrix`, `x_fit`, plus a `.summary()` method
-producing the same formatted-string style.
+`success`, `message`, `covariance_matrix`, `t_fit` (named for the time axis,
+in place of `FitResult`'s `x_fit`), plus a `.summary()` method producing the
+same formatted-string style.
 
 ### `fit_relaxation`
 
