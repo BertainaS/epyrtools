@@ -159,3 +159,41 @@ class TestFitRelaxationGammaGaussianDecay:
         assert result.parameters["Gamma0"] == pytest.approx(0.05, rel=1e-3)
         assert result.parameters["GammaG"] == pytest.approx(0.02, rel=1e-3)
         assert result.r_squared > 0.999
+
+
+@pytest.mark.smoke
+class TestFitRelaxationBiexponential:
+    def test_recovers_noise_free_parameters(self):
+        t = np.linspace(0, 200, 300)
+        y = biexponential(
+            t, amplitude1=3.0, tau1=8.0, amplitude2=2.0, tau2=80.0, offset=0.3
+        )
+        result = fit_relaxation(t, y, model="biexponential", plot=False)
+        assert result.success
+        assert result.parameters["tau1"] == pytest.approx(8.0, rel=1e-2)
+        assert result.parameters["tau2"] == pytest.approx(80.0, rel=1e-2)
+        assert result.r_squared > 0.999
+
+
+@pytest.mark.smoke
+class TestFitRelaxationInversionRecovery:
+    def test_recovers_noise_free_parameters(self):
+        t = np.linspace(0, 100, 200)
+        y = inversion_recovery(t, amplitude=4.0, T1=20.0, offset=0.5)
+        result = fit_relaxation(t, y, model="inversion_recovery", plot=False)
+        assert result.success
+        assert result.parameters["T1"] == pytest.approx(20.0, rel=1e-3)
+        assert result.parameters["amplitude"] == pytest.approx(4.0, rel=1e-3)
+        assert result.r_squared > 0.999
+
+
+@pytest.mark.smoke
+class TestFitRelaxationSaturationRecovery:
+    def test_recovers_noise_free_parameters(self):
+        t = np.linspace(0, 100, 200)
+        y = saturation_recovery(t, amplitude=4.0, T1=20.0, offset=0.5)
+        result = fit_relaxation(t, y, model="saturation_recovery", plot=False)
+        assert result.success
+        assert result.parameters["T1"] == pytest.approx(20.0, rel=1e-3)
+        assert result.parameters["amplitude"] == pytest.approx(4.0, rel=1e-3)
+        assert result.r_squared > 0.999

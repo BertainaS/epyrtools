@@ -14,13 +14,23 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 from ..logging_config import get_logger
-from .models import gamma_gaussian_decay, mono_exponential, stretched_exponential
+from .models import (
+    biexponential,
+    gamma_gaussian_decay,
+    inversion_recovery,
+    mono_exponential,
+    saturation_recovery,
+    stretched_exponential,
+)
 
 logger = get_logger(__name__)
 
 SUPPORTED_MODELS = [
     "mono_exponential",
     "stretched_exponential",
+    "biexponential",
+    "inversion_recovery",
+    "saturation_recovery",
     "gamma_gaussian_decay",
 ]
 
@@ -311,6 +321,44 @@ def _get_fit_function(
             "offset": (-np.inf, np.inf),
         }
 
+    elif model == "biexponential":
+
+        def fit_func(t, amplitude1, tau1, amplitude2, tau2, offset):
+            return biexponential(t, amplitude1, tau1, amplitude2, tau2, offset)
+
+        param_names = ["amplitude1", "tau1", "amplitude2", "tau2", "offset"]
+        param_bounds = {
+            "amplitude1": (-np.inf, np.inf),
+            "tau1": (1e-9, np.inf),
+            "amplitude2": (-np.inf, np.inf),
+            "tau2": (1e-9, np.inf),
+            "offset": (-np.inf, np.inf),
+        }
+
+    elif model == "inversion_recovery":
+
+        def fit_func(t, amplitude, T1, offset):
+            return inversion_recovery(t, amplitude, T1, offset)
+
+        param_names = ["amplitude", "T1", "offset"]
+        param_bounds = {
+            "amplitude": (-np.inf, np.inf),
+            "T1": (1e-9, np.inf),
+            "offset": (-np.inf, np.inf),
+        }
+
+    elif model == "saturation_recovery":
+
+        def fit_func(t, amplitude, T1, offset):
+            return saturation_recovery(t, amplitude, T1, offset)
+
+        param_names = ["amplitude", "T1", "offset"]
+        param_bounds = {
+            "amplitude": (-np.inf, np.inf),
+            "T1": (1e-9, np.inf),
+            "offset": (-np.inf, np.inf),
+        }
+
     else:
         raise ValueError(f"Unsupported model: {model}. Choose from: {SUPPORTED_MODELS}")
 
@@ -402,6 +450,27 @@ def _estimate_initial_params(
             "Gamma0": rate_guess,
             "GammaG": rate_guess,
             "offset": offset_guess,
+        }
+
+    if model == "biexponential":
+        time_span = float(t[-1] - t[0]) or 1.0
+        return {
+            "amplitude1": amplitude_guess / 2,
+            "tau1": max(time_span * 0.1, 1e-6),
+            "amplitude2": amplitude_guess / 2,
+            "tau2": max(time_span, 1e-6),
+            "offset": offset_guess,
+        }
+
+    if model in ("inversion_recovery", "saturation_recovery"):
+        recovery_amplitude = float(y[-1] - y[0]) or 1.0
+        midpoint = y[0] + 0.5 * (y[-1] - y[0])
+        crossing_idx = int(np.argmin(np.abs(y - midpoint)))
+        T1_guess = max(float(t[crossing_idx] - t[0]), float(t[1] - t[0]))
+        return {
+            "amplitude": abs(recovery_amplitude),
+            "T1": T1_guess,
+            "offset": float(y[0]),
         }
 
     raise ValueError(f"Unsupported model: {model}. Choose from: {SUPPORTED_MODELS}")
