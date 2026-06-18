@@ -11,6 +11,7 @@ import pytest
 from epyr.relaxation import (
     RelaxationFitResult,
     biexponential,
+    fit_multiple_decays,
     fit_relaxation,
     gamma_gaussian_decay,
     inversion_recovery,
@@ -197,3 +198,45 @@ class TestFitRelaxationSaturationRecovery:
         assert result.parameters["T1"] == pytest.approx(20.0, rel=1e-3)
         assert result.parameters["amplitude"] == pytest.approx(4.0, rel=1e-3)
         assert result.r_squared > 0.999
+
+
+@pytest.mark.standard
+class TestFitMultipleDecays:
+    def test_picks_mono_exponential_when_data_is_mono_exponential(self):
+        rng = np.random.default_rng(1)
+        t = np.linspace(0, 100, 300)
+        y_true = mono_exponential(t, amplitude=5.0, T=20.0, offset=1.0)
+        y = y_true + 0.01 * (y_true.max() - y_true.min()) * rng.standard_normal(t.size)
+
+        results = fit_multiple_decays(t, y, plot=False)
+        best = min(results, key=lambda k: results[k].chi_squared)
+        assert best == "mono_exponential"
+
+    def test_picks_stretched_exponential_when_data_is_stretched(self):
+        rng = np.random.default_rng(1)
+        t = np.linspace(0.1, 100, 300)
+        y_true = stretched_exponential(t, amplitude=4.0, T=25.0, beta=0.6, offset=0.5)
+        y = y_true + 0.01 * (y_true.max() - y_true.min()) * rng.standard_normal(t.size)
+
+        results = fit_multiple_decays(t, y, plot=False)
+        best = min(results, key=lambda k: results[k].chi_squared)
+        assert best == "stretched_exponential"
+
+    def test_picks_biexponential_when_data_is_biexponential(self):
+        rng = np.random.default_rng(1)
+        t = np.linspace(0, 200, 300)
+        y_true = biexponential(
+            t, amplitude1=3.0, tau1=8.0, amplitude2=2.0, tau2=80.0, offset=0.3
+        )
+        y = y_true + 0.01 * (y_true.max() - y_true.min()) * rng.standard_normal(t.size)
+
+        results = fit_multiple_decays(t, y, plot=False)
+        best = min(results, key=lambda k: results[k].chi_squared)
+        assert best == "biexponential"
+
+    def test_plot_true_does_not_raise(self):
+        t = np.linspace(0, 100, 200)
+        y = mono_exponential(t, amplitude=5.0, T=20.0, offset=1.0)
+        results = fit_multiple_decays(t, y, plot=True)
+        assert all(r.success for r in results.values())
+        plt.close("all")

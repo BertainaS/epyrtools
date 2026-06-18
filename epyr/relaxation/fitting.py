@@ -690,3 +690,157 @@ def _plot_fit_results(
 
     plt.tight_layout()
     plt.show()
+
+
+def fit_multiple_decays(
+    t_data: np.ndarray,
+    y_data: np.ndarray,
+    models: Optional[List[str]] = None,
+    mask: Optional[np.ndarray] = None,
+    plot: bool = True,
+) -> Dict[str, RelaxationFitResult]:
+    """
+    Fit relaxation data with multiple models and compare by reduced chi-squared.
+
+    Parameters
+    ----------
+    t_data : np.ndarray
+        Time axis, in the unit chosen by the caller.
+    y_data : np.ndarray
+        Relaxation signal.
+    models : list of str, optional
+        Models to fit. Default: ['mono_exponential', 'stretched_exponential',
+        'biexponential']. The recovery models and 'gamma_gaussian_decay' are
+        excluded by default since they assume a specific data shape rather
+        than being interchangeable candidates for a generic decay.
+    mask : np.ndarray of bool, optional
+        Boolean array selecting points to include (True = include). Passed
+        unchanged to each fit_relaxation call.
+    plot : bool, optional
+        Display a side-by-side comparison plot (default: True).
+
+    Returns
+    -------
+    dict
+        Mapping of model name to RelaxationFitResult for all attempted fits.
+
+    Notes
+    -----
+    Models are ranked by reduced chi-squared, not R-squared: R-squared is
+    biased toward models with more free parameters, since extra parameters
+    can only reduce the residual sum of squares on the same data.
+    """
+
+    if models is None:
+        models = ["mono_exponential", "stretched_exponential", "biexponential"]
+
+    results = {}
+
+    for model in models:
+        try:
+            result = fit_relaxation(t_data, y_data, model=model, mask=mask, plot=False)
+            results[model] = result
+        except Exception as e:
+            logger.warning(f"Failed to fit {model}: {e}")
+            results[model] = RelaxationFitResult(
+                model=model,
+                parameters={},
+                parameter_errors={},
+                fitted_curve=np.array([]),
+                residuals=np.array([]),
+                r_squared=0.0,
+                chi_squared=np.inf,
+                success=False,
+                message=str(e),
+            )
+
+    successful_fits = {k: v for k, v in results.items() if v.success}
+
+    if successful_fits and plot:
+        _plot_comparison(t_data, y_data, successful_fits)
+
+    logger.info("=== Relaxation Model Comparison ===")
+    for model, result in results.items():
+        if result.success:
+            logger.info(
+                f"{model:22s}: chi2_red = {result.chi_squared:.4g},"
+                f" R2 = {result.r_squared:.6f}"
+            )
+        else:
+            logger.info(f"{model:22s}: FAILED - {result.message}")
+
+    if successful_fits:
+        best_model = min(
+            successful_fits.keys(), key=lambda k: successful_fits[k].chi_squared
+        )
+        logger.info(f"\nBest fit (lowest chi2_red): {best_model}")
+
+    return results
+
+
+def _plot_comparison(
+    t: np.ndarray, y: np.ndarray, results: Dict[str, RelaxationFitResult]
+) -> None:
+    """
+    Plot fitted curves and residuals for multiple relaxation models.
+
+    Parameters
+    ----------
+    t : np.ndarray
+        Full time data passed to fit_multiple_decays.
+    y : np.ndarray
+        Full relaxation signal passed to fit_multiple_decays.
+    results : dict
+        Mapping of model name to RelaxationFitResult; only successful fits
+        are drawn.
+    """
+
+    fig, (ax1, ax2) = plt.subplots(
+        2, 1, figsize=(12, 10), gridspec_kw={"height_ratios": [3, 1]}
+    )
+
+    colors = ["#d62728", "#2ca02c", "#ff7f0e", "#9467bd", "#8c564b"]
+
+    ax1.plot(t, y, "o", markersize=4, alpha=0.7, label="Data", color="#1f77b4")
+
+    for i, (model, result) in enumerate(results.items()):
+        if result.success:
+            color = colors[i % len(colors)]
+            t_plot = result.t_fit if result.t_fit is not None else t
+            ax1.plot(
+                t_plot,
+                result.fitted_curve,
+                "-",
+                linewidth=2,
+                label=f"{model} (chi2_red={result.chi_squared:.3g})",
+                color=color,
+            )
+
+    ax1.set_xlabel("Time")
+    ax1.set_ylabel("Intensity")
+    ax1.set_title("Relaxation Fitting - Model Comparison")
+    ax1.legend()
+    ax1.grid(True, alpha=0.3)
+
+    for i, (model, result) in enumerate(results.items()):
+        if result.success:
+            color = colors[i % len(colors)]
+            t_plot = result.t_fit if result.t_fit is not None else t
+            ax2.plot(
+                t_plot,
+                result.residuals,
+                "o-",
+                markersize=2,
+                alpha=0.7,
+                label=model,
+                color=color,
+            )
+
+    ax2.axhline(y=0, color="k", linestyle="--", alpha=0.5)
+    ax2.set_xlabel("Time")
+    ax2.set_ylabel("Residuals")
+    ax2.legend()
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
