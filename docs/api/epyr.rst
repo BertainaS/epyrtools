@@ -13,6 +13,7 @@ Main Modules
    epyr.baseline
    epyr.fair
    epyr.lineshapes
+   epyr.relaxation
    epyr.plot
    epyr.signalprocessing
    epyr.physics
@@ -29,6 +30,7 @@ Complete Module Index
    epyr.baseline
    epyr.fair
    epyr.lineshapes
+   epyr.relaxation
    epyr.eprplot
    epyr.signalprocessing
    epyr.physics

@@ -5,14 +5,26 @@ Release Notes
    :maxdepth: 2
    :caption: Version History:
 
+   release_notes/v0.4.0
    release_notes/v0.3.9
    release_notes/v0.3.8
    release_notes/v0.3.6
    release_notes/v0.3.5
    release_notes/v0.2.0
 
-Version 0.3.9 (Latest)
-----------------------
+Version 0.4.0 (Latest)
+-----------------------
+
+**Release Date:** June 2026
+
+New ``epyr.relaxation`` package for T1/T2 relaxation fitting: six
+decay/recovery models (mono- and stretched-exponential, bi-exponential,
+inversion/saturation recovery, Gamma0/GammaG), ``fit_relaxation()``, and
+``fit_multiple_decays()`` (ranked by reduced chi-squared). See
+:doc:`release_notes/v0.4.0`.
+
+Version 0.3.9
+--------------
 
 **Release Date:** May 2026
 

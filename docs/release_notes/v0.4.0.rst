@@ -1,0 +1,31 @@
+Version 0.4.0
+=============
+
+**Release Date:** June 2026
+
+**Status:** Stable release
+
+New: relaxation fitting module
+-------------------------------
+
+A new package, ``epyr.relaxation``, fits time-domain T1/T2 relaxation data,
+complementing the existing field-domain lineshape fitting in
+``epyr.lineshapes.fitting``.
+
+- ``epyr.relaxation.models``: six decay/recovery functions, ``mono_exponential``,
+  ``stretched_exponential``, ``biexponential``, ``inversion_recovery``,
+  ``saturation_recovery``, and ``gamma_gaussian_decay`` (a combined
+  homogeneous/spectral-diffusion echo-decay model).
+- ``epyr.relaxation.fit_relaxation()``: fits a single decay/recovery curve
+  with any of the six models, returning a ``RelaxationFitResult`` with
+  parameters, errors, R-squared, reduced chi-squared, and an optional
+  annotated plot. Mirrors the existing ``fit_epr_signal()`` API.
+- ``epyr.relaxation.fit_multiple_decays()``: fits several candidate models
+  and ranks them by reduced chi-squared (not R-squared, which is biased
+  toward models with more free parameters) to suggest the best-supported
+  decay model for a given dataset.
+- New example script ``examples/clean/06_relaxation_fitting.py`` demonstrates
+  all three entry points on a real T2 echo decay and on synthetic
+  bi-exponential and Gamma0/GammaG data.
+
+No backwards-incompatible changes.
