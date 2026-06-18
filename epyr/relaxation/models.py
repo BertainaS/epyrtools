@@ -121,9 +121,7 @@ def biexponential(
     represent either relaxation process, depending on the experiment.
     """
     t = np.asarray(t, dtype=float)
-    return (
-        amplitude1 * np.exp(-t / tau1) + amplitude2 * np.exp(-t / tau2) + offset
-    )
+    return amplitude1 * np.exp(-t / tau1) + amplitude2 * np.exp(-t / tau2) + offset
 
 
 def inversion_recovery(
@@ -222,6 +220,4 @@ def gamma_gaussian_decay(
         Signal values, same shape as t.
     """
     t = np.asarray(t, dtype=float)
-    return (
-        amplitude * np.exp(-Gamma0 * t) * np.exp(-((GammaG * t) ** 2)) + offset
-    )
+    return amplitude * np.exp(-Gamma0 * t) * np.exp(-((GammaG * t) ** 2)) + offset

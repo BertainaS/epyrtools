@@ -51,7 +51,9 @@ class TestModelFunctions:
         assert v == pytest.approx(0.5)
 
     def test_gamma_gaussian_decay_at_zero(self):
-        v = gamma_gaussian_decay(0.0, amplitude=2.0, Gamma0=0.1, GammaG=0.05, offset=0.2)
+        v = gamma_gaussian_decay(
+            0.0, amplitude=2.0, Gamma0=0.1, GammaG=0.05, offset=0.2
+        )
         assert v == pytest.approx(2.2)
 
     def test_gamma_gaussian_decay_array_shape_and_dtype(self):
