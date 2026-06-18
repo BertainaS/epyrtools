@@ -14,12 +14,14 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 from ..logging_config import get_logger
-from .models import mono_exponential
+from .models import gamma_gaussian_decay, mono_exponential, stretched_exponential
 
 logger = get_logger(__name__)
 
 SUPPORTED_MODELS = [
     "mono_exponential",
+    "stretched_exponential",
+    "gamma_gaussian_decay",
 ]
 
 
@@ -283,6 +285,32 @@ def _get_fit_function(
             "offset": (-np.inf, np.inf),
         }
 
+    elif model == "stretched_exponential":
+
+        def fit_func(t, amplitude, T, beta, offset):
+            return stretched_exponential(t, amplitude, T, beta, offset)
+
+        param_names = ["amplitude", "T", "beta", "offset"]
+        param_bounds = {
+            "amplitude": (-np.inf, np.inf),
+            "T": (1e-9, np.inf),
+            "beta": (0.05, 5.0),
+            "offset": (-np.inf, np.inf),
+        }
+
+    elif model == "gamma_gaussian_decay":
+
+        def fit_func(t, amplitude, Gamma0, GammaG, offset):
+            return gamma_gaussian_decay(t, amplitude, Gamma0, GammaG, offset)
+
+        param_names = ["amplitude", "Gamma0", "GammaG", "offset"]
+        param_bounds = {
+            "amplitude": (-np.inf, np.inf),
+            "Gamma0": (0.0, np.inf),
+            "GammaG": (0.0, np.inf),
+            "offset": (-np.inf, np.inf),
+        }
+
     else:
         raise ValueError(f"Unsupported model: {model}. Choose from: {SUPPORTED_MODELS}")
 
@@ -354,10 +382,27 @@ def _estimate_initial_params(
     span = float(y[0] - y[-1])
     amplitude_guess = span if span != 0 else float(y.max() - y.min()) or 1.0
 
-    if model == "mono_exponential":
+    if model in ("mono_exponential", "stretched_exponential", "gamma_gaussian_decay"):
         rate_guess = _estimate_decay_rate(t, y, offset_guess, amplitude_guess)
         T_guess = 1.0 / rate_guess if rate_guess > 0 else (t[-1] - t[0]) / 2
-        return {"amplitude": amplitude_guess, "T": T_guess, "offset": offset_guess}
+
+        if model == "mono_exponential":
+            return {"amplitude": amplitude_guess, "T": T_guess, "offset": offset_guess}
+
+        if model == "stretched_exponential":
+            return {
+                "amplitude": amplitude_guess,
+                "T": T_guess,
+                "beta": 1.0,
+                "offset": offset_guess,
+            }
+
+        return {
+            "amplitude": amplitude_guess,
+            "Gamma0": rate_guess,
+            "GammaG": rate_guess,
+            "offset": offset_guess,
+        }
 
     raise ValueError(f"Unsupported model: {model}. Choose from: {SUPPORTED_MODELS}")
 

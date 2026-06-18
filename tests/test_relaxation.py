@@ -135,3 +135,27 @@ class TestFitRelaxationValidation:
         assert result.success
         assert result.t_fit.size == 190
         assert result.parameters["T"] == pytest.approx(15.0, rel=1e-3)
+
+
+@pytest.mark.smoke
+class TestFitRelaxationStretchedExponential:
+    def test_recovers_noise_free_parameters(self):
+        t = np.linspace(0.1, 100, 200)
+        y = stretched_exponential(t, amplitude=4.0, T=25.0, beta=0.7, offset=0.5)
+        result = fit_relaxation(t, y, model="stretched_exponential", plot=False)
+        assert result.success
+        assert result.parameters["T"] == pytest.approx(25.0, rel=1e-3)
+        assert result.parameters["beta"] == pytest.approx(0.7, rel=1e-3)
+        assert result.r_squared > 0.999
+
+
+@pytest.mark.smoke
+class TestFitRelaxationGammaGaussianDecay:
+    def test_recovers_noise_free_parameters(self):
+        t = np.linspace(0, 100, 200)
+        y = gamma_gaussian_decay(t, amplitude=3.0, Gamma0=0.05, GammaG=0.02, offset=0.2)
+        result = fit_relaxation(t, y, model="gamma_gaussian_decay", plot=False)
+        assert result.success
+        assert result.parameters["Gamma0"] == pytest.approx(0.05, rel=1e-3)
+        assert result.parameters["GammaG"] == pytest.approx(0.02, rel=1e-3)
+        assert result.r_squared > 0.999
