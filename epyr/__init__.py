@@ -3,7 +3,7 @@
 # Submodule re-exports
 from . import baseline
 from . import eprplot as plot  # Backward-compatible alias
-from . import lineshapes, signalprocessing
+from . import lineshapes, relaxation, signalprocessing
 
 # Baseline correction API
 from .baseline import (
