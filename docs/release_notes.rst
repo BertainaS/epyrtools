@@ -13,7 +13,7 @@ Release Notes
    release_notes/v0.2.0
 
 Version 0.4.0 (Latest)
------------------------
+----------------------
 
 **Release Date:** June 2026
 
@@ -24,7 +24,7 @@ inversion/saturation recovery, Gamma0/GammaG), ``fit_relaxation()``, and
 :doc:`release_notes/v0.4.0`.
 
 Version 0.3.9
---------------
+-------------
 
 **Release Date:** May 2026
 

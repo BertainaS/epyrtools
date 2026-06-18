@@ -6,7 +6,7 @@ Version 0.4.0
 **Status:** Stable release
 
 New: relaxation fitting module
--------------------------------
+------------------------------
 
 A new package, ``epyr.relaxation``, fits time-domain T1/T2 relaxation data,
 complementing the existing field-domain lineshape fitting in

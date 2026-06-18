@@ -1,5 +1,5 @@
 epyr.relaxation module
-=======================
+======================
 
 .. automodule:: epyr.relaxation
    :members:
