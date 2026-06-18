@@ -463,14 +463,20 @@ def _estimate_initial_params(
         }
 
     if model in ("inversion_recovery", "saturation_recovery"):
-        recovery_amplitude = float(y[-1] - y[0]) or 1.0
         midpoint = y[0] + 0.5 * (y[-1] - y[0])
         crossing_idx = int(np.argmin(np.abs(y - midpoint)))
-        T1_guess = max(float(t[crossing_idx] - t[0]), float(t[1] - t[0]))
+        half_life = max(float(t[crossing_idx] - t[0]), float(t[1] - t[0]))
+        T1_guess = half_life / np.log(2)
+        if model == "inversion_recovery":
+            amplitude_guess = abs(float(y[-1] - y[0]) / 3.0) or 1.0
+            offset_guess = float(y[0] + 2.0 * amplitude_guess)
+        else:
+            amplitude_guess = abs(float(y[-1] - y[0])) or 1.0
+            offset_guess = float(y[0])
         return {
-            "amplitude": abs(recovery_amplitude),
+            "amplitude": amplitude_guess,
             "T1": T1_guess,
-            "offset": float(y[0]),
+            "offset": offset_guess,
         }
 
     raise ValueError(f"Unsupported model: {model}. Choose from: {SUPPORTED_MODELS}")
