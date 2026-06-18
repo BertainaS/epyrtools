@@ -1,10 +1,17 @@
 """Tests for epyr.relaxation: T1/T2 decay and recovery models and fitting."""
 
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
 from epyr.relaxation import (
+    RelaxationFitResult,
     biexponential,
+    fit_relaxation,
     gamma_gaussian_decay,
     inversion_recovery,
     mono_exponential,
@@ -61,3 +68,70 @@ class TestModelFunctions:
         y = gamma_gaussian_decay(t, amplitude=1.0, Gamma0=0.02, GammaG=0.01)
         assert y.shape == t.shape
         assert y.dtype == np.float64
+
+
+@pytest.mark.smoke
+class TestFitRelaxationMonoExponential:
+    def test_recovers_noise_free_parameters(self):
+        t = np.linspace(0, 100, 200)
+        y = mono_exponential(t, amplitude=5.0, T=15.0, offset=1.0)
+        result = fit_relaxation(t, y, model="mono_exponential", plot=False)
+        assert result.success
+        assert result.parameters["amplitude"] == pytest.approx(5.0, rel=1e-3)
+        assert result.parameters["T"] == pytest.approx(15.0, rel=1e-3)
+        assert result.parameters["offset"] == pytest.approx(1.0, abs=1e-3)
+        assert result.r_squared > 0.999
+
+    def test_returns_relaxation_fit_result(self):
+        t = np.linspace(0, 50, 100)
+        y = mono_exponential(t, amplitude=2.0, T=10.0, offset=0.0)
+        result = fit_relaxation(t, y, plot=False)
+        assert isinstance(result, RelaxationFitResult)
+        assert result.model == "mono_exponential"
+
+    def test_plot_true_does_not_raise(self):
+        t = np.linspace(0, 50, 80)
+        y = mono_exponential(t, amplitude=3.0, T=12.0, offset=0.5)
+        result = fit_relaxation(t, y, plot=True)
+        assert result.success
+        plt.close("all")
+
+
+@pytest.mark.standard
+class TestFitRelaxationNoisy:
+    def test_noisy_mono_exponential(self):
+        rng = np.random.default_rng(0)
+        t = np.linspace(0, 100, 300)
+        y_true = mono_exponential(t, amplitude=5.0, T=20.0, offset=1.0)
+        y = y_true + 0.02 * 5.0 * rng.standard_normal(t.size)
+        result = fit_relaxation(t, y, model="mono_exponential", plot=False)
+        assert result.success
+        assert result.r_squared > 0.99
+        assert result.parameters["T"] == pytest.approx(20.0, rel=0.05)
+
+
+@pytest.mark.smoke
+class TestFitRelaxationValidation:
+    def test_mismatched_lengths_raises(self):
+        with pytest.raises(ValueError):
+            fit_relaxation(np.array([1, 2, 3, 4]), np.array([1, 2, 3]), plot=False)
+
+    def test_too_few_points_raises(self):
+        with pytest.raises(ValueError):
+            fit_relaxation(np.array([1, 2, 3]), np.array([1, 2, 3]), plot=False)
+
+    def test_unsupported_model_raises(self):
+        t = np.linspace(0, 10, 20)
+        y = np.ones_like(t)
+        with pytest.raises(ValueError):
+            fit_relaxation(t, y, model="not_a_model", plot=False)
+
+    def test_mask_excludes_points(self):
+        t = np.linspace(0, 100, 200)
+        y = mono_exponential(t, amplitude=5.0, T=15.0, offset=1.0)
+        mask = np.ones_like(t, dtype=bool)
+        mask[50:60] = False
+        result = fit_relaxation(t, y, mask=mask, plot=False)
+        assert result.success
+        assert result.t_fit.size == 190
+        assert result.parameters["T"] == pytest.approx(15.0, rel=1e-3)
