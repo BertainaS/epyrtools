@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 
+from .._plot_utils import get_or_create_subplots
 from ..logging_config import get_logger
 from .models import (
     biexponential,
@@ -640,12 +641,9 @@ def _plot_fit_results(
         Unit label appended to the time axis (default: '').
     """
 
-    if plt.get_fignums():
-        fig = plt.gcf()
-        fig.clf()
-        ax1, ax2 = fig.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
-    else:
-        fig, (ax1, ax2) = plt.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
+    fig, (ax1, ax2) = get_or_create_subplots(
+        2, 1, gridspec_kw={"height_ratios": [3, 1]}
+    )
 
     time_label = f"Time ({time_unit})" if time_unit else "Time"
 
@@ -710,11 +708,11 @@ class RelaxationFitComparison(dict):
         if not self:
             return "RelaxationFitComparison({})"
 
-        param_names: List[str] = []
-        for result in self.values():
-            for name in result.parameters:
-                if name not in param_names:
-                    param_names.append(name)
+        param_names = list(
+            dict.fromkeys(
+                name for result in self.values() for name in result.parameters
+            )
+        )
 
         headers = ["model", "success", "R2", "chi2"] + param_names
         rows = []
@@ -732,10 +730,7 @@ class RelaxationFitComparison(dict):
                 row.append(value_str)
             rows.append(row)
 
-        widths = [
-            max(len(headers[i]), *(len(row[i]) for row in rows))
-            for i in range(len(headers))
-        ]
+        widths = [max(len(cell) for cell in column) for column in zip(headers, *rows)]
 
         def format_row(cells: List[str]) -> str:
             return "  ".join(cell.ljust(width) for cell, width in zip(cells, widths))
@@ -851,12 +846,9 @@ def _plot_comparison(
         are drawn.
     """
 
-    if plt.get_fignums():
-        fig = plt.gcf()
-        fig.clf()
-        ax1, ax2 = fig.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
-    else:
-        fig, (ax1, ax2) = plt.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
+    fig, (ax1, ax2) = get_or_create_subplots(
+        2, 1, gridspec_kw={"height_ratios": [3, 1]}
+    )
 
     colors = ["#d62728", "#2ca02c", "#ff7f0e", "#9467bd", "#8c564b"]
 

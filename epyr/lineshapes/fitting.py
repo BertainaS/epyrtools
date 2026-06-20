@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
 
+from .._plot_utils import get_or_create_subplots
 from ..logging_config import get_logger
 from .gaussian import gaussian
 from .lorentzian import lorentzian
@@ -976,12 +977,9 @@ def _plot_fit_results(
         Optimal parameter vector from curve_fit.
     """
 
-    if plt.get_fignums():
-        fig = plt.gcf()
-        fig.clf()
-        ax1, ax2 = fig.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
-    else:
-        fig, (ax1, ax2) = plt.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
+    fig, (ax1, ax2) = get_or_create_subplots(
+        2, 1, gridspec_kw={"height_ratios": [3, 1]}
+    )
 
     has_excluded = x_all is not None and len(x_all) > len(x)
 
@@ -1194,12 +1192,9 @@ def _plot_comparison(x: np.ndarray, y: np.ndarray, results: Dict[str, FitResult]
         Mapping of shape name to FitResult; only successful fits are drawn.
     """
 
-    if plt.get_fignums():
-        fig = plt.gcf()
-        fig.clf()
-        ax1, ax2 = fig.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
-    else:
-        fig, (ax1, ax2) = plt.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
+    fig, (ax1, ax2) = get_or_create_subplots(
+        2, 1, gridspec_kw={"height_ratios": [3, 1]}
+    )
 
     colors = ["#d62728", "#2ca02c", "#ff7f0e", "#9467bd", "#8c564b"]
 
