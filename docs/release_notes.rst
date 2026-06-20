@@ -20,8 +20,10 @@ Version 0.4.0 (Latest)
 New ``epyr.relaxation`` package for T1/T2 relaxation fitting: six
 decay/recovery models (mono- and stretched-exponential, bi-exponential,
 inversion/saturation recovery, Gamma0/GammaG), ``fit_relaxation()``, and
-``fit_multiple_decays()`` (ranked by reduced chi-squared). See
-:doc:`release_notes/v0.4.0`.
+``fit_multiple_decays()`` (ranked by reduced chi-squared). Fit results print
+their own summary, ``fit_multiple_decays()`` returns a dict that prints as a
+comparison table, and fit plots follow ``matplotlib.rcParams`` for size and
+style. See :doc:`release_notes/v0.4.0`.
 
 Version 0.3.9
 -------------

@@ -28,4 +28,24 @@ complementing the existing field-domain lineshape fitting in
   all three entry points on a real T2 echo decay and on synthetic
   bi-exponential and Gamma0/GammaG data.
 
+Relaxation fitting: readable results and rcParams-aware plots
+---------------------------------------------------------------
+
+- ``RelaxationFitResult.__repr__`` now returns ``summary()``, so a single
+  fit result prints its parameters and errors directly instead of dumping
+  the raw dataclass fields (including the full fitted-curve and residual
+  arrays).
+- ``fit_multiple_decays()`` now returns ``RelaxationFitComparison``, a
+  ``dict`` subclass that behaves exactly like the plain dict it replaces
+  (subscripting, ``.items()``, iteration) but whose ``__repr__`` prints a
+  side-by-side table of R-squared, chi-squared, and every fitted parameter
+  across all models.
+- Fit plots (``_plot_fit_results``, ``_plot_comparison``) no longer hard-code
+  figure size, marker size, line width, or text size. They reuse the
+  current figure's size if one is already open, otherwise fall back to
+  ``matplotlib.rcParams`` defaults, and likewise read marker/line/font size
+  from ``rcParams`` rather than overriding them. The identical change was
+  applied to ``epyr.lineshapes.fitting`` for consistency between the two
+  fitting modules.
+
 No backwards-incompatible changes.

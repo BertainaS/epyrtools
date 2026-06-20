@@ -5,7 +5,12 @@ Time-domain decay and recovery models for T1/T2 EPR relaxation measurements,
 with a curve-fitting layer mirroring epyr.lineshapes.fitting.
 """
 
-from .fitting import RelaxationFitResult, fit_multiple_decays, fit_relaxation
+from .fitting import (
+    RelaxationFitComparison,
+    RelaxationFitResult,
+    fit_multiple_decays,
+    fit_relaxation,
+)
 from .models import (
     biexponential,
     gamma_gaussian_decay,
@@ -25,4 +30,5 @@ __all__ = [
     "fit_relaxation",
     "fit_multiple_decays",
     "RelaxationFitResult",
+    "RelaxationFitComparison",
 ]

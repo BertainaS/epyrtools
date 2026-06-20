@@ -99,6 +99,9 @@ class RelaxationFitResult:
 
         return "\n".join(lines)
 
+    def __repr__(self) -> str:
+        return self.summary()
+
 
 def fit_relaxation(
     t_data: np.ndarray,
@@ -637,25 +640,27 @@ def _plot_fit_results(
         Unit label appended to the time axis (default: '').
     """
 
-    fig, (ax1, ax2) = plt.subplots(
-        2, 1, figsize=(6, 4), gridspec_kw={"height_ratios": [3, 1]}
-    )
+    if plt.get_fignums():
+        fig = plt.gcf()
+        fig.clf()
+        ax1, ax2 = fig.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
+    else:
+        fig, (ax1, ax2) = plt.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
 
     time_label = f"Time ({time_unit})" if time_unit else "Time"
 
-    ax1.plot(t, y, "o", markersize=4, alpha=0.7, label="Data", color="#1f77b4")
+    ax1.plot(t, y, "o", alpha=0.7, label="Data", color="#1f77b4")
     ax1.plot(
         t,
         result.fitted_curve,
         "-",
-        linewidth=2,
         label=f"{model} fit",
         color="#d62728",
     )
     ax1.set_xlabel(time_label)
     ax1.set_ylabel("Intensity")
     ax1.set_title(f"Relaxation Fitting - {model}")
-    ax1.legend()
+    ax1.legend(loc="best")
     ax1.grid(True, alpha=0.3)
 
     results_lines = [
@@ -676,13 +681,12 @@ def _plot_fit_results(
         0.98,
         "\n".join(results_lines),
         transform=ax1.transAxes,
-        fontsize=9,
         verticalalignment="top",
         horizontalalignment="right",
         bbox=dict(boxstyle="round", facecolor="lightblue", alpha=0.8),
     )
 
-    ax2.plot(t, result.residuals, "o-", markersize=3, alpha=0.7, color="#ff7f0e")
+    ax2.plot(t, result.residuals, "o-", alpha=0.7, color="#ff7f0e")
     ax2.axhline(y=0, color="k", linestyle="--", alpha=0.5)
     ax2.set_xlabel(time_label)
     ax2.set_ylabel("Residuals")
@@ -692,13 +696,63 @@ def _plot_fit_results(
     plt.show()
 
 
+class RelaxationFitComparison(dict):
+    """
+    Dict of model name to RelaxationFitResult, with a tabular ``__repr__``.
+
+    Behaves exactly like a plain ``dict`` (subscripting, iteration,
+    ``.items()``, ...). Printing it shows R-squared, chi-squared, and every
+    fitted parameter side by side for all models, so the full comparison is
+    visible without looping over individual ``summary()`` calls.
+    """
+
+    def __repr__(self) -> str:
+        if not self:
+            return "RelaxationFitComparison({})"
+
+        param_names: List[str] = []
+        for result in self.values():
+            for name in result.parameters:
+                if name not in param_names:
+                    param_names.append(name)
+
+        headers = ["model", "success", "R2", "chi2"] + param_names
+        rows = []
+        for model, result in self.items():
+            row = [model, str(result.success)]
+            row.append(f"{result.r_squared:.6f}" if result.success else "-")
+            row.append(f"{result.chi_squared:.4g}" if result.success else "-")
+            for name in param_names:
+                if name not in result.parameters:
+                    row.append("-")
+                    continue
+                value_str = f"{result.parameters[name]:.4g}"
+                if name in result.parameter_errors:
+                    value_str += f" +/- {result.parameter_errors[name]:.2g}"
+                row.append(value_str)
+            rows.append(row)
+
+        widths = [
+            max(len(headers[i]), *(len(row[i]) for row in rows))
+            for i in range(len(headers))
+        ]
+
+        def format_row(cells: List[str]) -> str:
+            return "  ".join(cell.ljust(width) for cell, width in zip(cells, widths))
+
+        lines = [format_row(headers), format_row(["-" * w for w in widths])]
+        lines.extend(format_row(row) for row in rows)
+
+        return "\n".join(lines)
+
+
 def fit_multiple_decays(
     t_data: np.ndarray,
     y_data: np.ndarray,
     models: Optional[List[str]] = None,
     mask: Optional[np.ndarray] = None,
     plot: bool = True,
-) -> Dict[str, RelaxationFitResult]:
+) -> RelaxationFitComparison:
     """
     Fit relaxation data with multiple models and compare by reduced chi-squared.
 
@@ -721,8 +775,10 @@ def fit_multiple_decays(
 
     Returns
     -------
-    dict
-        Mapping of model name to RelaxationFitResult for all attempted fits.
+    RelaxationFitComparison
+        Dict subclass mapping model name to RelaxationFitResult for all
+        attempted fits. Printing it shows a comparison table of R-squared,
+        chi-squared, and every fitted parameter across all models.
 
     Notes
     -----
@@ -734,7 +790,7 @@ def fit_multiple_decays(
     if models is None:
         models = ["mono_exponential", "stretched_exponential", "biexponential"]
 
-    results = {}
+    results = RelaxationFitComparison()
 
     for model in models:
         try:
@@ -795,13 +851,16 @@ def _plot_comparison(
         are drawn.
     """
 
-    fig, (ax1, ax2) = plt.subplots(
-        2, 1, figsize=(12, 10), gridspec_kw={"height_ratios": [3, 1]}
-    )
+    if plt.get_fignums():
+        fig = plt.gcf()
+        fig.clf()
+        ax1, ax2 = fig.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
+    else:
+        fig, (ax1, ax2) = plt.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
 
     colors = ["#d62728", "#2ca02c", "#ff7f0e", "#9467bd", "#8c564b"]
 
-    ax1.plot(t, y, "o", markersize=4, alpha=0.7, label="Data", color="#1f77b4")
+    ax1.plot(t, y, "o", alpha=0.7, label="Data", color="#1f77b4")
 
     for i, (model, result) in enumerate(results.items()):
         if result.success:
@@ -811,7 +870,6 @@ def _plot_comparison(
                 t_plot,
                 result.fitted_curve,
                 "-",
-                linewidth=2,
                 label=f"{model} (chi2_red={result.chi_squared:.3g})",
                 color=color,
             )
@@ -819,7 +877,7 @@ def _plot_comparison(
     ax1.set_xlabel("Time")
     ax1.set_ylabel("Intensity")
     ax1.set_title("Relaxation Fitting - Model Comparison")
-    ax1.legend()
+    ax1.legend(loc="best")
     ax1.grid(True, alpha=0.3)
 
     for i, (model, result) in enumerate(results.items()):
@@ -830,7 +888,6 @@ def _plot_comparison(
                 t_plot,
                 result.residuals,
                 "o-",
-                markersize=2,
                 alpha=0.7,
                 label=model,
                 color=color,
@@ -839,7 +896,7 @@ def _plot_comparison(
     ax2.axhline(y=0, color="k", linestyle="--", alpha=0.5)
     ax2.set_xlabel("Time")
     ax2.set_ylabel("Residuals")
-    ax2.legend()
+    ax2.legend(loc="best")
     ax2.grid(True, alpha=0.3)
 
     plt.tight_layout()

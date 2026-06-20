@@ -1,11 +1,11 @@
 Clean End-to-End Examples
 =========================
 
-The ``examples/clean/`` directory contains five short, standalone Python
+The ``examples/clean/`` directory contains six short, standalone Python
 scripts that exercise the public EPyR Tools API on the bundled datasets.
 Each script is self-contained: copy, run, edit, repeat.
 
-Run all five from the repository root with:
+Run all six from the repository root with:
 
 .. code-block:: bash
 
@@ -14,6 +14,7 @@ Run all five from the repository root with:
    python examples/clean/03_advanced_fft_windows.py
    python examples/clean/04_interactive_2d_slicer.py
    python examples/clean/05_rabi_frequency_analysis.py
+   python examples/clean/06_relaxation_fitting.py
 
 01 -- Basic loading and plotting
 --------------------------------
@@ -85,3 +86,43 @@ expected scaling with sqrt(power), and prints a comparison table.
 
 Useful as a template for any 2D experiment where each row is a
 time-domain oscillation.
+
+06 -- T1/T2 relaxation fitting
+------------------------------
+
+**File:** ``examples/clean/06_relaxation_fitting.py``
+
+Three mini-experiments in one script:
+
+1. Mono- and stretched-exponential fits on a real T2 echo decay
+   (DMTTFBr), compared with :func:`epyr.relaxation.fit_multiple_decays`.
+2. Bi-exponential decay recovered from synthetic data with
+   :func:`epyr.relaxation.fit_relaxation`.
+3. Combined homogeneous/spectral-diffusion (Gamma0/GammaG) echo decay
+   recovered from synthetic data, same entry point.
+
+Exercises :func:`epyr.relaxation.fit_relaxation`,
+:func:`epyr.relaxation.fit_multiple_decays`, and the
+:class:`epyr.relaxation.RelaxationFitResult` /
+:class:`epyr.relaxation.RelaxationFitComparison` return types.
+
+Each fitted result prints its parameters and errors directly
+(``print(result)`` calls ``result.summary()`` under the hood), and
+``fit_multiple_decays`` returns a dict-like object that prints as a
+side-by-side comparison table of every fitted parameter across models:
+
+.. code-block:: python
+
+   from epyr.relaxation import fit_multiple_decays
+
+   results = fit_multiple_decays(t, y)
+   print(results)
+   # model                  success  R2        chi2       amplitude  T      offset ...
+   # mono_exponential       True     0.998391  0.0004842  2.005      1.310  0.297  ...
+   # stretched_exponential  True     0.998452  0.000476   1.976      1.309  0.309  ...
+
+   results['mono_exponential'].parameters['T']  # single fitted value
+
+Fit plots use ``matplotlib.rcParams`` for figure size, marker size, line
+width, and font size, so they follow whatever style you set globally (or
+the size of a figure you created beforehand) instead of a fixed layout.

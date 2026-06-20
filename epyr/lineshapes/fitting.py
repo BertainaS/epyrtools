@@ -976,9 +976,12 @@ def _plot_fit_results(
         Optimal parameter vector from curve_fit.
     """
 
-    fig, (ax1, ax2) = plt.subplots(
-        2, 1, figsize=(6, 4), gridspec_kw={"height_ratios": [3, 1]}
-    )
+    if plt.get_fignums():
+        fig = plt.gcf()
+        fig.clf()
+        ax1, ax2 = fig.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
+    else:
+        fig, (ax1, ax2) = plt.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
 
     has_excluded = x_all is not None and len(x_all) > len(x)
 
@@ -988,7 +991,6 @@ def _plot_fit_results(
             x_all,
             y_all,
             "o",
-            markersize=4,
             alpha=0.3,
             color="gray",
             label="Excluded",
@@ -1000,7 +1002,6 @@ def _plot_fit_results(
         x,
         y,
         "o",
-        markersize=4,
         alpha=0.7,
         label="Data (fitted)",
         color="#1f77b4",
@@ -1019,7 +1020,6 @@ def _plot_fit_results(
         x_model,
         y_model,
         "-",
-        linewidth=2,
         label=f"{shape_type.title()} fit",
         color="#d62728",
         zorder=3,
@@ -1064,14 +1064,13 @@ def _plot_fit_results(
         0.98,
         textstr,
         transform=ax1.transAxes,
-        fontsize=9,
         verticalalignment="top",
         horizontalalignment="left",
         bbox=props,
     )
 
     # Residuals plot
-    ax2.plot(x, result.residuals, "o-", markersize=3, alpha=0.7, color="#ff7f0e")
+    ax2.plot(x, result.residuals, "o-", alpha=0.7, color="#ff7f0e")
     ax2.axhline(y=0, color="k", linestyle="--", alpha=0.5)
     ax2.set_xlabel("Magnetic Field / G")
     ax2.set_ylabel("Residuals")
@@ -1195,14 +1194,17 @@ def _plot_comparison(x: np.ndarray, y: np.ndarray, results: Dict[str, FitResult]
         Mapping of shape name to FitResult; only successful fits are drawn.
     """
 
-    fig, (ax1, ax2) = plt.subplots(
-        2, 1, figsize=(12, 10), gridspec_kw={"height_ratios": [3, 1]}
-    )
+    if plt.get_fignums():
+        fig = plt.gcf()
+        fig.clf()
+        ax1, ax2 = fig.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
+    else:
+        fig, (ax1, ax2) = plt.subplots(2, 1, gridspec_kw={"height_ratios": [3, 1]})
 
     colors = ["#d62728", "#2ca02c", "#ff7f0e", "#9467bd", "#8c564b"]
 
     # Data
-    ax1.plot(x, y, "o", markersize=4, alpha=0.7, label="Data", color="#1f77b4")
+    ax1.plot(x, y, "o", alpha=0.7, label="Data", color="#1f77b4")
 
     # Fits
     for i, (shape, result) in enumerate(results.items()):
@@ -1213,7 +1215,6 @@ def _plot_comparison(x: np.ndarray, y: np.ndarray, results: Dict[str, FitResult]
                 x_plot,
                 result.fitted_curve,
                 "-",
-                linewidth=2,
                 label=f"{shape.title()} (R²={result.r_squared:.4f})",
                 color=color,
             )
@@ -1233,7 +1234,6 @@ def _plot_comparison(x: np.ndarray, y: np.ndarray, results: Dict[str, FitResult]
                 x_plot,
                 result.residuals,
                 "o-",
-                markersize=2,
                 alpha=0.7,
                 label=f"{shape.title()}",
                 color=color,
