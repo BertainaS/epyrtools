@@ -160,7 +160,7 @@ Use pytest for all tests:
 
    import pytest
    import numpy as np
-   from epyr.baseline import baseline_polynomial
+   from epyr.baseline import baseline_polynomial_1d
 
 
    class TestBaselineCorrection:
@@ -175,8 +175,8 @@ Use pytest for all tests:
            noisy_data = true_signal + true_baseline + np.random.normal(0, 0.01, 1000)
 
            # Apply correction
-           corrected, fitted_baseline = baseline_polynomial(
-               noisy_data, x_data=x, poly_order=1
+           corrected, fitted_baseline = baseline_polynomial_1d(
+               x, noisy_data, order=1
            )
 
            # Check results
@@ -189,7 +189,7 @@ Use pytest for all tests:
            x = np.linspace(0, 100, 500)
            y = np.ones_like(x) + 0.01 * np.random.randn(len(x))
 
-           corrected, baseline = baseline_polynomial(y, x_data=x, poly_order=order)
+           corrected, baseline = baseline_polynomial_1d(x, y, order=order)
 
            assert len(corrected) == len(y)
            assert len(baseline) == len(y)
@@ -252,7 +252,7 @@ Writing Documentation
    Advanced Baseline Correction
    ============================
 
-   The :func:`epyr.baseline.baseline_polynomial` function supports
+   The :func:`epyr.baseline.baseline_polynomial_1d` function supports
    advanced baseline correction with signal exclusion.
 
    .. math::
@@ -266,14 +266,15 @@ Writing Documentation
 
    .. code-block:: python
 
-      from epyr.baseline import baseline_polynomial
+      from epyr.baseline import baseline_polynomial_1d
 
       # Apply quadratic correction excluding peak region
-      y_corrected, baseline = baseline_polynomial(
+      y_corrected, baseline = baseline_polynomial_1d(
+          x_data,
           y_data,
-          x_data=x_data,
-          poly_order=2,
-          exclude_regions=[(3300, 3400)]
+          order=2,
+          manual_regions=[(3300, 3400)],
+          region_mode="exclude",
       )
 
 Issue Reporting
@@ -309,7 +310,7 @@ When reporting bugs, please include:
    import epyr
    x, y, params, _ = epyr.eprload('2d_data.dsc')
    # Error occurs here:
-   corrected, baseline = baseline_polynomial(y, x_data=x)
+   corrected, baseline = baseline_polynomial_1d(x, y)
    ```
 
    **Error:**

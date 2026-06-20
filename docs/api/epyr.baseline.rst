@@ -39,20 +39,20 @@ Polynomial Baseline Correction
 
 .. code-block:: python
 
-   from epyr.baseline import baseline_polynomial
+   from epyr.baseline import baseline_polynomial_1d
    import numpy as np
-   
+
    # Load your EPR data (x, y arrays)
    x = np.linspace(3200, 3400, 1000)  # Magnetic field in G
    y = epr_spectrum  # Your EPR data
-   
+
    # Linear baseline correction
-   y_corrected, baseline = baseline_polynomial(y, x_data=x, poly_order=1)
-   
+   y_corrected, baseline = baseline_polynomial_1d(x, y, order=1)
+
    # Exclude signal regions from baseline fit
    signal_regions = [(3340, 3360), (3380, 3400)]
-   y_corrected, baseline = baseline_polynomial(
-       y, x_data=x, poly_order=2, exclude_regions=signal_regions
+   y_corrected, baseline = baseline_polynomial_1d(
+       x, y, order=2, manual_regions=signal_regions, region_mode="exclude"
    )
 
 Exponential Baseline Correction

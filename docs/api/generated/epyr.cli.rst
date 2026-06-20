@@ -17,6 +17,7 @@ epyr.cli
       cmd_plot
       cmd_plot_with_args
       cmd_validate
+      cmd_view
       create_interactive_plot_with_measurements
       main
    

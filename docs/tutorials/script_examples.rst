@@ -92,16 +92,16 @@ Script 2: Baseline Correction (02_baseline_correction.py)
    # Method comparison
    corrections = [
        ("Original", y, None),
-       ("Constant Offset", *baseline_polynomial(y, x_data=x, poly_order=0)),
-       ("Linear", *baseline_polynomial(y, x_data=x, poly_order=1)),
-       ("Quadratic", *baseline_polynomial(y, x_data=x, poly_order=2)),
+       ("Constant Offset", *baseline_polynomial_1d(x, y, order=0)),
+       ("Linear", *baseline_polynomial_1d(x, y, order=1)),
+       ("Quadratic", *baseline_polynomial_1d(x, y, order=2)),
    ]
 
    # Advanced exclusion handling
    exclude_regions = [(center_field - width/2, center_field + width/2)
                      for peak_idx in peak_indices]
-   y_corrected, baseline = baseline_polynomial(
-       y, x_data=x, poly_order=2, exclude_regions=exclude_regions
+   y_corrected, baseline = baseline_polynomial_1d(
+       x, y, order=2, manual_regions=exclude_regions, region_mode="exclude"
    )
 
 **Sample Output**:
@@ -231,7 +231,7 @@ Automated Analysis Pipeline
 
        # 2. Apply baseline correction (if 1D)
        if not isinstance(x, list):
-           y_corrected, baseline = baseline_polynomial(y, x_data=x, poly_order=1)
+           y_corrected, baseline = baseline_polynomial_1d(x, y, params, order=1)
        else:
            y_corrected = y
 

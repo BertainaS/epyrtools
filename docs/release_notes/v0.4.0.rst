@@ -48,4 +48,23 @@ Relaxation fitting: readable results and rcParams-aware plots
   applied to ``epyr.lineshapes.fitting`` for consistency between the two
   fitting modules.
 
+Tutorial notebooks rebuilt
+--------------------------
+
+The ``examples/notebooks/`` directory was rebuilt into an eight-notebook
+series (``00`` index plus ``01``-``07``) covering loading and plotting,
+baseline correction, lineshape fitting, relaxation fitting, signal
+processing, FAIR conversion, and physics/units. Each notebook runs top to
+bottom on the bundled datasets and is committed without cell outputs.
+Superseded notebooks are archived under ``examples/notebooks/_legacy/``.
+
+Bug fix: batch FAIR conversion
+------------------------------
+
+``batch_convert_directory()`` forwarded the wrong keyword names to
+``convert_bruker_to_fair()`` (``input_file_or_dir`` and ``output_formats``),
+raising ``TypeError`` for every file and producing no output. It now passes
+``input_file`` and ``formats`` correctly, so batch conversion writes the
+requested formats. A regression test covers this.
+
 No backwards-incompatible changes.

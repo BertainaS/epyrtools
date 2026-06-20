@@ -13,81 +13,44 @@ For users who want short, runnable, copy-pasteable scripts:
 
    clean_examples
 
-These five scripts in ``examples/clean/`` cover loading + plotting,
-baseline + fitting, FFT windowing, the 2D slicer, and Rabi frequency
-analysis. They are the recommended starting point.
+These six scripts in ``examples/clean/`` cover loading + plotting,
+baseline + fitting, FFT windowing, the 2D slicer, Rabi frequency
+analysis, and T1/T2 relaxation fitting. They are the recommended
+starting point.
 
 Interactive Notebooks
 ----------------------
 
-Our Jupyter notebooks provide interactive tutorials for learning EPyR Tools:
+An eight-notebook tutorial series in ``examples/notebooks/`` walks through
+the public API on the bundled datasets. Notebooks are committed without
+cell outputs; run them to generate figures.
 
 .. toctree::
    :maxdepth: 1
 
    basic_loading
-   baseline_correction
-   fair_conversion
 
-**Location**: ``examples/notebooks/``
-
-To run the notebooks:
+To run the series:
 
 .. code-block:: bash
 
    cd examples/notebooks
-   jupyter notebook
+   jupyter lab 00_Tutorial_Series_Index.ipynb   # index and navigation
 
-Basic Loading Tutorial
-~~~~~~~~~~~~~~~~~~~~~~
+================================================  ============================================
+Notebook                                          Topic
+================================================  ============================================
+``00_Tutorial_Series_Index.ipynb``                Overview, environment check, dataset list
+``01_Loading_and_Plotting.ipynb``                 ``eprload``, parameter inspection, 1D/2D plots
+``02_Baseline_Correction.ipynb``                  Polynomial, automatic, exponential baselines
+``03_Lineshape_Analysis_and_Fitting.ipynb``       Gaussian/Lorentzian/Voigt, derivatives, fitting
+``04_Relaxation_Fitting.ipynb``                   T1/T2 decay/recovery models (new in v0.4.0)
+``05_Signal_Processing_and_FFT.ipynb``            Frequency analysis of Rabi data, apodization
+``06_FAIR_Conversion_and_Export.ipynb``           CSV/JSON/HDF5 export and validation
+``07_Physics_Units_and_Constants.ipynb``          CODATA constants, field/frequency conversions
+================================================  ============================================
 
-**File**: ``01_Basic_Loading.ipynb``
-
-Learn the fundamentals of EPR data loading:
-
-* Loading BES3T and ESP format files
-* Understanding 1D vs 2D data structures
-* Handling complex EPR data
-* Basic parameter extraction
-* Simple visualization techniques
-* Data export for external analysis
-
-**Prerequisites**: Basic Python knowledge
-**Duration**: 20-30 minutes
-
-Baseline Correction Tutorial
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**Coming Soon**: ``02_Baseline_Correction.ipynb``
-
-Master baseline correction techniques:
-
-* Understanding baseline artifacts
-* Polynomial correction methods
-* Signal region exclusion
-* Advanced exponential models
-* Quality assessment metrics
-* Best practices for different data types
-
-**Prerequisites**: Basic Loading Tutorial
-**Duration**: 30-45 minutes
-
-FAIR Data Conversion Tutorial
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**Coming Soon**: ``03_FAIR_Conversion.ipynb``
-
-Convert proprietary data to open formats:
-
-* FAIR data principles
-* CSV export with metadata
-* JSON parameter documentation
-* HDF5 for large datasets
-* Cross-platform compatibility
-* Integration with other tools
-
-**Prerequisites**: Basic Loading Tutorial
-**Duration**: 25-35 minutes
+Superseded notebooks are archived under ``examples/notebooks/_legacy/``.
 
 Example Scripts
 ---------------
@@ -206,8 +169,8 @@ Routine EPR Analysis
 
    .. code-block:: python
 
-      from epyr.baseline import baseline_polynomial
-      y_corrected, baseline = baseline_polynomial(y, x_data=x, poly_order=1)
+      from epyr.baseline import baseline_polynomial_1d
+      y_corrected, baseline = baseline_polynomial_1d(x, y, params, order=1)
 
 4. **Visualize Results**:
 

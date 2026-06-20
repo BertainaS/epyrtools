@@ -6,7 +6,7 @@ This tutorial covers the fundamentals of loading EPR data with EPyR Tools.
 Interactive Notebook
 --------------------
 
-**File**: ``examples/notebooks/01_Basic_Loading.ipynb``
+**File**: ``examples/notebooks/01_Loading_and_Plotting.ipynb``
 
 The most comprehensive way to learn basic loading is through our interactive Jupyter notebook. It provides:
 
@@ -20,7 +20,7 @@ To run the notebook:
 .. code-block:: bash
 
    cd examples/notebooks
-   jupyter notebook 01_Basic_Loading.ipynb
+   jupyter lab 01_Loading_and_Plotting.ipynb
 
 Core Concepts
 -------------

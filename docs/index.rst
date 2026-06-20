@@ -67,8 +67,8 @@ Quick Start
    x, y, params, filepath = epyr.eprload()
 
    # Apply baseline correction
-   from epyr.baseline import baseline_polynomial
-   y_corrected, baseline = baseline_polynomial(y, x_data=x, poly_order=1)
+   from epyr.baseline import baseline_polynomial_1d
+   y_corrected, baseline = baseline_polynomial_1d(x, y, params, order=1)
 
    # Convert to FAIR formats (CSV, JSON, HDF5)
    from epyr.fair import convert_bruker_to_fair

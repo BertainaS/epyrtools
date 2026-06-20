@@ -42,15 +42,15 @@ Remove baseline drift and artifacts from your spectra:
 
 .. code-block:: python
 
-   from epyr.baseline import baseline_polynomial
+   from epyr.baseline import baseline_polynomial_1d
 
    # Simple polynomial baseline correction
-   y_corrected, baseline = baseline_polynomial(y, x_data=x, poly_order=1)
+   y_corrected, baseline = baseline_polynomial_1d(x, y, params, order=1)
 
    # Advanced correction with signal exclusion
    exclude_regions = [(3300, 3400)]  # Exclude peak regions
-   y_corrected, baseline = baseline_polynomial(
-       y, x_data=x, poly_order=2, exclude_regions=exclude_regions
+   y_corrected, baseline = baseline_polynomial_1d(
+       x, y, params, order=2, manual_regions=exclude_regions, region_mode="exclude"
    )
 
 Available Methods
@@ -126,7 +126,7 @@ Here's a complete workflow from loading to analysis:
 .. code-block:: python
 
    import epyr
-   from epyr.baseline import baseline_polynomial
+   from epyr.baseline import baseline_polynomial_1d
    from epyr.fair import convert_bruker_to_fair
    import matplotlib.pyplot as plt
    import numpy as np
@@ -146,7 +146,7 @@ Here's a complete workflow from loading to analysis:
    # 3. Apply baseline correction (for 1D data)
    if not isinstance(x, list):
        print("Applying baseline correction...")
-       y_corrected, baseline = baseline_polynomial(y, x_data=x, poly_order=1)
+       y_corrected, baseline = baseline_polynomial_1d(x, y, params, order=1)
 
        # Plot before/after
        plt.figure(figsize=(12, 5))

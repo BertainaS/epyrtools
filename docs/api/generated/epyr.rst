@@ -22,5 +22,6 @@
    performance
    physics
    plugins
+   relaxation
    signalprocessing
    sub

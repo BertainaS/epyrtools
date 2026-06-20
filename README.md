@@ -12,137 +12,87 @@
 
 | License | Tests | Documentation | Version |
 |---------|-------|---------------|---------|
-| [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) | ![Tests Passing](https://img.shields.io/badge/tests-100%2B%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-comprehensive-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.3.8-blue) |
+| [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) | ![Tests Passing](https://img.shields.io/badge/tests-369%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-Sphinx-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.4.0-blue) |
 
-**EPyR Tools** is a comprehensive Python package for Electron Paramagnetic Resonance (EPR) spectroscopy data analysis. It provides a complete toolkit for loading, processing, analyzing, and visualizing EPR data from Bruker spectrometers, with a focus on FAIR (Findable, Accessible, Interoperable, and Reusable) data principles.
+## What is EPyR Tools?
 
-From basic data loading to advanced quantitative analysis, EPyR Tools offers professional-grade capabilities for EPR researchers, with comprehensive documentation and interactive tutorials.
+**EPyR Tools** is a Python package for analyzing Electron Paramagnetic Resonance (EPR) spectroscopy data from Bruker spectrometers. It covers the full path from raw instrument files to publication-ready results: loading BES3T and ESP/WinEPR binary formats, baseline correction, lineshape and T1/T2 relaxation fitting, FFT-based analysis of pulse-EPR time-domain data, and FAIR-compliant export to CSV, JSON, and HDF5.
+
+The package targets EPR researchers who want a reproducible, scriptable Python workflow in place of proprietary vendor software, with a command-line interface for routine processing and a documented Python API for custom analysis.
 
 ## Key Features
 
-### **Data Loading & Formats**
-- **Bruker File Support:** Load BES3T (.dta/.dsc) and ESP/WinEPR (.par/.spc) files seamlessly
-- **Automatic Format Detection:** Smart file format recognition and parameter extraction
-- **FAIR Data Conversion:** Export to CSV, JSON, and HDF5 formats with complete metadata
-- **Batch Processing:** Handle multiple files efficiently with parallel processing
-- **Plugin Architecture:** Extensible system for custom file formats and processing
+### Data Loading & FAIR Conversion
+- Read Bruker BES3T (`.DTA`/`.DSC`) and ESP/WinEPR (`.spc`/`.par`) files, 1D and 2D, with automatic format detection
+- `epyr.fair`: export to CSV, JSON, and HDF5 with standardized, complete metadata
+- Batch conversion of entire directories
+- Plugin architecture for adding new file formats
 
-### **Advanced Analysis**
-- **Modern Baseline Correction:** Streamlined polynomial correction with interactive region selection
-- **Peak Detection:** Automatic identification of EPR spectral features
-- **g-Factor Calculations:** Precise electronic g-factor determination with field calibration
-- **Hyperfine Analysis:** Pattern recognition and coupling constant extraction
-- **Quantitative Integration:** Single and double integration for spin quantification
-- **Lineshape Analysis:** Comprehensive suite of EPR lineshape functions (Gaussian, Lorentzian, Voigt, pseudo-Voigt)
+### Baseline Correction (`epyr.baseline`)
+- Polynomial, exponential, bi-exponential, and stretched-exponential models, for 1D and 2D data
+- Automatic model selection ranked by AIC/BIC/R²
+- Manual and interactive baseline-region selection
 
-### **Command Line Interface**
-- **Complete CLI Suite:** 9 professional commands for all EPR workflows
-- **Interactive Plotting:** `epyr-plot` with measurement tools for precise delta x/y analysis
-- **Batch Processing:** `epyr-batch-convert` for high-throughput data processing  
-- **Data Validation:** `epyr-validate` with FAIR compliance checking
-- **Configuration Management:** `epyr-config` for system-wide settings
-- **Interactive Tools:** `epyr-isotopes` GUI and system information display
+### Lineshape Analysis & Fitting (`epyr.lineshapes`)
+- Gaussian, Lorentzian, true Voigt (Faddeeva-function convolution), and pseudo-Voigt lineshapes
+- Absorption and 1st/2nd derivative forms, phase mixing, optional affine baseline term
+- `fit_epr_signal()` and `fit_multiple_shapes()` for single-model and model-comparison fitting
 
-### **Performance & Quality**
-- **Memory Optimization:** Intelligent caching and memory management for large datasets
-- **Parallel Processing:** Multi-core support for batch operations
-- **Quality Assurance:** Comprehensive testing suite with 90+ tests
-- **Code Standards:** Professional development workflow with pre-commit hooks
-- **Security:** Automated vulnerability scanning and safe defaults
+### T1/T2 Relaxation Fitting (`epyr.relaxation`, new in v0.4.0)
+- Six decay/recovery models: mono- and stretched-exponential, bi-exponential, inversion/saturation recovery, and combined homogeneous/spectral-diffusion (Gamma0/GammaG) echo decay
+- `fit_relaxation()` for a single model, `fit_multiple_decays()` to rank candidates by reduced chi-squared
+- Fit results print a readable parameter summary directly
 
-### **Visualization & Plotting**
-- **Interactive Measurement Tools:** Click-to-measure delta x/y distances with real-time feedback
-- **2D Spectral Maps:** Professional publication-quality EPR plots  
-- **macOS Optimized:** Smooth interactive plotting with TkAgg backend
-- **Customizable Styling:** Flexible plot configuration for different EPR experiments
-- **Export Options:** High-resolution outputs for publications
+### Signal Processing (`epyr.signalprocessing`)
+- FFT-based frequency analysis for pulse-EPR time-domain data: Rabi oscillations, DEER, HYSCORE
+- 1D and 2D FFT modes, apodization windows (Hann, Hamming, Blackman, Kaiser), automatic time-unit detection, zero-padding
+- Power spectral density (Welch, periodogram) and spectrogram analysis
 
-### **Learning & Documentation**
-- **Interactive Tutorials:** 4 comprehensive Jupyter notebooks (beginner → advanced)
-- **Complete API Documentation:** Professional Sphinx-generated docs
-- **Example Scripts:** Ready-to-use Python automation scripts including lineshape analysis
-- **Best Practices Guide:** EPR analysis workflows and quality assessment
+### Physics & Units (`epyr.physics`)
+- CODATA 2022 physical constants in SI and CGS units (`GFREE`, `BMAGN`, `NMAGN`, `PLANCK`, ...)
+- Field/frequency conversion (mT ↔ MHz ↔ cm⁻¹) via `unitconvert()` and dedicated helpers
 
-### **EPR-Specific Tools**
-- **Physical Constants:** Comprehensive EPR-relevant constants library
-- **Isotope Database:** Nuclear properties and magnetic parameters
-- **Field-Frequency Conversion:** Precise EPR measurement calculations
-- **Spectrometer Support:** Optimized for modern Bruker EPR systems
+### Command-Line Interface
+- Nine commands covering the full workflow: `epyr-convert`, `epyr-baseline`, `epyr-batch-convert`, `epyr-config`, `epyr-info`, `epyr-isotopes`, `epyr-plot`, `epyr-validate`, `epyrview`
+- `epyr-plot --interactive --measure`: click-to-measure delta x/y distance tool
 
-### **Professional Documentation**
-- **[Complete Documentation](docs/)**: Comprehensive guides and API reference
-- **[User Guide](docs/user_guide.md)**: Step-by-step tutorials and workflows
-- **[CLI Reference](docs/cli_reference.md)**: Command-line interface documentation
-- **[System Architecture](docs/README.md)**: Core modules and plugin system
+### Performance & Isotope Database
+- `OptimizedLoader` / `DataCache` for large files, with memory monitoring and streaming
+- `epyr.isotopes` / `epyr-isotopes`: interactive periodic-table GUI with NMR frequency calculator and X/Q/W-band presets
 
-## What's New in v0.3.0
+## What's New in v0.4.0
 
-**EPyR Tools v0.3.0** represents a **major code quality enhancement** with professional logging infrastructure:
+Version 0.4.0 adds the **`epyr.relaxation`** package for T1/T2 relaxation fitting, complementing the existing field-domain lineshape fitting in `epyr.lineshapes.fitting`:
 
-### Professional Logging System
-- **Centralized Logging**: Migrated 398 print statements to structured logging (95.7% coverage)
-  - Professional logging infrastructure across 18 core modules
-  - Hierarchical log levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`
-  - Timestamped messages with module names for better traceability
-  - Consistent log format throughout the entire codebase
-
-- **Enhanced Debugging**: Better production-ready monitoring capabilities
-  - Configurable logging levels via standard Python logging
-  - Log to files for permanent records
-  - Integration with logging frameworks (Sentry, Logstash, etc.)
-  - Full call chain tracing with module information
-
-- **Backward Compatible**: 100% compatible with existing code
-  - No breaking changes - all functionality preserved
-  - Default logging configured to match previous print() behavior
-  - All 100+ tests passing with no regressions
-  - Optional custom logging configuration
-
-### Modules Updated
-Core modules refactored with professional logging:
-- **Data Loading**: eprload, eprplot, cli
-- **Signal Processing**: frequency_analysis, apowin
-- **Physics**: conversions, units, constants
-- **Baseline Correction**: baseline package (4 modules)
-- **FAIR Conversion**: conversion, exporters, data_processing
-- **Lineshape Analysis**: fitting, convspec
-- **GUI**: isotope_gui
-
-### Configuration Example
 ```python
-import logging
+from epyr.relaxation import fit_relaxation, fit_multiple_decays
 
-# Configure EPyR logging (optional)
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    filename='epyr_analysis.log'
-)
+# Single model
+result = fit_relaxation(t, y, model="stretched_exponential")
+print(result)
+# === Relaxation Fit Results - stretched_exponential ===
+# Success: True
+# R2 = 0.998452
+# ...
 
-# Use EPyR Tools normally
-from epyr import eprload
-x, y, params, filepath = eprload("data.DTA")
-# Logging messages written to epyr_analysis.log
+# Compare candidate models, ranked by reduced chi-squared (not R-squared,
+# which is biased toward models with more free parameters)
+results = fit_multiple_decays(t, y)
+print(results)
+# model                  success  R2        chi2       amplitude  T      ...
+# mono_exponential       True     0.998391  0.0004842  2.005      1.310  ...
+# stretched_exponential  True     0.998452  0.000476   1.976      1.309  ...
 ```
 
-### Benefits
-- **Production Ready**: Professional logging standards for real-world deployments
-- **Better Debugging**: Detailed trace information with timestamps and module names
-- **Maintainability**: Single logging configuration point, consistent patterns
-- **Flexibility**: Control output verbosity via standard Python logging configuration
+Fit plots in both `epyr.relaxation` and `epyr.lineshapes.fitting` now follow `matplotlib.rcParams` for figure size, marker size, line width, and font size, instead of a fixed layout.
 
-**See Also:**
-- [RELEASE_NOTES_v0.3.0.md](RELEASE_NOTES_v0.3.0.md) - Complete v0.3.0 details
-- [RELEASE_NOTES_v0.2.5.md](RELEASE_NOTES_v0.2.5.md) - Enhanced data handling features
-- [docs/changelog.rst](docs/changelog.rst) - Full version history
-
----
+See [docs/release_notes/v0.4.0.rst](docs/release_notes/v0.4.0.rst) for full details, or [docs/release_notes.rst](docs/release_notes.rst) for the complete version history.
 
 ## Installation
 
 ### Prerequisites
 - Python 3.8 or higher
-- NumPy, matplotlib, pandas, h5py (automatically installed)
+- NumPy, SciPy, matplotlib, pandas, h5py (installed automatically)
 
 ### Quick Install
 ```bash
@@ -151,7 +101,6 @@ pip install epyr-tools
 
 ### Development Installation
 ```bash
-# Clone the repository
 git clone https://github.com/BertainaS/epyrtools.git
 cd epyrtools
 
@@ -164,296 +113,200 @@ pre-commit install
 
 ### Verification
 ```bash
-# Test installation
 epyr --help
 epyr-info
-
-# Run test suite
 make test
-```
-
-### Alternative: Manual Dependencies
-```bash
-# Clone the repository
-git clone https://github.com/BertainaS/epyrtools.git
-cd epyrtools
-
-# Install dependencies manually
-pip install -r requirements.txt
-
-# Optional: Install development tools
-pip install -r requirements-dev.txt
-```
-
-### Quick Test
-```bash
-# Verify installation
-python -c "import epyr; print('EPyR Tools successfully installed!')"
 ```
 
 ## Getting Started
 
-### Quick Demo: Loading EPR Data
-
-![EPyR Tools eprload demo](eprload_simple_demo.gif)
-
 ### 1. Loading Data
 
-The primary function for loading data is `epyr.eprload()`. It can be called with a file path or without arguments to open a file dialog.
-
 ```python
-import epyr.eprload as eprload
+import epyr
 
 # Open a file dialog to select a .dta, .dsc, .spc, or .par file
-# The script will automatically plot the data.
-x, y, params, file_path = eprload.eprload()
+x, y, params, filepath = epyr.eprload()
 
-# Or, specify a file path directly:
-# x, y, params, file_path = eprload.eprload('path/to/your/data.dsc')
+# Or specify a path directly:
+# x, y, params, filepath = epyr.eprload('path/to/data.dsc')
 ```
 
 ### 2. Converting to FAIR Formats
 
-Use the `epyr.fair` module to convert your Bruker files into more accessible formats (`.csv`, `.json`, `.h5`).
-
 ```python
 from epyr.fair import convert_bruker_to_fair
 
-# Opens a file dialog to select an input file and saves the converted
-# files in the same directory.
-convert_bruker_to_fair()
-
-# You can also specify input and output paths:
-# convert_bruker_to_fair('path/to/data.dsc', output_dir='path/to/output')
+convert_bruker_to_fair('path/to/data.dsc', output_dir='path/to/output')
 ```
 
-### 3. Modern Baseline Correction
-
-The `epyr.baseline` module provides streamlined functions for correcting EPR baselines with interactive region selection. Compatible with `eprload()` data format.
+### 3. Baseline Correction
 
 ```python
 import epyr
-import numpy as np
 
-# Load EPR data using eprload
 x, y, params, filepath = epyr.eprload("data.dsc")
 
-# Simple automatic correction
-corrected, baseline = epyr.baseline.baseline_polynomial_1d(x, y, params)
+# Automatic model selection
+corrected, baseline, model_info = epyr.baseline.baseline_auto_1d(x, y, params)
 
-# With manual region exclusion (e.g., exclude signal regions)
-signal_regions = [(3340, 3360), (3380, 3400)]  # mT
-corrected, baseline = epyr.baseline.baseline_polynomial_1d(
-    x, y, params, 
-    manual_regions=signal_regions,
-    region_mode='exclude',
-    order=2
-)
-
-# Interactive region selection for complex spectra
+# Or a specific model with manual region exclusion (e.g. signal regions, in mT)
 corrected, baseline = epyr.baseline.baseline_polynomial_1d(
     x, y, params,
-    interactive=True
+    manual_regions=[(3340, 3360), (3380, 3400)],
+    region_mode='exclude',
+    order=2,
 )
 ```
 
-### 4. Lineshape Analysis
-
-The `epyr.lineshapes` module provides comprehensive EPR lineshape functions with advanced capabilities including derivatives, phase rotation, and convolution.
+### 4. Lineshape Fitting
 
 ```python
-from epyr.lineshapes import Lineshape, gaussian, lorentzian, voigtian
-import numpy as np
-import matplotlib.pyplot as plt
+from epyr.lineshapes import fit_epr_signal, fit_multiple_shapes
 
-# Create magnetic field range
-B = np.linspace(-10, 10, 1000)  # mT
+x, y, params, filepath = epyr.eprload('data.DTA')
 
-# Method 1: Direct functions with advanced options
-gauss = gaussian(B, center=0, width=4.0, derivative=0)  # Absorption
-gauss_1st = gaussian(B, center=0, width=4.0, derivative=1)  # 1st derivative
-lorentz = lorentzian(B, center=0, width=4.0, phase=0.0)  # Pure absorption
+# Single model
+result = fit_epr_signal(x, y, 'gaussian')
+print(result.summary())
 
-# True Voigt profiles (convolution of Gaussian and Lorentzian)
-voigt = voigtian(B, center=0, sigma=2.0, gamma=2.0)
-
-# Method 2: Unified Lineshape class for consistent API
-shape = Lineshape('pseudo_voigt', width=4.0, alpha=0.5)  # 50/50 mix
-mixed = shape(B, center=0)
-
-# Plot comparison
-plt.plot(B, gauss, label='Gaussian')
-plt.plot(B, lorentz, label='Lorentzian')  
-plt.plot(B, voigt, label='True Voigt')
-plt.plot(B, mixed, label='Pseudo-Voigt')
-plt.legend()
-plt.show()
+# 1st-derivative signal with adjustable phase, comparing all lineshapes
+results = fit_multiple_shapes(x, y, derivative=1, fit_phase=True)
 ```
 
-### 5. Simple EPR Plotting
+### 5. T1/T2 Relaxation Fitting
 
-The `epyr.eprplot` module provides simple, direct plotting functions for EPR data from `eprload()`.
+```python
+from epyr.relaxation import fit_relaxation, fit_multiple_decays
+
+t, y, params, filepath = epyr.eprload('echo_decay.DTA')
+y = abs(y)  # take the magnitude of a complex echo signal
+
+result = fit_relaxation(t, y, model="stretched_exponential")
+results = fit_multiple_decays(t, y)  # compare mono/stretched/bi-exponential
+```
+
+### 6. Time-Domain Signal Processing (FFT)
+
+```python
+from epyr.signalprocessing import analyze_frequencies
+
+t, y, params, filepath = epyr.eprload('rabi_oscillation.DTA')
+result = analyze_frequencies(t, y, window='hann', zero_padding=4)
+print(f"Dominant frequency: {result['dominant_frequencies'][0]:.3f} MHz")
+```
+
+### 7. Plotting and the CLI
 
 ```python
 import epyr
-import matplotlib.pyplot as plt
 
-# Load EPR data
 x, y, params, filepath = epyr.eprload("data.dsc")
-
-# Plot 1D spectrum
-epyr.eprplot.plot_1d(x, y, params, title="EPR Spectrum")
-
-# Plot 2D data as color map
-epyr.eprplot.plot_2d_map(x, y, params, title="2D EPR Map")
-
-# Plot 2D data as waterfall plot
-epyr.eprplot.plot_2d_waterfall(x, y, params, title="2D Waterfall", max_traces=30)
-
-plt.show()
+epyr.plot_1d(x, y, params, title="EPR Spectrum")
 ```
 
-### 6. Interactive Command-Line Plotting
-
-Experience the new interactive plotting with measurement tools:
-
 ```bash
-# Interactive plotting with measurement tools
-epyr-plot --interactive --measure
-
-# Load specific file with measurements
+# Interactive plot with click-to-measure delta x/y
 epyr-plot spectrum.dsc --interactive --measure
 
-# Quick analysis with scaling and save
-epyr-plot data.dta --interactive --measure -s nG --save
+# Batch FAIR conversion
+epyr-batch-convert ./data --formats csv,json,hdf5
 ```
 
-**Measurement Features:**
-- Click two points to measure Δx, Δy, and distance
-- Real-time visual feedback with annotations
-- macOS optimized for smooth performance
-- Right-click to clear, 'c' key for quick clear
+## Tutorials & Examples
 
-### 7. Isotope GUI
+### Jupyter Notebook Series
+An eight-notebook tutorial series in `examples/notebooks/`, using real experimental data from `examples/data/`. Notebooks are committed without outputs; run them to generate figures.
 
-Run the interactive isotope GUI to explore nuclear data. Note that this requires the `pandas` library.
-
-```python
-from epyr.isotope_gui import run_gui
-
-# This will launch the Tkinter GUI
-run_gui()
-```
-
-## Interactive Tutorials
-
-EPyR Tools includes comprehensive Jupyter notebook tutorials for hands-on learning:
-
-### **Getting Started (Beginner)**
 ```bash
 cd examples/notebooks
-jupyter notebook 01_Getting_Started.ipynb
+jupyter lab 00_Tutorial_Series_Index.ipynb  # index and navigation
 ```
-Learn EPR data loading, visualization, and FAIR data conversion.
 
-### **Baseline Correction (Intermediate)**
-```bash
-jupyter notebook 06_Baseline_Correction_Functions_Complete.ipynb
-```
-Master modern polynomial baseline correction with interactive region selection.
+| Notebook | Topic |
+|----------|-------|
+| `01_Loading_and_Plotting.ipynb` | `eprload`, parameter inspection, 1D/2D plotting |
+| `02_Baseline_Correction.ipynb` | Polynomial, automatic, and exponential baselines |
+| `03_Lineshape_Analysis_and_Fitting.ipynb` | Gaussian/Lorentzian/Voigt, derivatives, fitting |
+| `04_Relaxation_Fitting.ipynb` | T1/T2 decay/recovery models (new in v0.4.0) |
+| `05_Signal_Processing_and_FFT.ipynb` | Frequency analysis of Rabi data, apodization |
+| `06_FAIR_Conversion_and_Export.ipynb` | CSV/JSON/HDF5 export and validation |
+| `07_Physics_Units_and_Constants.ipynb` | CODATA constants, field/frequency conversions |
 
-### **Advanced Analysis (Expert)**
-```bash
-jupyter notebook 03_Advanced_Analysis.ipynb
-```
-Complete EPR analysis: g-factors, hyperfine structure, quantitative integration.
+### Standalone Example Scripts
+Six short, self-contained scripts in `examples/clean/` exercising the public API end to end:
 
-### **EPR Lineshape Analysis (Professional)**
 ```bash
-jupyter notebook 04_EPR_Lineshape_Analysis.ipynb
+python examples/clean/01_basic_loading_and_plotting.py
+python examples/clean/02_baseline_and_fitting.py
+python examples/clean/03_advanced_fft_windows.py
+python examples/clean/04_interactive_2d_slicer.py
+python examples/clean/05_rabi_frequency_analysis.py
+python examples/clean/06_relaxation_fitting.py
 ```
-Comprehensive lineshape analysis: Gaussian, Lorentzian, Voigt profiles, derivatives, and convolution techniques.
 
-### **Example Scripts**
-Ready-to-use automation scripts in `examples/scripts/`:
-```bash
-python examples/scripts/01_basic_loading.py
-python examples/scripts/02_baseline_correction.py
-python examples/scripts/04_lineshape_analysis.py
-```
+See [docs/tutorials/clean_examples.rst](docs/tutorials/clean_examples.rst) for a description of each script.
 
 ## Project Structure
 
 ```
 epyrtools/
-├── epyr/                           # Main package
+├── epyr/                          # Main package
 │   ├── eprload.py                 # Core data loading (BES3T, ESP formats)
-│   ├── eprplot.py                 # Simple EPR plotting functions
-│   ├── baseline_correction.py     # Modern streamlined baseline correction
-│   ├── baseline/                  # Compatibility layer for baseline functions
-│   │   └── __init__.py           # Imports from baseline_correction
-│   ├── fair/                     # FAIR data conversion
-│   │   ├── conversion.py         # Format conversion tools
-│   │   ├── exporters.py          # CSV, JSON, HDF5 export
-│   │   └── parameter_mapping.py  # Metadata standardization
-│   ├── lineshapes/               # EPR lineshape analysis
-│   │   ├── gaussian.py           # Gaussian profiles with derivatives
-│   │   ├── lorentzian.py         # Lorentzian profiles with phase rotation
-│   │   ├── voigtian.py           # True Voigt convolution profiles
-│   │   ├── lshape.py             # General lineshape functions
-│   │   ├── convspec.py           # Spectrum convolution tools
-│   │   └── lineshape_class.py    # Unified lineshape interface
-│   ├── physics/                  # Physical constants and unit conversions
-│   │   ├── constants.py          # CODATA 2022 constants (SI and CGS)
-│   │   ├── conversions.py        # Frequency/field conversions (MHz↔mT, etc.)
-│   │   └── units.py              # unitconvert() interface
-│   ├── eprplot.py                # EPR plotting (1D, 2D map, waterfall, slicer)
-│   ├── isotope_gui.py            # Interactive isotope database GUI
-│   └── sub/                     # Bruker format loaders
-│       ├── loadBES3T.py         # BES3T format loader (.DTA / .DSC)
-│       ├── loadESP.py           # ESP / WinEPR loader (.spc / .par)
-│       └── utils.py             # File handling utilities
-├── docs/                        # Sphinx API documentation
-├── examples/                    # Tutorials and example data
-│   ├── notebooks/               # Interactive Jupyter tutorials
-│   ├── clean/                   # Five end-to-end standalone scripts
-│   ├── scripts/                 # Other Python automation examples
-│   └── data/                    # EPR measurement files
-│       ├── *.DSC, *.DTA        # BES3T format files
-│       ├── *.par, *.spc        # ESP format files
-│       └── processed/          # Analysis results examples
-├── tests/                       # Comprehensive test suite (44 tests)
-├── requirements.txt             # Core dependencies
-├── requirements-dev.txt         # Development tools
-└── pyproject.toml              # Modern Python packaging
+│   ├── eprplot.py                 # EPR plotting (1D, 2D map, waterfall, slicer)
+│   ├── cli.py                     # Command-line interface (9 commands)
+│   ├── config.py                  # Hierarchical configuration system
+│   ├── performance.py             # OptimizedLoader, DataCache
+│   ├── plugins.py                 # Plugin architecture
+│   ├── logging_config.py          # Centralized logging
+│   ├── isotope_gui.py             # Interactive isotope database GUI
+│   ├── baseline/                  # Baseline correction (correction, selection, models, interactive)
+│   ├── lineshapes/                # Gaussian, Lorentzian, Voigt, pseudo-Voigt, fitting
+│   ├── relaxation/                # T1/T2 decay/recovery models and fitting
+│   ├── signalprocessing/          # FFT frequency analysis, apodization windows
+│   ├── physics/                   # CODATA constants and unit conversions
+│   ├── fair/                      # FAIR conversion, exporters, validation
+│   └── sub/                       # Bruker BES3T/ESP format loaders
+├── docs/                          # Sphinx documentation and tutorials
+├── examples/
+│   ├── notebooks/                 # Jupyter tutorial series
+│   ├── clean/                     # Six standalone end-to-end scripts
+│   └── data/                      # Real EPR measurement files (CW, pulse, 2D)
+├── tests/                         # Test suite (369 tests; smoke/standard/deep/scientific)
+└── pyproject.toml                 # Packaging, dependencies, entry points
+```
+
+## Documentation
+
+- [Full documentation](docs/): guides and API reference (Sphinx)
+- [User guide](docs/user_guide.md): workflows and step-by-step tutorials
+- [CLI reference](docs/cli_reference.md): command-line interface
+- [API reference](docs/api_reference.md): public API
+- [Release notes](docs/release_notes.rst): version history
+
+## Testing & Quality
+
+EPyR Tools follows a 4-level testing protocol (`pytest -m smoke|standard|deep|scientific`), with 369 tests covering basic functionality, broad feature coverage, edge cases, and scientific validation against NIST/CODATA values.
+
+```bash
+make test        # full suite
+make test-cov    # with coverage report
+make quality     # lint, type-check, security
 ```
 
 ## Contributing & Support
 
-### **Documentation**
-- **API Reference:** [docs/](docs/) - Complete function documentation
-- **Tutorials:** [examples/notebooks/](examples/notebooks/) - Interactive learning
-- **Examples:** [examples/scripts/](examples/scripts/) - Ready-to-use code
-
-### **Community**
 - **Issues:** [GitHub Issues](https://github.com/BertainaS/epyrtools/issues)
-- **Discussions:** Share EPR analysis workflows and tips
-- **Contributing:** See contribution guidelines for code contributions
-
-### **Quality Assurance**
-- **44 passing tests** with pytest
-- **Pre-commit hooks** for code quality
-- **Type hints** and comprehensive docstrings
-- **Professional packaging** with modern Python standards
+- **Contributing guide:** [docs/contributing.rst](docs/contributing.rst)
 
 ## License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License**, see [LICENSE](LICENSE) for details.
 
 ## Contributors
 
 **Lead Developer & Maintainer:**
-- **Sylvain Bertaina** - [sylvain.bertaina@cnrs.fr](mailto:sylvain.bertaina@cnrs.fr)
+- **Sylvain Bertaina**, [sylvain.bertaina@cnrs.fr](mailto:sylvain.bertaina@cnrs.fr)
 
 **Affiliation:**
 - [Magnetism Group (MAG), IM2NP Laboratory](https://www.im2np.fr/fr/equipe-magnetisme-mag)
@@ -461,4 +314,4 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-**EPyR Tools** - *Professional EPR analysis for the Python ecosystem*
+**EPyR Tools**: EPR data analysis in Python.
