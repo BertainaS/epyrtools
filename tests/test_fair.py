@@ -87,6 +87,35 @@ class TestFairModule:
         except Exception as e:
             pytest.skip(f"Error handling may not be implemented: {e}")
 
+    @patch("epyr.fair.conversion.eprload")
+    def test_batch_convert_directory_produces_outputs(
+        self, mock_eprload, sample_1d_data, sample_epr_params
+    ):
+        """Batch conversion must call convert_bruker_to_fair with valid kwargs.
+
+        Regression test: batch_convert_directory previously forwarded the
+        wrong keyword names (input_file_or_dir, output_formats), raising
+        TypeError for every file and silently producing no output.
+        """
+        from epyr.fair import batch_convert_directory
+
+        x, y = sample_1d_data
+        mock_eprload.return_value = (x, y, sample_epr_params, "/path/to/test.dsc")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            in_dir = tmp_path / "in"
+            in_dir.mkdir()
+            (in_dir / "sample.dsc").touch()
+            out_dir = tmp_path / "out"
+
+            batch_convert_directory(
+                in_dir, out_dir, file_extensions=[".dsc"], output_formats=["csv"]
+            )
+
+            produced = list(out_dir.rglob("*.csv"))
+            assert produced, "batch conversion produced no CSV output"
+
     def test_fair_module_imports(self):
         """Test that fair module functions can be imported."""
         # Test that we can import the main functions

@@ -273,10 +273,10 @@ def batch_convert_directory(
                 file_output_dir = None
 
             convert_bruker_to_fair(
-                input_file_or_dir=file_path,
+                input_file=file_path,
                 output_dir=file_output_dir,
                 scaling=scaling,
-                output_formats=output_formats,
+                formats=output_formats,
             )
             successful_conversions += 1
 
