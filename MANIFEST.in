@@ -1,0 +1,16 @@
+# Keep the source distribution lean. The package itself (including
+# epyr/sub/isotopedata.txt) is always included; the rules below drop large
+# example data, archived notebooks, rendered images, build artifacts, and
+# internal planning notes that do not belong in a release.
+
+include README.md LICENSE pyproject.toml setup.py requirements.txt
+
+prune examples/data
+prune examples/notebooks/_legacy
+prune docs/superpowers
+prune docs/_build
+
+recursive-exclude examples *.png *.jpg *.gif
+global-exclude .DS_Store
+global-exclude *.py[cod]
+global-exclude __pycache__/*
