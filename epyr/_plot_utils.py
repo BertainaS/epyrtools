@@ -6,7 +6,6 @@ Shared matplotlib helpers for the fit-plotting code in
 from typing import Any, Dict, Optional, Tuple
 
 import matplotlib.pyplot as plt
-from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 
