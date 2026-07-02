@@ -5,7 +5,7 @@ Standalone, chainable functions for ESEEM, HYSCORE, and Rabi pipelines:
 remove_baseline, apodize, zero_pad.
 """
 
-from typing import Tuple
+from typing import Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,6 +19,11 @@ except ImportError:
     def get_logger(name):
         return logging.getLogger(name)
 
+
+try:
+    from .apowin import apowin
+except ImportError:
+    from apowin import apowin  # noqa: F401
 
 logger = get_logger(__name__)
 
@@ -214,6 +219,156 @@ def _plot_baseline(
     for ax in axes:
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
+
+    plt.tight_layout()
+    plt.show()
+
+
+# =============================================================================
+# apodize
+# =============================================================================
+
+
+def apodize(
+    signal: np.ndarray,
+    window: str = "hann",
+    alpha: Optional[float] = None,
+    half_window: Optional[str] = None,
+    axis: Union[int, str] = "both",
+    plot: bool = False,
+) -> np.ndarray:
+    """
+    Apply an apodization window to reduce spectral leakage from signal truncation.
+
+    Parameters
+    ----------
+    signal : np.ndarray
+        Signal array, 1D or 2D.
+    window : str
+        Window type: any key accepted by ``apowin()`` — ``'hann'``,
+        ``'hamming'``, ``'blackman'``, ``'kaiser'``, ``'gaussian'``,
+        ``'exponential'``, etc.
+    alpha : float, optional
+        Shape parameter for ``kaiser`` and ``gaussian`` windows.
+    half_window : str, optional
+        ``None`` (symmetric window), ``'left'`` (first half only),
+        or ``'right'`` (second half only).
+    axis : int or str
+        For 2D data: ``0``, ``1``, or ``'both'``. When ``'both'``, a 2D
+        window is built as the outer product of two 1D windows, one per
+        axis. Ignored for 1D input.
+    plot : bool
+        Show a figure with the original signal, window shape, and
+        windowed signal.
+
+    Returns
+    -------
+    signal_windowed : np.ndarray
+        Windowed signal, same shape as ``signal``.
+
+    Raises
+    ------
+    ValueError
+        If ``signal`` is not 1D or 2D, or if ``axis`` is invalid for 2D.
+
+    Examples
+    --------
+    >>> signal = np.exp(-t / 120) * np.sin(2 * np.pi * 8.5e-3 * t)
+    >>> windowed = apodize(signal, window='hann', half_window='right')
+    """
+    signal = np.asarray(signal, dtype=float)
+
+    if signal.ndim == 1:
+        windowed = _apodize_1d(signal, window, alpha, half_window)
+    elif signal.ndim == 2:
+        windowed = _apodize_2d(signal, window, alpha, half_window, axis)
+    else:
+        raise ValueError(f"signal must be 1D or 2D, got {signal.ndim}D")
+
+    if plot:
+        _plot_apodize(signal, windowed, window, half_window)
+
+    return windowed
+
+
+def _apodize_1d(
+    signal: np.ndarray,
+    window: str,
+    alpha: Optional[float],
+    half_window: Optional[str],
+) -> np.ndarray:
+    n = len(signal)
+    w = apowin(window, n, alpha=alpha, half_window=half_window)
+    return signal * w
+
+
+def _apodize_2d(
+    signal: np.ndarray,
+    window: str,
+    alpha: Optional[float],
+    half_window: Optional[str],
+    axis: Union[int, str],
+) -> np.ndarray:
+    n_rows, n_cols = signal.shape
+
+    if axis == "both":
+        w_rows = apowin(window, n_rows, alpha=alpha, half_window=half_window)
+        w_cols = apowin(window, n_cols, alpha=alpha, half_window=half_window)
+        return signal * np.outer(w_rows, w_cols)
+    elif axis == 0:
+        w = apowin(window, n_rows, alpha=alpha, half_window=half_window)
+        return signal * w[:, np.newaxis]
+    elif axis == 1:
+        w = apowin(window, n_cols, alpha=alpha, half_window=half_window)
+        return signal * w[np.newaxis, :]
+    else:
+        raise ValueError(f"axis must be 0, 1, or 'both' for 2D signals, got {axis!r}")
+
+
+def _plot_apodize(
+    signal: np.ndarray,
+    windowed: np.ndarray,
+    window: str,
+    half_window: Optional[str],
+) -> None:
+    if signal.ndim == 1:
+        n = len(signal)
+        try:
+            w = apowin(window, n, half_window=half_window)
+        except Exception:
+            w = np.ones(n)
+
+        fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+        axes[0].plot(signal, "b-", linewidth=1.5)
+        axes[0].set_title("Original signal")
+
+        axes[1].plot(w, color="orange", linewidth=2)
+        title = f"{window} window"
+        if half_window:
+            title += f" ({half_window} half)"
+        axes[1].set_title(title)
+        axes[1].set_ylim(-0.05, 1.1)
+
+        axes[2].plot(windowed, "g-", linewidth=1.5)
+        axes[2].set_title("Apodized signal")
+
+        for ax in axes:
+            ax.set_xlabel("Sample")
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+    else:
+        fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+        im0 = axes[0].imshow(signal, aspect="auto", cmap="RdBu_r", origin="lower")
+        axes[0].set_title("Original signal")
+        plt.colorbar(im0, ax=axes[0])
+
+        im1 = axes[1].imshow(windowed, aspect="auto", cmap="RdBu_r", origin="lower")
+        axes[1].set_title("Apodized signal")
+        plt.colorbar(im1, ax=axes[1])
+
+        for ax in axes:
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
 
     plt.tight_layout()
     plt.show()

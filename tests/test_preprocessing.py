@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from epyr.signalprocessing.preprocessing import remove_baseline
+from epyr.signalprocessing.preprocessing import apodize, remove_baseline
 
 # ---------------------------------------------------------------------------
 # remove_baseline — 1D polynomial
@@ -135,4 +135,126 @@ def test_remove_baseline_plot_2d_no_error():
     time = np.linspace(0, 500, 64)
     signal = np.tile(np.sin(2 * np.pi * 8e-3 * time) + 0.3, (8, 1))
     remove_baseline(time, signal, method="polynomial", order=1, plot=True)
+    plt.close("all")
+
+
+# ---------------------------------------------------------------------------
+# apodize — 1D
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.smoke
+def test_apodize_1d_hann_shape():
+    signal = np.sin(2 * np.pi * np.linspace(0, 1, 256))
+    result = apodize(signal, window="hann")
+    assert result.shape == signal.shape
+
+
+@pytest.mark.smoke
+def test_apodize_1d_hann_endpoints_near_zero():
+    signal = np.ones(256)
+    result = apodize(signal, window="hann")
+    # Hann window is 0 at both ends
+    assert result[0] < 0.01
+    assert result[-1] < 0.01
+
+
+@pytest.mark.smoke
+def test_apodize_1d_hann_center_near_one():
+    signal = np.ones(256)
+    result = apodize(signal, window="hann")
+    # Hann window peaks at 1 in the centre
+    assert result[128] > 0.99
+
+
+@pytest.mark.standard
+def test_apodize_1d_half_window_right():
+    signal = np.ones(128)
+    result = apodize(signal, window="hann", half_window="right")
+    # Right half: starts near 1, ends near 0
+    assert result[0] > 0.95
+    assert result[-1] < 0.05
+
+
+@pytest.mark.standard
+def test_apodize_1d_half_window_left():
+    signal = np.ones(128)
+    result = apodize(signal, window="hann", half_window="left")
+    # Left half: starts near 0, ends near 1
+    assert result[0] < 0.05
+    assert result[-1] > 0.95
+
+
+@pytest.mark.standard
+def test_apodize_1d_kaiser_alpha():
+    signal = np.ones(128)
+    result = apodize(signal, window="kaiser", alpha=6)
+    assert result.shape == signal.shape
+    assert result[0] < result[64]  # Peak in the middle
+
+
+@pytest.mark.smoke
+def test_apodize_3d_raises():
+    signal = np.ones((4, 8, 64))
+    with pytest.raises(ValueError, match="1D or 2D"):
+        apodize(signal)
+
+
+# ---------------------------------------------------------------------------
+# apodize — 2D
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.standard
+def test_apodize_2d_both_shape():
+    signal = np.ones((64, 128))
+    result = apodize(signal, window="hann", axis="both")
+    assert result.shape == signal.shape
+
+
+@pytest.mark.standard
+def test_apodize_2d_both_corners_near_zero():
+    signal = np.ones((64, 128))
+    result = apodize(signal, window="hann", axis="both")
+    assert result[0, 0] < 0.01
+    assert result[-1, -1] < 0.01
+
+
+@pytest.mark.standard
+def test_apodize_2d_axis0_shape():
+    signal = np.ones((64, 128))
+    result = apodize(signal, window="hann", axis=0)
+    assert result.shape == signal.shape
+
+
+@pytest.mark.standard
+def test_apodize_2d_axis1_shape():
+    signal = np.ones((64, 128))
+    result = apodize(signal, window="hann", axis=1)
+    assert result.shape == signal.shape
+
+
+@pytest.mark.standard
+def test_apodize_2d_invalid_axis_raises():
+    signal = np.ones((64, 128))
+    with pytest.raises(ValueError, match="axis must be"):
+        apodize(signal, window="hann", axis=2)
+
+
+# ---------------------------------------------------------------------------
+# apodize — plot (smoke-tests that plot does not raise)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.standard
+def test_apodize_plot_1d_no_error():
+    signal = np.ones(64)
+    apodize(signal, window="hann", plot=True)
+    plt.close("all")
+
+
+@pytest.mark.standard
+def test_apodize_plot_2d_no_error():
+    signal = np.ones((32, 64))
+    apodize(signal, window="hann", axis="both", plot=True)
     plt.close("all")
