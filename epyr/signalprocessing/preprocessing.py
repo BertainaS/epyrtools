@@ -23,7 +23,7 @@ except ImportError:
 try:
     from .apowin import apowin
 except ImportError:
-    from apowin import apowin  # noqa: F401
+    from apowin import apowin
 
 logger = get_logger(__name__)
 
@@ -89,18 +89,29 @@ def remove_baseline(
     time = np.asarray(time, dtype=float)
     signal = np.asarray(signal, dtype=float)
 
+    if signal.ndim not in (1, 2):
+        raise ValueError(f"signal must be 1D or 2D, got {signal.ndim}D")
+
+    if signal.ndim == 2 and axis not in (0, 1):
+        raise ValueError(f"axis must be 0 or 1 for 2D signals, got {axis}")
+
+    expected_len = signal.shape[axis] if signal.ndim == 2 else signal.shape[0]
+    if len(time) != expected_len:
+        raise ValueError(
+            f"time length {len(time)} does not match signal length"
+            f" {expected_len} along axis {axis}."
+        )
+
     logger.info(f"remove_baseline: {method}, signal shape {signal.shape}")
 
     if signal.ndim == 1:
         corrected, baseline = _remove_baseline_1d(
             time, signal, method, order, end_fraction
         )
-    elif signal.ndim == 2:
+    else:
         corrected, baseline = _remove_baseline_2d(
             time, signal, method, order, end_fraction, axis
         )
-    else:
-        raise ValueError(f"signal must be 1D or 2D, got {signal.ndim}D")
 
     if plot:
         _plot_baseline(time, signal, corrected, baseline, method)
@@ -245,7 +256,7 @@ def apodize(
     signal : np.ndarray
         Signal array, 1D or 2D.
     window : str
-        Window type: any key accepted by ``apowin()`` — ``'hann'``,
+        Window type: any key accepted by ``apowin()``: ``'hann'``,
         ``'hamming'``, ``'blackman'``, ``'kaiser'``, ``'gaussian'``,
         ``'exponential'``, etc.
     alpha : float, optional
