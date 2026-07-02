@@ -372,3 +372,156 @@ def _plot_apodize(
 
     plt.tight_layout()
     plt.show()
+
+
+# =============================================================================
+# zero_pad
+# =============================================================================
+
+
+def zero_pad(
+    signal: np.ndarray,
+    factor: Optional[int] = None,
+    n_points: Optional[int] = None,
+    axis: Union[int, str] = -1,
+    plot: bool = False,
+) -> np.ndarray:
+    """
+    Pad a signal with trailing zeros to increase FFT frequency resolution.
+
+    Exactly one of ``factor`` or ``n_points`` must be supplied.
+
+    Parameters
+    ----------
+    signal : np.ndarray
+        Signal array, 1D or 2D.
+    factor : int, optional
+        Multiplicative factor: output length = ``factor * N`` along ``axis``.
+    n_points : int, optional
+        Absolute output length along ``axis``.
+    axis : int or str
+        Axis to pad. For 1D input this parameter is ignored.
+        For 2D input: ``0``, ``1``, ``-1`` (equivalent to ``1``), or
+        ``'both'`` (pad each axis independently with the same factor or
+        n_points). Default ``-1``.
+    plot : bool
+        Show a before/after figure.
+
+    Returns
+    -------
+    signal_padded : np.ndarray
+        Zero-padded signal, same dtype as ``signal``.
+
+    Raises
+    ------
+    ValueError
+        If both or neither of ``factor`` / ``n_points`` are given, if
+        ``n_points`` is shorter than the signal length, if ``signal`` is
+        not 1D or 2D, or if ``axis`` is invalid for 2D.
+
+    Examples
+    --------
+    >>> signal = np.ones(256)
+    >>> padded = zero_pad(signal, factor=4)   # 1024 points
+    >>> padded = zero_pad(signal, n_points=1024)
+    """
+    signal = np.asarray(signal, dtype=float)
+
+    if (factor is None) == (n_points is None):
+        raise ValueError(
+            "Provide exactly one of factor or n_points, not both or neither."
+        )
+
+    if signal.ndim == 1:
+        padded = _zero_pad_1d(signal, factor, n_points)
+    elif signal.ndim == 2:
+        padded = _zero_pad_2d(signal, factor, n_points, axis)
+    else:
+        raise ValueError(f"signal must be 1D or 2D, got {signal.ndim}D")
+
+    if plot:
+        _plot_zero_pad(signal, padded)
+
+    return padded
+
+
+def _zero_pad_1d(
+    signal: np.ndarray,
+    factor: Optional[int],
+    n_points: Optional[int],
+) -> np.ndarray:
+    n = len(signal)
+    n_out = (factor * n) if factor is not None else n_points
+    if n_out < n:
+        raise ValueError(f"Target length {n_out} is shorter than signal length {n}.")
+    padded = np.zeros(n_out, dtype=signal.dtype)
+    padded[:n] = signal
+    return padded
+
+
+def _zero_pad_2d(
+    signal: np.ndarray,
+    factor: Optional[int],
+    n_points: Optional[int],
+    axis: Union[int, str],
+) -> np.ndarray:
+    n_rows, n_cols = signal.shape
+
+    def _out_len(n: int) -> int:
+        return (factor * n) if factor is not None else n_points
+
+    if axis == "both":
+        n_rows_out = _out_len(n_rows)
+        n_cols_out = _out_len(n_cols)
+        padded = np.zeros((n_rows_out, n_cols_out), dtype=signal.dtype)
+        padded[:n_rows, :n_cols] = signal
+    elif axis in (0,):
+        n_rows_out = _out_len(n_rows)
+        padded = np.zeros((n_rows_out, n_cols), dtype=signal.dtype)
+        padded[:n_rows, :] = signal
+    elif axis in (1, -1):
+        n_cols_out = _out_len(n_cols)
+        padded = np.zeros((n_rows, n_cols_out), dtype=signal.dtype)
+        padded[:, :n_cols] = signal
+    else:
+        raise ValueError(
+            f"axis must be 0, 1, -1, or 'both' for 2D signals, got {axis!r}"
+        )
+
+    return padded
+
+
+def _plot_zero_pad(signal: np.ndarray, padded: np.ndarray) -> None:
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+    if signal.ndim == 1:
+        axes[0].plot(signal, "b-", linewidth=1.5)
+        axes[0].set_title(f"Original signal ({len(signal)} points)")
+        axes[0].set_xlabel("Sample")
+
+        axes[1].plot(padded, "g-", linewidth=1.5)
+        axes[1].axvline(
+            len(signal) - 1,
+            color="red",
+            linestyle="--",
+            alpha=0.7,
+            label="Original data end",
+        )
+        axes[1].set_title(f"Zero-padded signal ({len(padded)} points)")
+        axes[1].set_xlabel("Sample")
+        axes[1].legend()
+    else:
+        im0 = axes[0].imshow(signal, aspect="auto", cmap="RdBu_r", origin="lower")
+        axes[0].set_title(f"Original signal {signal.shape}")
+        plt.colorbar(im0, ax=axes[0])
+
+        im1 = axes[1].imshow(padded, aspect="auto", cmap="RdBu_r", origin="lower")
+        axes[1].set_title(f"Zero-padded signal {padded.shape}")
+        plt.colorbar(im1, ax=axes[1])
+
+    for ax in axes:
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+
+    plt.tight_layout()
+    plt.show()

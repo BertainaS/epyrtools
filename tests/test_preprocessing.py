@@ -258,3 +258,133 @@ def test_apodize_plot_2d_no_error():
     signal = np.ones((32, 64))
     apodize(signal, window="hann", axis="both", plot=True)
     plt.close("all")
+
+
+from epyr.signalprocessing.preprocessing import zero_pad  # noqa: E402
+
+# ---------------------------------------------------------------------------
+# zero_pad — 1D
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.smoke
+def test_zero_pad_factor_1d_length():
+    signal = np.ones(128)
+    result = zero_pad(signal, factor=4)
+    assert len(result) == 512
+
+
+@pytest.mark.smoke
+def test_zero_pad_n_points_1d_length():
+    signal = np.ones(128)
+    result = zero_pad(signal, n_points=512)
+    assert len(result) == 512
+
+
+@pytest.mark.smoke
+def test_zero_pad_1d_preserves_original():
+    signal = np.arange(64, dtype=float)
+    result = zero_pad(signal, factor=2)
+    np.testing.assert_array_equal(result[:64], signal)
+
+
+@pytest.mark.smoke
+def test_zero_pad_1d_trailing_zeros():
+    signal = np.ones(64)
+    result = zero_pad(signal, factor=2)
+    np.testing.assert_array_equal(result[64:], np.zeros(64))
+
+
+@pytest.mark.smoke
+def test_zero_pad_both_factor_and_n_points_raises():
+    signal = np.ones(64)
+    with pytest.raises(ValueError, match="exactly one"):
+        zero_pad(signal, factor=2, n_points=256)
+
+
+@pytest.mark.smoke
+def test_zero_pad_neither_factor_nor_n_points_raises():
+    signal = np.ones(64)
+    with pytest.raises(ValueError, match="exactly one"):
+        zero_pad(signal)
+
+
+@pytest.mark.smoke
+def test_zero_pad_n_points_shorter_than_signal_raises():
+    signal = np.ones(128)
+    with pytest.raises(ValueError, match="shorter than signal"):
+        zero_pad(signal, n_points=64)
+
+
+@pytest.mark.smoke
+def test_zero_pad_3d_raises():
+    signal = np.ones((4, 8, 64))
+    with pytest.raises(ValueError, match="1D or 2D"):
+        zero_pad(signal, factor=2)
+
+
+# ---------------------------------------------------------------------------
+# zero_pad — 2D
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.standard
+def test_zero_pad_2d_axis1_shape():
+    signal = np.ones((32, 64))
+    result = zero_pad(signal, factor=2, axis=1)
+    assert result.shape == (32, 128)
+
+
+@pytest.mark.standard
+def test_zero_pad_2d_axis0_shape():
+    signal = np.ones((32, 64))
+    result = zero_pad(signal, factor=2, axis=0)
+    assert result.shape == (64, 64)
+
+
+@pytest.mark.standard
+def test_zero_pad_2d_both_shape():
+    signal = np.ones((32, 64))
+    result = zero_pad(signal, factor=2, axis="both")
+    assert result.shape == (64, 128)
+
+
+@pytest.mark.standard
+def test_zero_pad_2d_both_n_points_shape():
+    signal = np.ones((32, 64))
+    result = zero_pad(signal, n_points=128, axis="both")
+    assert result.shape == (128, 128)
+
+
+@pytest.mark.standard
+def test_zero_pad_2d_preserves_data():
+    signal = np.random.randn(32, 64)
+    result = zero_pad(signal, factor=2, axis=1)
+    np.testing.assert_array_equal(result[:, :64], signal)
+    np.testing.assert_array_equal(result[:, 64:], np.zeros((32, 64)))
+
+
+@pytest.mark.standard
+def test_zero_pad_2d_invalid_axis_raises():
+    signal = np.ones((32, 64))
+    with pytest.raises(ValueError, match="axis must be"):
+        zero_pad(signal, factor=2, axis=3)
+
+
+# ---------------------------------------------------------------------------
+# zero_pad — plot
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.standard
+def test_zero_pad_plot_1d_no_error():
+    signal = np.ones(64)
+    zero_pad(signal, factor=2, plot=True)
+    plt.close("all")
+
+
+@pytest.mark.standard
+def test_zero_pad_plot_2d_no_error():
+    signal = np.ones((32, 64))
+    zero_pad(signal, factor=2, axis="both", plot=True)
+    plt.close("all")
