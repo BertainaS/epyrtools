@@ -21,7 +21,7 @@ Functions demonstrated
 remove_baseline  : polynomial and exponential baseline subtraction
 apodize          : Hann (full and right-half), Hamming, Blackman
 zero_pad         : multiplicative factor and absolute point count
-analyze_frequencies / analyze_frequencies_2d : FFT after manual preprocessing
+analyze_frequencies : FFT after manual 1D preprocessing
 """
 
 from pathlib import Path
@@ -270,18 +270,27 @@ fig4.tight_layout()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Part 5 — 2D HYSCORE: baseline and apodization along both axes
+# Part 5 — 2D HYSCORE: background normalization, apodization, and 2D FFT
 # ═══════════════════════════════════════════════════════════════════════════════
-# HYSCORE: each row is a time trace along t2 with the t1 increment fixed.
-# Polynomial baseline is removed row-wise (axis=1), then column-wise (axis=0)
-# to correct slow drift in both dimensions.  A 2D Hann window (outer product)
-# suppresses edge artifacts before the 2D FFT.
+# HYSCORE echo height is always negative (phase convention) and decays along
+# both t1 and t2 following T_2.  The nuclear modulations are oscillations ON
+# TOP of this large negative background.  Polynomial subtraction on such data
+# diverges; the correct procedure is:
+#   (1) divide each t1-slice (row) by its mean absolute value to isolate the
+#       fractional modulation depth;
+#   (2) subtract the residual row mean (DC along t2);
+#   (3) subtract the residual column mean (DC along t1).
+# After this normalization, apodize(axis='both') and zero_pad(axis='both')
+# work exactly as in the 1D case.
 
 print("Part 5 — 2D HYSCORE pipeline ...")
 
-# Baseline removal along t2 (rows), then along t1 (columns)
-sig2d_bl, _ = remove_baseline(t2_ns, sig2d, method="polynomial", order=2, axis=1)
-sig2d_bl, _ = remove_baseline(t1_ns, sig2d_bl, method="polynomial", order=2, axis=0)
+# Background normalization: isolate fractional nuclear modulation
+row_bg = np.abs(sig2d.mean(axis=1, keepdims=True))  # t1-dependent background
+sig2d_mod = sig2d / row_bg  # dimensionless modulation (values near ±1)
+sig2d_mod -= sig2d_mod.mean(axis=1, keepdims=True)  # remove DC along t2
+sig2d_mod -= sig2d_mod.mean(axis=0, keepdims=True)  # remove DC along t1
+sig2d_bl = sig2d_mod
 
 # 2D Hann apodization
 sig2d_apo = apodize(sig2d_bl, window="hann", axis="both")
