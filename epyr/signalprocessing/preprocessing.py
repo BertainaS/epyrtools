@@ -5,7 +5,7 @@ Standalone, chainable functions for ESEEM, HYSCORE, and Rabi pipelines:
 remove_baseline, apodize, zero_pad.
 """
 
-from typing import Optional, Tuple, Union
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,11 +19,6 @@ except ImportError:
     def get_logger(name):
         return logging.getLogger(name)
 
-
-try:
-    from .apowin import apowin
-except ImportError:
-    from apowin import apowin
 
 logger = get_logger(__name__)
 
@@ -88,6 +83,8 @@ def remove_baseline(
     """
     time = np.asarray(time, dtype=float)
     signal = np.asarray(signal, dtype=float)
+
+    logger.info(f"remove_baseline: {method}, signal shape {signal.shape}")
 
     if signal.ndim == 1:
         corrected, baseline = _remove_baseline_1d(
@@ -163,8 +160,8 @@ def _remove_baseline_2d(
     end_fraction: float,
     axis: int,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    corrected = np.zeros_like(signal)
-    baseline = np.zeros_like(signal)
+    corrected = np.zeros_like(signal, dtype=float)
+    baseline = np.zeros_like(signal, dtype=float)
 
     if axis == 1:
         for i in range(signal.shape[0]):
