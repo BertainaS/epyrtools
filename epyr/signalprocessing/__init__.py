@@ -104,6 +104,13 @@ from .frequency_analysis import (
     spectrogram_analysis,
 )
 
+# Import preprocessing utilities
+from .preprocessing import (
+    apodize,
+    remove_baseline,
+    zero_pad,
+)
+
 __all__ = [
     # Apodization windows
     "apowin",
@@ -115,6 +122,10 @@ __all__ = [
     "analyze_frequencies_2d",  # 2D FFT analysis (row-by-row or full 2D)
     "power_spectrum",  # Power spectral density
     "spectrogram_analysis",  # Time-frequency analysis
+    # Preprocessing (standalone chainable functions)
+    "remove_baseline",
+    "apodize",
+    "zero_pad",
 ]
 
 __version__ = "0.3.9"
