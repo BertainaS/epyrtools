@@ -468,7 +468,12 @@ def _zero_pad_2d(
     n_rows, n_cols = signal.shape
 
     def _out_len(n: int) -> int:
-        return (factor * n) if factor is not None else n_points
+        result = (factor * n) if factor is not None else n_points
+        if result < n:
+            raise ValueError(
+                f"Target length {result} is shorter than signal length {n}."
+            )
+        return result
 
     if axis == "both":
         n_rows_out = _out_len(n_rows)

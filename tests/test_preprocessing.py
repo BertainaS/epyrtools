@@ -388,3 +388,10 @@ def test_zero_pad_plot_2d_no_error():
     signal = np.ones((32, 64))
     zero_pad(signal, factor=2, axis="both", plot=True)
     plt.close("all")
+
+
+@pytest.mark.smoke
+def test_zero_pad_2d_n_points_shorter_than_axis_raises():
+    signal = np.ones((32, 64))
+    with pytest.raises(ValueError, match="shorter than signal"):
+        zero_pad(signal, n_points=16, axis=1)
