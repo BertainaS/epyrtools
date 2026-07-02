@@ -395,3 +395,53 @@ def test_zero_pad_2d_n_points_shorter_than_axis_raises():
     signal = np.ones((32, 64))
     with pytest.raises(ValueError, match="shorter than signal"):
         zero_pad(signal, n_points=16, axis=1)
+
+
+from epyr.signalprocessing import analyze_frequencies  # noqa: E402
+from epyr.signalprocessing import apodize as ap
+from epyr.signalprocessing import remove_baseline as rb  # noqa: E402
+from epyr.signalprocessing import zero_pad as zp
+
+# ---------------------------------------------------------------------------
+# Deep: full ESEEM preprocessing chain
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.deep
+def test_chain_eseem_pipeline():
+    """Verify the full preprocessing chain produces a valid FFT result."""
+    rng = np.random.default_rng(42)
+    time = np.linspace(0, 500, 256)  # 500 ns, ns units
+    rabi_freq = 8.5  # MHz
+    decay = 1.5 * np.exp(-time / 200)
+    oscillation = 0.3 * np.sin(2 * np.pi * rabi_freq * time * 1e-3)
+    signal = oscillation + decay + 0.02 * rng.standard_normal(256)
+
+    # Step 1: remove exponential baseline
+    corrected, baseline = rb(time, signal, method="exponential")
+    assert corrected.shape == (256,)
+    assert baseline.shape == (256,)
+    # Baseline should track the slow decay
+    assert np.mean(np.abs(baseline - decay)) < 0.2
+
+    # Step 2: apodize with right half-Hann
+    windowed = ap(corrected, window="hann", half_window="right")
+    assert windowed.shape == (256,)
+    # Right half-Hann: window is 1.0 at start (first sample unchanged),
+    # exactly 0.0 at end (last sample zeroed), regardless of signal sign.
+    assert windowed[0] == pytest.approx(corrected[0])
+    assert windowed[-1] == 0.0
+
+    # Step 3: zero-pad x4
+    padded = zp(windowed, factor=4)
+    assert len(padded) == 1024
+    np.testing.assert_array_equal(padded[256:], np.zeros(768))
+
+    # Step 4: FFT — skip window and DC removal since already done
+    result = analyze_frequencies(
+        time, padded[:256], window=None, remove_dc=False, plot=False
+    )
+    # Dominant frequency should be near rabi_freq
+    assert len(result["dominant_frequencies"]) > 0
+    detected = result["dominant_frequencies"][0]
+    assert abs(detected - rabi_freq) < 1.0  # within 1 MHz
