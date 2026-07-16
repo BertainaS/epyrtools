@@ -2,6 +2,7 @@
 Tests for EPyR Tools performance optimization module.
 """
 
+import importlib
 import os
 import tempfile
 from pathlib import Path
@@ -17,6 +18,10 @@ from epyr.performance import (
     get_performance_info,
     optimize_numpy_operations,
 )
+
+# epyr/__init__.py rebinds the name "eprload" to the function, so the
+# submodule must be resolved through importlib to patch its attributes
+eprload_module = importlib.import_module("epyr.eprload")
 
 
 class TestMemoryMonitor:
@@ -50,22 +55,24 @@ class TestMemoryMonitor:
                 assert memory_info["vms_mb"] == 0
                 assert memory_info["percent"] == 0
 
+    @patch("epyr.performance.config.get", return_value=500)
     @patch("epyr.performance.MemoryMonitor.get_memory_info")
-    def test_check_memory_limit_ok(self, mock_get_memory):
+    def test_check_memory_limit_ok(self, mock_get_memory, mock_config_get):
         """Test memory limit check when within limits."""
         mock_get_memory.return_value = {"rss_mb": 100}  # 100 MB
 
-        # Default limit is 500 MB
+        # Limit pinned to 500 MB, independent of the user's config file
         result = MemoryMonitor.check_memory_limit()
 
         assert result is True
 
+    @patch("epyr.performance.config.get", return_value=500)
     @patch("epyr.performance.MemoryMonitor.get_memory_info")
-    def test_check_memory_limit_exceeded(self, mock_get_memory):
+    def test_check_memory_limit_exceeded(self, mock_get_memory, mock_config_get):
         """Test memory limit check when limit exceeded."""
         mock_get_memory.return_value = {"rss_mb": 600}  # 600 MB
 
-        # Default limit is 500 MB
+        # Limit pinned to 500 MB, independent of the user's config file
         result = MemoryMonitor.check_memory_limit()
 
         assert result is False
@@ -322,7 +329,7 @@ class TestOptimizedLoader:
         finally:
             config.set("performance.chunk_size_mb", original_chunk)
 
-    @patch("epyr.performance.eprload")
+    @patch.object(eprload_module, "eprload")
     @patch("epyr.performance.MemoryMonitor.check_memory_limit")
     def test_load_epr_file_success(self, mock_memory_check, mock_eprload):
         """Test successful EPR file loading."""
@@ -351,7 +358,7 @@ class TestOptimizedLoader:
         finally:
             test_file.unlink()
 
-    @patch("epyr.performance.eprload")
+    @patch.object(eprload_module, "eprload")
     def test_load_epr_file_with_cache(self, mock_eprload):
         """Test EPR file loading with cache."""
         test_data = (
@@ -384,7 +391,7 @@ class TestOptimizedLoader:
         finally:
             test_file.unlink()
 
-    @patch("epyr.performance.eprload")
+    @patch.object(eprload_module, "eprload")
     @patch("epyr.performance.MemoryMonitor.check_memory_limit")
     @patch("epyr.performance.MemoryMonitor.optimize_memory")
     def test_load_epr_file_memory_optimization(
@@ -415,7 +422,7 @@ class TestOptimizedLoader:
         finally:
             test_file.unlink()
 
-    @patch("epyr.performance.eprload")
+    @patch.object(eprload_module, "eprload")
     def test_load_epr_file_error_handling(self, mock_eprload):
         """Test error handling during file loading."""
         mock_eprload.side_effect = Exception("Loading failed")
@@ -465,7 +472,8 @@ class TestOptimizedLoader:
 
         with tempfile.NamedTemporaryFile(delete=False) as f:
             test_file = Path(f.name)
-            f.write(b"large file content that exceeds chunk size")
+            # 2048 bytes = 0.002 MB, above the 0.001 MB chunk threshold
+            f.write(b"x" * 2048)
 
         try:
             # Should issue warning and fall back to non-chunked processing
@@ -517,8 +525,8 @@ class TestPerformanceUtilities:
         try:
             config.set("performance.parallel_processing", True)
 
-            # Mock MKL import failure
-            with patch.dict("sys.modules", {"mkl": None}):
+            # Simulate MKL being unavailable
+            with patch("epyr.performance.mkl", None):
                 optimize_numpy_operations()
 
             # Should set environment variable

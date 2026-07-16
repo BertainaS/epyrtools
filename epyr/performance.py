@@ -32,6 +32,18 @@ import numpy as np
 from .config import config
 from .logging_config import get_logger
 
+# Optional dependencies, resolved once at import so their absence is
+# handled uniformly (and so tests can patch them as module attributes)
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
+try:
+    import mkl
+except ImportError:
+    mkl = None
+
 logger = get_logger(__name__)
 
 
@@ -45,21 +57,19 @@ class MemoryMonitor:
         Returns:
             Dict with memory info in MB: {rss, vms, percent}
         """
-        try:
-            import psutil
-
-            process = psutil.Process()
-            memory_info = process.memory_info()
-            memory_percent = process.memory_percent()
-
-            return {
-                "rss_mb": memory_info.rss / (1024 * 1024),  # Resident Set Size
-                "vms_mb": memory_info.vms / (1024 * 1024),  # Virtual Memory Size
-                "percent": memory_percent,
-            }
-        except ImportError:
+        if psutil is None:
             logger.warning("psutil not available for memory monitoring")
             return {"rss_mb": 0, "vms_mb": 0, "percent": 0}
+
+        process = psutil.Process()
+        memory_info = process.memory_info()
+        memory_percent = process.memory_percent()
+
+        return {
+            "rss_mb": memory_info.rss / (1024 * 1024),  # Resident Set Size
+            "vms_mb": memory_info.vms / (1024 * 1024),  # Virtual Memory Size
+            "percent": memory_percent,
+        }
 
     @staticmethod
     def check_memory_limit() -> bool:
@@ -284,15 +294,11 @@ def optimize_numpy_operations():
     """Configure NumPy for optimal performance."""
     # Set optimal number of threads for NumPy operations
     if config.get("performance.parallel_processing", True):
-        try:
-            import mkl
-
+        if mkl is not None:
             # Use half of available cores to avoid oversubscription
             n_cores = max(1, os.cpu_count() // 2)
             mkl.set_num_threads(n_cores)
             logger.debug(f"Set MKL threads to {n_cores}")
-        except ImportError:
-            pass
 
         # Set OpenMP threads for NumPy
         os.environ["OMP_NUM_THREADS"] = str(max(1, os.cpu_count() // 2))
