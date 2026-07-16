@@ -48,7 +48,8 @@ class TestGaussian:
 
     def test_gaussian_derivatives(self):
         """Test Gaussian derivatives"""
-        x = np.linspace(-10, 10, 1000)
+        # Odd point count places a sample exactly at the center x=0
+        x = np.linspace(-10, 10, 1001)
 
         # First derivative should have zero at center
         dy = gaussian(x, 0, 4, derivative=1)
@@ -102,9 +103,16 @@ class TestLorentzian:
         # Check peak position (allow ±1 point tolerance for numerical differences)
         assert abs(np.argmax(y) - 500) <= 1  # Center at x=0
 
-        # Check normalization
-        area = np.trapz(y, x)
-        assert abs(area - 1.0) < 0.01
+        # Check normalization: Lorentzian tails are heavy, so the truncated
+        # integral over +/-R only captures (2/pi)*arctan(2R/width) of the area.
+        # Integrate to infinity instead of over the plotting grid.
+        area = (
+            2
+            * integrate.quad(
+                lambda t: float(lorentzian(np.array([t]), 0, 4)[0]), 0, np.inf
+            )[0]
+        )
+        assert abs(area - 1.0) < 0.001
 
         # Check FWHM
         half_max = np.max(y) / 2
@@ -114,7 +122,8 @@ class TestLorentzian:
 
     def test_lorentzian_derivatives(self):
         """Test Lorentzian derivatives"""
-        x = np.linspace(-20, 20, 1000)
+        # Odd point count places a sample exactly at the center x=0
+        x = np.linspace(-20, 20, 1001)
 
         # First derivative should have zero at center
         dy = lorentzian(x, 0, 4, derivative=1)
@@ -207,7 +216,7 @@ class TestLineshapeClass:
 
         # Lorentzian
         lorentz = Lineshape("lorentzian", width=3.0, derivative=1)
-        assert lorentz.derivative == 1
+        assert lorentz.derivative_order == 1
 
     def test_lineshape_call(self):
         """Test Lineshape __call__ method"""
@@ -245,8 +254,8 @@ class TestLineshapeClass:
 
         # Test derivative modification
         gauss_deriv = gauss.set_derivative(1)
-        assert gauss_deriv.derivative == 1
-        assert gauss.derivative == 0  # Original unchanged
+        assert gauss_deriv.derivative_order == 1
+        assert gauss.derivative_order == 0  # Original unchanged
 
     def test_lineshape_info(self):
         """Test Lineshape info method"""
@@ -288,24 +297,24 @@ class TestFactoryFunctions:
 class TestConvspec:
     """Test convolution functions"""
 
+    def test_convspec_basic(self):
+        """Test basic convolution functionality"""
+        # Create delta function of unit area (height 1/step): convolution
+        # preserves the area of the input spectrum
+        x = np.linspace(-10, 10, 1000)
+        step = x[1] - x[0]
+        spectrum = np.zeros_like(x)
+        spectrum[500] = 1.0 / step
 
-def test_convspec_basic(self):
-    """Test basic convolution functionality"""
-    # Create delta function
-    x = np.linspace(-10, 10, 1000)
-    spectrum = np.zeros_like(x)
-    spectrum[500] = 1.0  # Delta at center
+        # Convolve with Gaussian
+        broadened = convspec(spectrum, step, width=2.0, alpha=1.0)
 
-    # Convolve with Gaussian
-    step = x[1] - x[0]
-    broadened = convspec(spectrum, step, width=2.0, alpha=1.0)
+        # Result should be Gaussian-like
+        assert np.argmax(broadened) == 500  # Peak at center
 
-    # Result should be Gaussian-like
-    assert np.argmax(broadened) == 500  # Peak at center
-
-    # Should be normalized
-    area = np.trapz(broadened, x)
-    assert abs(area - 1.0) < 0.1
+        # Should be normalized
+        area = np.trapz(broadened, x)
+        assert abs(area - 1.0) < 0.1
 
 
 class TestInputValidation:
@@ -348,19 +357,18 @@ class TestNumericalAccuracy:
 
     def test_normalization_accuracy(self):
         """Test that all lineshapes are properly normalized"""
-        x = np.linspace(-50, 50, 2000)  # Wide range, high resolution
-
-        # Test various widths
+        # A single fixed grid cannot resolve both narrow peaks (width=0.1)
+        # and heavy Lorentzian tails (width=20). Integrate each profile to
+        # infinity with adaptive quadrature instead.
         for width in [0.1, 1.0, 5.0, 20.0]:
-            # Gaussian
-            y_gauss = gaussian(x, 0, width)
-            area_gauss = np.trapz(y_gauss, x)
-            assert abs(area_gauss - 1.0) < 0.001, f"Gaussian width={width}"
-
-            # Lorentzian
-            y_lorentz = lorentzian(x, 0, width)
-            area_lorentz = np.trapz(y_lorentz, x)
-            assert abs(area_lorentz - 1.0) < 0.001, f"Lorentzian width={width}"
+            for func, name in [(gaussian, "Gaussian"), (lorentzian, "Lorentzian")]:
+                area = (
+                    2
+                    * integrate.quad(
+                        lambda t: float(func(np.array([t]), 0, width)[0]), 0, np.inf
+                    )[0]
+                )
+                assert abs(area - 1.0) < 0.001, f"{name} width={width}"
 
     def test_symmetry_properties(self):
         """Test symmetry properties of lineshapes"""

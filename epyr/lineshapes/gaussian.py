@@ -55,6 +55,8 @@ def gaussian(x, center, width, derivative=0, phase=0.0, return_both=False):
     """
 
     x = np.asarray(x, dtype=float)
+    if x.size == 0:
+        raise ValueError("x must contain at least one point")
 
     # Input validation
     _validate_gaussian_inputs(center, width, derivative, phase)

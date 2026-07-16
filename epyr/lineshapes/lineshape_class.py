@@ -78,17 +78,49 @@ class Lineshape:
         phase: float = 0.0,
         normalize: bool = True,
     ):
+        """
+        Initialize a lineshape with fixed parameters.
 
+        Parameters
+        ----------
+        shape_type : str
+            One of 'gaussian', 'lorentzian', 'voigt', 'pseudo_voigt', 'general'.
+        width : float or tuple of two floats
+            Full width at half maximum (FWHM), in the same unit as the
+            abscissa. Voigt profiles require a
+            (gaussian_width, lorentzian_width) tuple.
+        alpha : float
+            Mixing parameter for pseudo-Voigt (1 = Gaussian, 0 = Lorentzian).
+        derivative : int
+            Derivative order: 0 (absorption), 1, 2, or -1 (integral).
+        phase : float
+            Phase rotation in radians (0 = absorption, pi/2 = dispersion).
+        normalize : bool
+            Maintain unit area normalization.
+
+        Raises
+        ------
+        ValueError
+            If shape_type is unknown, or if a Voigt width is not a
+            (gaussian_width, lorentzian_width) pair.
+        """
         # Validate inputs
         if shape_type not in self.SUPPORTED_SHAPES:
             raise ValueError(
                 f"shape_type must be one of {list(self.SUPPORTED_SHAPES.keys())}"
             )
 
+        if shape_type == "voigt":
+            if not (isinstance(width, (tuple, list)) and len(width) == 2):
+                raise ValueError(
+                    "Voigt lineshapes require width=(gaussian_width,"
+                    f" lorentzian_width), got {width!r}"
+                )
+
         self.shape_type = shape_type
         self.width = width
         self.alpha = alpha
-        self.derivative = derivative
+        self.derivative_order = derivative
         self.phase = phase
         self.normalize = normalize
 
@@ -187,7 +219,11 @@ class Lineshape:
             # Functions that support return_both parameter
             if self.shape_type in ["gaussian", "lorentzian", "voigt"]:
                 return self._func(
-                    x, center, self.width, derivative=self.derivative, return_both=True
+                    x,
+                    center,
+                    self.width,
+                    derivative=self.derivative_order,
+                    return_both=True,
                 )
 
         # Fallback: compute separately
@@ -201,7 +237,7 @@ class Lineshape:
             self.shape_type,
             width,
             self.alpha,
-            self.derivative,
+            self.derivative_order,
             self.phase,
             self.normalize,
         )
@@ -212,7 +248,7 @@ class Lineshape:
             self.shape_type,
             self.width,
             alpha,
-            self.derivative,
+            self.derivative_order,
             self.phase,
             self.normalize,
         )
@@ -234,7 +270,7 @@ class Lineshape:
             self.shape_type,
             self.width,
             self.alpha,
-            self.derivative,
+            self.derivative_order,
             phase,
             self.normalize,
         )
@@ -245,7 +281,7 @@ class Lineshape:
             "shape_type": self.shape_type,
             "width": self.width,
             "alpha": self.alpha,
-            "derivative": self.derivative,
+            "derivative": self.derivative_order,
             "phase": self.phase,
             "phase_degrees": np.degrees(self.phase),
             "normalize": self.normalize,
@@ -263,7 +299,9 @@ class Lineshape:
     def __str__(self) -> str:
         """Human-readable string"""
         phase_desc = "absorption" if self.phase == 0 else f"phase={self.phase:.3f}"
-        deriv_desc = "" if self.derivative == 0 else f", d^{self.derivative}"
+        deriv_desc = (
+            "" if self.derivative_order == 0 else f", d^{self.derivative_order}"
+        )
         return (
             f"{self.shape_type.title()} lineshape"
             f" (w={self.width}, {phase_desc}{deriv_desc})"
