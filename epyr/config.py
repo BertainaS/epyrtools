@@ -129,11 +129,18 @@ class EPyRConfig:
                 logger.warning(f"Failed to load config from {self._config_file}: {e}")
 
     def _load_from_environment(self) -> None:
-        """Load configuration from environment variables."""
-        # Environment variables with EPYR_ prefix override config
+        """Load configuration from environment variables.
+
+        Variables follow the convention EPYR_<SECTION>_<KEY>: the first
+        underscore after the prefix separates the section from the key,
+        so EPYR_PERFORMANCE_CACHE_ENABLED maps to
+        performance.cache_enabled. Values are parsed as JSON when
+        possible (numbers, booleans, objects) and kept as strings
+        otherwise.
+        """
         for key, value in os.environ.items():
             if key.startswith("EPYR_"):
-                config_key = key[5:].lower().replace("_", ".")
+                config_key = key[5:].lower().replace("_", ".", 1)
                 try:
                     # Try to parse as JSON first (for complex values)
                     parsed_value = json.loads(value)

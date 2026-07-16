@@ -20,6 +20,17 @@ from epyr.config import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _isolated_config_file(tmp_path, monkeypatch):
+    """Point EPyRConfig at a per-test path so the user's real
+    ~/.config/EPyRTools/config.json cannot leak into assertions."""
+    monkeypatch.setattr(
+        EPyRConfig,
+        "_get_config_file_path",
+        lambda self: tmp_path / "EPyRTools" / "config.json",
+    )
+
+
 class TestEPyRConfig:
     """Test EPyRConfig class functionality."""
 
@@ -190,11 +201,10 @@ class TestEPyRConfig:
         ):
             test_config = EPyRConfig()
 
-            # Check environment variables were loaded
-            assert test_config.get("plotting.dpi") == "150"  # String from env
-            assert (
-                test_config.get("performance.cache_enabled") == "false"
-            )  # String from env
+            # Environment values are parsed as JSON, so numbers and
+            # booleans arrive with their native types
+            assert test_config.get("plotting.dpi") == 150
+            assert test_config.get("performance.cache_enabled") is False
             assert test_config.get("custom.key") == {"nested": "value"}  # JSON parsed
 
     def test_config_file_error_handling(self):
