@@ -72,7 +72,7 @@ class TestEPRLoad:
         test_file = Path(str(temp_data_files["test.dta"])).parent / "data.txt"
         test_file.write_text("dummy content")
 
-        with pytest.raises(ValueError, match="Unsupported file extension"):
+        with pytest.raises(ValueError, match="recognized EPR extension"):
             eprload(str(test_file), plot_if_possible=False)
 
     def test_eprload_with_mock_bruker_files(self, mock_bruker_files):

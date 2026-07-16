@@ -348,12 +348,11 @@ def eprload(
         file_path = file_name
 
     # --- Determine File Format and Validate ---
-    try:
-        file_path, file_format = _determine_file_format(file_path)
-        _validate_scaling(scaling)
-    except (ValueError, FileNotFoundError) as e:
-        logger.error(str(e))
-        return None, None, None, None
+    # Usage errors (missing file, unsupported extension, invalid scaling)
+    # propagate to the caller, per the documented contract. Only errors
+    # while reading an existing, recognized file return the None tuple.
+    file_path, file_format = _determine_file_format(file_path)
+    _validate_scaling(scaling)
 
     # --- Load Data ---
     loaded_file_path = str(file_path.resolve())
