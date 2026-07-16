@@ -336,12 +336,12 @@ class TestLineshapesComprehensive:
             assert len(result) == len(B)
             assert np.all(np.isfinite(result))
 
-        # Test convspec function
-        # Create a simple spectrum to convolve
+        # Test convspec function: convolve a spectrum with a Gaussian of
+        # width 1 (convspec builds the broadening kernel internally)
         original_spectrum = gaussian(B, center=0, width=3)
-        broadening_function = gaussian(B, center=0, width=1)
+        step = B[1] - B[0]
 
-        convolved = convspec(original_spectrum, broadening_function)
+        convolved = convspec(original_spectrum, step, width=1.0)
         assert len(convolved) == len(original_spectrum)
         assert np.all(np.isfinite(convolved))
 
@@ -354,7 +354,7 @@ class TestLineshapesComprehensive:
             ("gaussian", {"width": 5.0}),
             ("lorentzian", {"width": 5.0}),
             ("pseudo_voigt", {"width": 5.0, "alpha": 0.5}),
-            ("voigt", {"width": 5.0, "sigma": 3.0, "gamma": 3.0}),
+            ("voigt", {"width": (3.0, 3.0)}),
         ]
 
         for shape_type, params in test_cases:
@@ -451,17 +451,18 @@ class TestErrorHandling:
 
         # Test invalid polynomial orders
         with pytest.raises((ValueError, TypeError)):
-            baseline.baseline_polynomial(y, x_data=x, poly_order=-1)
+            baseline.baseline_polynomial_1d(x, y, order=-1)
 
-        # Test mismatched array sizes
-        with pytest.raises((ValueError, IndexError)):
-            baseline.baseline_polynomial(y, x_data=x[:-10], poly_order=1)
+        # Mismatched array sizes fall back to index coordinates
+        # (documented behavior of baseline_polynomial_1d)
+        corrected, base = baseline.baseline_polynomial_1d(x[:-10], y, order=1)
+        assert corrected.shape == y.shape
 
-        # Test insufficient data points
+        # Insufficient data points degrade gracefully with a warning
         tiny_y = np.array([1.0, 2.0])
         tiny_x = np.array([0.0, 1.0])
-        with pytest.raises((ValueError, np.linalg.LinAlgError)):
-            baseline.baseline_polynomial(tiny_y, x_data=tiny_x, poly_order=5)
+        with pytest.warns(UserWarning):
+            baseline.baseline_polynomial_1d(tiny_x, tiny_y, order=5)
 
 
 class TestNumericalAccuracy:
@@ -480,7 +481,10 @@ class TestNumericalAccuracy:
 
     def test_edge_case_parameters(self):
         """Test lineshapes with edge case parameters."""
-        B = np.linspace(-20, 20, 1000)
+        # Odd point count places a sample exactly at the peak center;
+        # a width of 1e-6 is far below the grid step, so the peak is only
+        # visible if x=0 is sampled
+        B = np.linspace(-20, 20, 1001)
 
         # Very small widths
         result = gaussian(B, center=0, width=1e-6)

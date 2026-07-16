@@ -1,6 +1,12 @@
-"""Tests for plot module (specialized EPR plotting functionality)."""
+"""Tests for plot module (specialized EPR plotting functionality).
 
-from unittest.mock import MagicMock, patch
+plot_2d_map follows the eprload data convention: the first argument is
+the axis data (a list of two 1D arrays for 2D datasets), the second is
+the 2D signal array of shape (ny, nx), and the third is the params dict
+used for axis labels and units.
+"""
+
+from unittest.mock import patch
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,7 +34,7 @@ class TestEPRPlotting:
         x_axis, y_axis, z_data = sample_2d_data
 
         # Test basic 2D plot
-        fig, ax = plot_2d_map(x_axis, y_axis, z_data)
+        fig, ax = plot_2d_map([x_axis, y_axis], z_data)
 
         # Check that figure and axis were created
         assert fig is not None
@@ -43,15 +49,16 @@ class TestEPRPlotting:
 
     @patch("matplotlib.pyplot.show")
     def test_plot_2d_map_with_units(self, mock_show, sample_2d_data):
-        """Test 2D mapping with custom units and labels."""
+        """Test 2D mapping with axis names and units from params."""
         x_axis, y_axis, z_data = sample_2d_data
 
-        # Test with custom units - check if function supports these parameters
-        try:
-            fig, ax = plot_2d_map(x_axis, y_axis, z_data, x_unit="mT", y_unit="GHz")
-        except TypeError:
-            # Function may not support these parameters
-            fig, ax = plot_2d_map(x_axis, y_axis, z_data)
+        params = {
+            "XAXIS_NAME": "Magnetic Field",
+            "XAXIS_UNIT": "mT",
+            "YAXIS_NAME": "Frequency",
+            "YAXIS_UNIT": "GHz",
+        }
+        fig, ax = plot_2d_map([x_axis, y_axis], z_data, params)
 
         # Check labels include units
         xlabel = ax.get_xlabel()
@@ -71,7 +78,7 @@ class TestEPRPlotting:
 
         for cmap in colormaps:
             try:
-                fig, ax = plot_2d_map(x_axis, y_axis, z_data)
+                fig, ax = plot_2d_map([x_axis, y_axis], z_data, cmap=cmap)
 
                 # Check that colorbar was created
                 assert len(fig.axes) >= 2  # Main plot + colorbar
@@ -83,18 +90,13 @@ class TestEPRPlotting:
 
     @patch("matplotlib.pyplot.show")
     def test_plot_2d_map_complex_data(self, mock_show, sample_2d_data):
-        """Test 2D mapping with complex data."""
+        """Test 2D mapping with complex data (real part is plotted)."""
         x_axis, y_axis, z_real = sample_2d_data
 
         # Create complex data
         z_complex = z_real + 1j * z_real * 0.5
 
-        # Complex data test - function may not support it
-        try:
-            fig, ax = plot_2d_map(x_axis, y_axis, z_complex)
-        except (TypeError, ValueError):
-            # Function may not handle complex data, use real part
-            fig, ax = plot_2d_map(x_axis, y_axis, z_real)
+        fig, ax = plot_2d_map([x_axis, y_axis], z_complex)
 
         assert fig is not None
         assert ax is not None
@@ -109,17 +111,18 @@ class TestEPRPlotting:
         z_data = np.random.random((5, 10))  # Correct shape (ny, nx)
 
         # Test correct input
-        fig, ax = plot_2d_map(x_axis, y_axis, z_data)
+        fig, ax = plot_2d_map([x_axis, y_axis], z_data)
         plt.close(fig)
 
-        # Test mismatched dimensions - may not be implemented
-        try:
-            z_wrong = np.random.random((3, 8))  # Wrong shape
-            with pytest.raises((ValueError, IndexError)):
-                plot_2d_map(x_axis, y_axis, z_wrong)
-        except TypeError:
-            # Function signature may be different
-            pass
+        # 1D data is rejected
+        with pytest.raises(ValueError, match="Expected 2D data"):
+            plot_2d_map([x_axis, y_axis], np.random.random(10))
+
+        # Mismatched axis lengths fall back to index coordinates
+        z_other = np.random.random((3, 8))
+        fig, ax = plot_2d_map([x_axis, y_axis], z_other)
+        assert "Index" in ax.get_xlabel()
+        plt.close(fig)
 
     def test_plot_module_integration(self, sample_2d_data):
         """Test integration of eprplot module with plotting functions."""
@@ -127,7 +130,7 @@ class TestEPRPlotting:
 
         with patch("matplotlib.pyplot.show"):
             # Test that plotting works
-            fig, ax = plot_2d_map(x_axis, y_axis, z_data)
+            fig, ax = plot_2d_map([x_axis, y_axis], z_data)
 
             # Check figure properties
             figsize = fig.get_size_inches()
@@ -143,7 +146,7 @@ class TestEPRPlotting:
         y_small = np.array([1, 2])
         z_small = np.array([[1, 2], [3, 4]])
 
-        fig, ax = plot_2d_map(x_small, y_small, z_small)
+        fig, ax = plot_2d_map([x_small, y_small], z_small)
         assert fig is not None
         plt.close(fig)
 
@@ -153,26 +156,22 @@ class TestEPRPlotting:
         z_single = np.array([[1]])
 
         try:
-            fig, ax = plot_2d_map(x_single, y_single, z_single)
+            fig, ax = plot_2d_map([x_single, y_single], z_single)
             plt.close(fig)
         except (ValueError, IndexError, TypeError):
-            # Expected for degenerate cases or unsupported parameters
+            # Expected for degenerate cases
             pass
 
     @patch("matplotlib.pyplot.show")
     def test_plot_styling_options(self, mock_show, sample_2d_data):
-        """Test various styling options for plots."""
+        """Test title and color scale options."""
         x_axis, y_axis, z_data = sample_2d_data
 
-        # Test with different styling parameters - basic version
-        try:
-            fig, ax = plot_2d_map(x_axis, y_axis, z_data)
-        except Exception:
-            pytest.skip("Styling parameters not supported")
+        fig, ax = plot_2d_map(
+            [x_axis, y_axis], z_data, title="Test map", vmin=0, vmax=10
+        )
 
-        # Check that a title was set (may be default title)
-        title = ax.get_title()
-        assert title != ""  # Should have some title
+        assert ax.get_title() == "Test map"
 
         plt.close(fig)
 
@@ -181,7 +180,7 @@ class TestEPRPlotting:
         x_axis, y_axis, z_data = sample_2d_data
 
         with patch("matplotlib.pyplot.show"):
-            result = plot_2d_map(x_axis, y_axis, z_data)
+            result = plot_2d_map([x_axis, y_axis], z_data)
 
             # Should return figure and axis objects
             assert len(result) == 2
@@ -205,7 +204,7 @@ class TestEPRPlotting:
             tmp_path = Path(tmp.name)
 
         try:
-            fig, ax = plot_2d_map(x_axis, y_axis, z_data)
+            fig, ax = plot_2d_map([x_axis, y_axis], z_data)
 
             # Test saving
             fig.savefig(tmp_path, dpi=150, bbox_inches="tight")
@@ -246,13 +245,9 @@ class TestPlotUtilities:
         z_with_nan[0, 0] = np.nan
 
         with patch("matplotlib.pyplot.show"):
-            # Should handle NaN gracefully
-            try:
-                fig, ax = plot_2d_map(x_axis, y_axis, z_with_nan)
-                plt.close(fig)
-            except (ValueError, RuntimeError, TypeError):
-                # Some plotting functions may not handle NaN
-                pass
+            # pcolormesh masks NaN cells, so this must not raise
+            fig, ax = plot_2d_map([x_axis, y_axis], z_with_nan)
+            plt.close(fig)
 
     def test_axis_range_calculation(self):
         """Test automatic axis range calculation."""
@@ -267,20 +262,16 @@ class TestPlotUtilities:
             z_test = np.random.random((len(y_range), len(x_range)))
 
             with patch("matplotlib.pyplot.show"):
-                try:
-                    fig, ax = plot_2d_map(x_range, y_range, z_test)
+                fig, ax = plot_2d_map([x_range, y_range], z_test)
 
-                    # Check that axis limits are reasonable
-                    xlim = ax.get_xlim()
-                    ylim = ax.get_ylim()
+                # Axis limits must cover the data range (pcolormesh
+                # extends half a cell beyond the outermost points)
+                xlim = ax.get_xlim()
+                ylim = ax.get_ylim()
 
-                    assert xlim[0] <= x_range.min() <= xlim[1]
-                    assert xlim[0] <= x_range.max() <= xlim[1]
-                    assert ylim[0] <= y_range.min() <= ylim[1]
-                    assert ylim[0] <= y_range.max() <= ylim[1]
+                assert xlim[0] <= x_range.min() <= xlim[1]
+                assert xlim[0] <= x_range.max() <= xlim[1]
+                assert ylim[0] <= y_range.min() <= ylim[1]
+                assert ylim[0] <= y_range.max() <= ylim[1]
 
-                    plt.close(fig)
-
-                except Exception:
-                    # Skip if plotting fails for extreme ranges
-                    pass
+                plt.close(fig)

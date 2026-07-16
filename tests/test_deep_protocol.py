@@ -73,35 +73,27 @@ class TestProtocol:
     def validate_numerical_stability(
         func, inputs: List[Tuple], tolerance: float = DEFAULT_TOLERANCE
     ):
-        """Test numerical stability with repeated executions."""
-        results = []
-        for _ in range(5):  # Run 5 times
-            for input_args in inputs:
-                result = func(*input_args)
-                if isinstance(result, (list, tuple)):
-                    results.extend(
-                        [
-                            np.array(r) if not isinstance(r, np.ndarray) else r
-                            for r in result
-                        ]
-                    )
-                else:
-                    results.append(
-                        np.array(result)
-                        if not isinstance(result, np.ndarray)
-                        else result
-                    )
+        """Test numerical stability with repeated executions.
 
-        # Check consistency
-        if len(results) > 1:
-            reference = results[0]
-            for i, result in enumerate(results[1:], 1):
-                if hasattr(result, "shape") and result.shape == reference.shape:
+        Each input tuple is evaluated five times; all repetitions must
+        agree with the first to within the tolerance. Different inputs
+        are never compared to each other.
+        """
+
+        def as_arrays(result):
+            parts = result if isinstance(result, (list, tuple)) else [result]
+            return [np.asarray(part) for part in parts]
+
+        for input_args in inputs:
+            reference = as_arrays(func(*input_args))
+            for run in range(1, 5):
+                repeat = as_arrays(func(*input_args))
+                for ref_part, repeat_part in zip(reference, repeat):
                     np.testing.assert_allclose(
-                        result,
-                        reference,
+                        repeat_part,
+                        ref_part,
                         rtol=tolerance,
-                        err_msg=f"Numerical instability detected in run {i}",
+                        err_msg=f"Numerical instability detected in run {run}",
                     )
 
 
@@ -112,50 +104,41 @@ class TestEPyRCoreModules(TestProtocol):
     def test_constants_module(self, protocol_level):
         """Deep testing of constants module."""
         if protocol_level == "smoke":
-            # Basic import and access
-            assert hasattr(constants, "ELECTRON_G_FACTOR")
-            assert abs(constants.ELECTRON_G_FACTOR) > 0  # g-factor can be negative
+            # Basic import and access (GFREE follows the EasySpin sign
+            # convention: positive magnitude of the free-electron g-factor)
+            assert hasattr(constants, "GFREE")
+            assert constants.GFREE > 0
 
         elif protocol_level == "standard":
             # Test all physical constants
             required_constants = [
-                "ELECTRON_G_FACTOR",
-                "BOHR_MAGNETON",
-                "PLANCK_CONSTANT",
-                "SPEED_OF_LIGHT",
-                "ELECTRON_MASS",
-                "NUCLEAR_MAGNETON",
+                "GFREE",
+                "BMAGN",
+                "PLANCK",
+                "HBAR",
+                "CLIGHT",
+                "BOLTZM",
+                "NMAGN",
             ]
             for const_name in required_constants:
                 assert hasattr(constants, const_name)
                 value = getattr(constants, const_name)
                 assert isinstance(value, (int, float))
-                if "G_FACTOR" in const_name:
-                    assert abs(value) > 0  # g-factors can be negative
-                else:
-                    assert value > 0
+                assert value > 0
 
         elif protocol_level == "deep":
             # Test constant relationships and units
-            # e.g., g-factor should be dimensionless and ~2 (absolute value)
-            assert 2.0 < abs(constants.ELECTRON_G_FACTOR) < 2.1
+            # g-factor should be dimensionless and ~2
+            assert 2.0 < constants.GFREE < 2.1
 
-            # Test derived calculations
-            gyromagnetic_ratio = (
-                constants.ELECTRON_G_FACTOR
-                * constants.BOHR_MAGNETON_SI
-                / constants.REDUCED_PLANCK_CONSTANT_SI
-            )
-            assert abs(gyromagnetic_ratio) > 1e10  # Should be in rad/s/T range
+            # Electron gyromagnetic ratio g*muB/hbar ~ 1.76e11 rad/s/T
+            gyromagnetic_ratio = constants.GFREE * constants.BMAGN / constants.HBAR
+            assert abs(gyromagnetic_ratio) > 1e10
 
         elif protocol_level == "scientific":
-            # Validate against known physical values (note: g-factor is negative)
-            np.testing.assert_allclose(
-                constants.ELECTRON_G_FACTOR, -2.00231930436256, rtol=1e-10
-            )
-            np.testing.assert_allclose(
-                constants.BOHR_MAGNETON_SI, 9.2740100783e-24, rtol=1e-8
-            )
+            # Validate against CODATA 2022 values
+            np.testing.assert_allclose(constants.GFREE, 2.00231930436092, rtol=1e-10)
+            np.testing.assert_allclose(constants.BMAGN, 9.2740100657e-24, rtol=1e-8)
 
     @pytest.mark.parametrize("protocol_level", PROTOCOL_LEVELS)
     def test_baseline_module(self, protocol_level, baseline_test_data):
@@ -166,51 +149,52 @@ class TestEPyRCoreModules(TestProtocol):
 
         if protocol_level == "smoke":
             # Basic polynomial correction
-            corrected, fitted_baseline = baseline.baseline_polynomial(
-                y, x_data=x, poly_order=1
-            )
+            corrected, fitted_baseline = baseline.baseline_polynomial_1d(x, y, order=1)
             assert len(corrected) == len(y)
             assert len(fitted_baseline) == len(y)
 
         elif protocol_level == "standard":
             # Test different polynomial orders
             for order in [0, 1, 2, 3]:
-                corrected, fitted_baseline = baseline.baseline_polynomial(
-                    y, x_data=x, poly_order=order
+                corrected, fitted_baseline = baseline.baseline_polynomial_1d(
+                    x, y, order=order
                 )
                 assert len(corrected) == len(y)
                 assert not np.any(np.isnan(corrected))
 
             # Test with exclusion regions
             exclude_regions = baseline_test_data["signal_regions"]
-            corrected, fitted_baseline = baseline.baseline_polynomial(
-                y, x_data=x, poly_order=1, exclude_regions=exclude_regions
+            corrected, fitted_baseline = baseline.baseline_polynomial_1d(
+                x, y, order=1, manual_regions=exclude_regions, region_mode="exclude"
             )
             assert len(corrected) == len(y)
 
         elif protocol_level == "deep":
             # Test numerical stability
             self.validate_numerical_stability(
-                baseline.baseline_polynomial, [(y, x, 1), (y, x, 2)], tolerance=1e-12
+                baseline.baseline_polynomial_1d,
+                [(x, y, None, 1), (x, y, None, 2)],
+                tolerance=1e-12,
             )
 
             # Test edge cases
-            # Single point
-            with pytest.raises((ValueError, IndexError)):
-                baseline.baseline_polynomial(np.array([1.0]), x_data=np.array([0.0]))
+            # Single point: degrades gracefully with a warning
+            with pytest.warns(UserWarning):
+                baseline.baseline_polynomial_1d(np.array([0.0]), np.array([1.0]))
 
-            # All NaN
+            # All NaN input propagates NaN without crashing
             nan_data = np.full_like(y, np.nan)
-            with pytest.raises((ValueError, np.linalg.LinAlgError)):
-                baseline.baseline_polynomial(nan_data, x_data=x)
+            corrected_nan, _ = baseline.baseline_polynomial_1d(x, nan_data)
+            assert np.all(np.isnan(corrected_nan))
 
         elif protocol_level == "scientific":
             # Validate correction accuracy
-            corrected, fitted_baseline = baseline.baseline_polynomial(
+            corrected, fitted_baseline = baseline.baseline_polynomial_1d(
+                x,
                 y,
-                x_data=x,
-                poly_order=1,
-                exclude_regions=baseline_test_data["signal_regions"],
+                order=1,
+                manual_regions=baseline_test_data["signal_regions"],
+                region_mode="exclude",
             )
 
             # The fitted baseline should be close to the true baseline
@@ -225,8 +209,12 @@ class TestLineshapesDeep(TestProtocol):
 
     @pytest.fixture
     def standard_field_range(self):
-        """Standard magnetic field range for testing."""
-        return np.linspace(-20, 20, 1000)
+        """Standard magnetic field range for testing.
+
+        Odd point count places a sample exactly at x=0, so symmetry and
+        center-value assertions hold to machine precision.
+        """
+        return np.linspace(-20, 20, 1001)
 
     @pytest.mark.parametrize("protocol_level", PROTOCOL_LEVELS)
     def test_gaussian_function(self, protocol_level, standard_field_range):
@@ -275,8 +263,9 @@ class TestLineshapesDeep(TestProtocol):
             gaussian(B, center=center, width=width, derivative=0)
             gauss_1 = gaussian(B, center=center, width=width, derivative=1)
 
-            # First derivative should be antisymmetric
-            np.testing.assert_allclose(gauss_1, -gauss_1[::-1], rtol=1e-10)
+            # Antisymmetric; atol absorbs the near-zero center sample,
+            # where a purely relative tolerance is meaningless
+            np.testing.assert_allclose(gauss_1, -gauss_1[::-1], rtol=1e-10, atol=1e-12)
 
             # Test phase rotation
             for phase in [0, 0.5, 1.0, 1.5]:
@@ -287,7 +276,7 @@ class TestLineshapesDeep(TestProtocol):
         elif protocol_level == "scientific":
             # Validate against analytical properties
             center = 0
-            width = 4.0  # HWHM
+            width = 4.0  # FWHM (library convention)
 
             gauss = gaussian(B, center=center, width=width, derivative=0)
 
@@ -296,13 +285,12 @@ class TestLineshapesDeep(TestProtocol):
             center_idx = np.argmin(np.abs(B - center))
             assert abs(max_idx - center_idx) <= 2  # Allow for discretization
 
-            # Test HWHM property (Half Width at Half Maximum)
+            # The width parameter is the full width at half maximum
             max_val = np.max(gauss)
             half_max_indices = np.where(gauss >= max_val / 2)[0]
             if len(half_max_indices) > 0:
                 field_width = B[half_max_indices[-1]] - B[half_max_indices[0]]
-                expected_width = 2 * width  # Full width
-                np.testing.assert_allclose(field_width, expected_width, rtol=0.1)
+                np.testing.assert_allclose(field_width, width, rtol=0.1)
 
     @pytest.mark.parametrize("protocol_level", PROTOCOL_LEVELS)
     def test_lorentzian_function(self, protocol_level, standard_field_range):
@@ -343,22 +331,25 @@ class TestLineshapesDeep(TestProtocol):
                 right_half = lorentz_abs[mid_idx + 1 :][::-1]
                 np.testing.assert_allclose(left_half, right_half, rtol=1e-10)
 
-            # Pure dispersion (phase=1)
-            lorentz_disp = lorentzian(B, center=center, width=width, phase=1)
-            # Dispersion should be antisymmetric
-            np.testing.assert_allclose(lorentz_disp, -lorentz_disp[::-1], rtol=1e-10)
+            # Pure dispersion (phase = pi/2)
+            lorentz_disp = lorentzian(B, center=center, width=width, phase=np.pi / 2)
+            # Antisymmetric; atol absorbs the near-zero center sample,
+            # where a purely relative tolerance is meaningless
+            np.testing.assert_allclose(
+                lorentz_disp, -lorentz_disp[::-1], rtol=1e-10, atol=1e-12
+            )
 
-            # Test numerical stability
+            # Test numerical stability (absorption and first derivative)
             self.validate_numerical_stability(
                 lorentzian,
-                [(B, center, width, 0), (B, center, width, 0.5)],
+                [(B, center, width, 0), (B, center, width, 1)],
                 tolerance=1e-12,
             )
 
         elif protocol_level == "scientific":
-            # Validate Lorentzian HWHM
+            # Validate Lorentzian width convention
             center = 0
-            width = 2.0  # HWHM
+            width = 2.0  # FWHM (library convention)
 
             lorentz = lorentzian(B, center=center, width=width, phase=0)
 
@@ -375,9 +366,9 @@ class TestLineshapesDeep(TestProtocol):
             half_max_indices = np.where(lorentz >= half_max_val)[0]
             if len(half_max_indices) > 0:
                 field_span = B[half_max_indices[-1]] - B[half_max_indices[0]]
-                expected_span = 2 * width  # Full width at half maximum
+                # The width parameter is the full width at half maximum
                 np.testing.assert_allclose(
-                    field_span, expected_span, rtol=0.15
+                    field_span, width, rtol=0.15
                 )  # Allow for discretization
 
     @pytest.mark.parametrize("protocol_level", PROTOCOL_LEVELS)
@@ -470,7 +461,7 @@ class TestLineshapesDeep(TestProtocol):
 
             for shape_type in lineshape_types:
                 if shape_type == "voigt":
-                    shape = Lineshape(shape_type, width=3.0, sigma=2.0, gamma=2.0)
+                    shape = Lineshape(shape_type, width=(2.0, 2.0))
                 elif shape_type == "pseudo_voigt":
                     shape = Lineshape(shape_type, width=3.0, alpha=0.5)
                 else:
@@ -486,10 +477,10 @@ class TestLineshapesDeep(TestProtocol):
             with pytest.raises(ValueError):
                 Lineshape("invalid_type", width=3.0)
 
-            # Missing required parameters
-            with pytest.raises(TypeError):
-                shape = Lineshape("voigt", width=3.0)  # Missing sigma, gamma
-                shape(B, center=0)
+            # Voigt requires a (gaussian_width, lorentzian_width) tuple,
+            # rejected at construction
+            with pytest.raises(ValueError):
+                Lineshape("voigt", width=3.0)
 
             # Test immutability and consistency
             shape = Lineshape("gaussian", width=5.0)
@@ -585,9 +576,7 @@ class TestIntegrationWorkflows(TestProtocol):
         x, y = sample_1d_data
 
         # 2. Baseline correction
-        y_corrected, baseline_fit = baseline.baseline_polynomial(
-            y, x_data=x, poly_order=1
-        )
+        y_corrected, baseline_fit = baseline.baseline_polynomial_1d(x, y, order=1)
 
         # 3. Lineshape fitting simulation
         # Find peak center
@@ -624,14 +613,14 @@ class TestScientificValidation(TestProtocol):
     """Scientific validation and accuracy tests."""
 
     def test_physical_constants_accuracy(self):
-        """Validate physical constants against NIST values."""
-        # Test electron g-factor (NIST 2018 CODATA) - note negative sign
-        nist_ge = -2.00231930436256
-        np.testing.assert_allclose(constants.ELECTRON_G_FACTOR, nist_ge, rtol=1e-10)
+        """Validate physical constants against NIST CODATA 2022 values."""
+        # Free-electron g-factor magnitude (EasySpin sign convention)
+        nist_ge = 2.00231930436092
+        np.testing.assert_allclose(constants.GFREE, nist_ge, rtol=1e-10)
 
-        # Test Bohr magneton (NIST 2018 CODATA) in J/T
-        nist_mb = 9.2740100783e-24
-        np.testing.assert_allclose(constants.BOHR_MAGNETON_SI, nist_mb, rtol=1e-8)
+        # Bohr magneton in J/T
+        nist_mb = 9.2740100657e-24
+        np.testing.assert_allclose(constants.BMAGN, nist_mb, rtol=1e-8)
 
     def test_lineshape_mathematical_properties(self):
         """Validate mathematical properties of lineshapes."""
