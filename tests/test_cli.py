@@ -232,7 +232,7 @@ class TestValidateCommand:
 
             assert excinfo.value.code == 1
 
-    @patch("epyr.eprload")
+    @patch("epyr.cli.eprload")
     def test_cmd_validate_success(self, mock_eprload, capsys):
         """Test successful validation."""
         import numpy as np
@@ -261,7 +261,7 @@ class TestValidateCommand:
         finally:
             os.unlink(test_file)
 
-    @patch("epyr.eprload")
+    @patch("epyr.cli.eprload")
     def test_cmd_validate_detailed(self, mock_eprload, capsys):
         """Test detailed validation output."""
         import numpy as np
@@ -290,7 +290,7 @@ class TestValidateCommand:
         finally:
             os.unlink(test_file)
 
-    @patch("epyr.eprload")
+    @patch("epyr.cli.eprload")
     def test_cmd_validate_failure(self, mock_eprload, capsys):
         """Test validation with invalid data."""
         # Mock failed data loading
@@ -416,8 +416,8 @@ class TestBaselineCommand:
 
             assert excinfo.value.code == 1
 
-    @patch("epyr.eprload")
-    @patch("epyr.baseline.baseline_polynomial")
+    @patch("epyr.cli.eprload")
+    @patch("epyr.baseline.baseline_polynomial_1d")
     def test_cmd_baseline_success(self, mock_baseline, mock_eprload, capsys):
         """Test successful baseline correction."""
         import numpy as np

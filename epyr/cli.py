@@ -1187,32 +1187,30 @@ def cmd_validate():
                     fair_result = validate_fair_dataset(data_dict, file_path)
 
                     if fair_result.is_valid:
-                        logger.info(f"✓ {file_path.name} - Valid")
+                        print(f"✓ {file_path.name} - Valid")
                         valid_files += 1
                     else:
-                        logger.info(
+                        print(
                             f"⚠ {file_path.name} - Valid data"
                             " but FAIR compliance issues"
                         )
                         valid_files += 1
 
-                    logger.info(f"  Data points: {len(y)}")
+                    print(f"  Data points: {len(y)}")
                     x_min = np.min(x) if x is not None else "N/A"
                     x_max = np.max(x) if x is not None else "N/A"
-                    logger.info(f"  X-axis range: {x_min} to {x_max}")
+                    print(f"  X-axis range: {x_min} to {x_max}")
                     n_params = len(params) if params else 0
-                    logger.info(f"  Parameters: {n_params} entries")
+                    print(f"  Parameters: {n_params} entries")
                     n_err = len(fair_result.errors)
                     n_warn = len(fair_result.warnings)
-                    logger.info(
-                        f"  FAIR compliance: {n_err} errors, " f"{n_warn} warnings"
-                    )
+                    print(f"  FAIR compliance: {n_err} errors, {n_warn} warnings")
 
                     if fair_result.errors:
                         for error in fair_result.errors[:3]:  # Show first 3 errors
-                            logger.info(f"    Error: {error}")
+                            print(f"    Error: {error}")
                         if len(fair_result.errors) > 3:
-                            logger.info(
+                            print(
                                 f"    ... and {len(fair_result.errors) - 3} more errors"
                             )
                 else:
