@@ -11,7 +11,7 @@ import numpy as np
 from .gaussian import gaussian
 from .lorentzian import lorentzian
 from .lshape import lshape, pseudo_voigt
-from .voigtian import voigtian
+from .voigtian import validate_voigt_widths, voigtian
 
 
 class Lineshape:
@@ -111,11 +111,8 @@ class Lineshape:
             )
 
         if shape_type == "voigt":
-            if not (isinstance(width, (tuple, list)) and len(width) == 2):
-                raise ValueError(
-                    "Voigt lineshapes require width=(gaussian_width,"
-                    f" lorentzian_width), got {width!r}"
-                )
+            # Fail at construction with the same rule voigtian() applies
+            validate_voigt_widths(width)
 
         self.shape_type = shape_type
         self.width = width

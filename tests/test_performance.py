@@ -47,13 +47,12 @@ class TestMemoryMonitor:
     def test_get_memory_info_without_psutil(self):
         """Test memory info retrieval without psutil."""
         with patch("epyr.performance.psutil", None):
-            with patch.dict("sys.modules", {"psutil": None}):
-                memory_info = MemoryMonitor.get_memory_info()
+            memory_info = MemoryMonitor.get_memory_info()
 
-                # Should return zero values when psutil not available
-                assert memory_info["rss_mb"] == 0
-                assert memory_info["vms_mb"] == 0
-                assert memory_info["percent"] == 0
+            # Should return zero values when psutil not available
+            assert memory_info["rss_mb"] == 0
+            assert memory_info["vms_mb"] == 0
+            assert memory_info["percent"] == 0
 
     @patch("epyr.performance.config.get", return_value=500)
     @patch("epyr.performance.MemoryMonitor.get_memory_info")

@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import special
 
+from ._validation import validate_abscissa
+
 
 def gaussian(x, center, width, derivative=0, phase=0.0, return_both=False):
     """
@@ -54,9 +56,7 @@ def gaussian(x, center, width, derivative=0, phase=0.0, return_both=False):
     >>> abs_part, disp_part = gaussian(x, 0, 4, return_both=True)
     """
 
-    x = np.asarray(x, dtype=float)
-    if x.size == 0:
-        raise ValueError("x must contain at least one point")
+    x = validate_abscissa(x)
 
     # Input validation
     _validate_gaussian_inputs(center, width, derivative, phase)

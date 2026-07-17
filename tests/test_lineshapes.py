@@ -8,7 +8,7 @@ and numerical accuracy validation.
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from scipy import integrate, special
+from scipy import integrate
 
 from epyr.lineshapes import (
     Lineshape,
@@ -23,6 +23,17 @@ from epyr.lineshapes import (
     pseudo_voigt,
     voigtian,
 )
+
+
+def total_area(func, width):
+    """Total area of a symmetric lineshape centered at 0.
+
+    Adaptive quadrature to infinity captures the heavy Lorentzian tails
+    that a truncated grid integral misses: the trapezoid sum over +/-R
+    only reaches (2/pi)*arctan(2R/width) of the Lorentzian area.
+    """
+    half_area, _ = integrate.quad(lambda t: func(np.array([t]), 0, width)[0], 0, np.inf)
+    return 2 * half_area
 
 
 class TestGaussian:
@@ -103,16 +114,8 @@ class TestLorentzian:
         # Check peak position (allow ±1 point tolerance for numerical differences)
         assert abs(np.argmax(y) - 500) <= 1  # Center at x=0
 
-        # Check normalization: Lorentzian tails are heavy, so the truncated
-        # integral over +/-R only captures (2/pi)*arctan(2R/width) of the area.
-        # Integrate to infinity instead of over the plotting grid.
-        area = (
-            2
-            * integrate.quad(
-                lambda t: float(lorentzian(np.array([t]), 0, 4)[0]), 0, np.inf
-            )[0]
-        )
-        assert abs(area - 1.0) < 0.001
+        # Check normalization over the full real line, not the plot grid
+        assert abs(total_area(lorentzian, 4) - 1.0) < 0.001
 
         # Check FWHM
         half_max = np.max(y) / 2
@@ -358,16 +361,10 @@ class TestNumericalAccuracy:
     def test_normalization_accuracy(self):
         """Test that all lineshapes are properly normalized"""
         # A single fixed grid cannot resolve both narrow peaks (width=0.1)
-        # and heavy Lorentzian tails (width=20). Integrate each profile to
-        # infinity with adaptive quadrature instead.
+        # and heavy Lorentzian tails (width=20), so use total_area
         for width in [0.1, 1.0, 5.0, 20.0]:
             for func, name in [(gaussian, "Gaussian"), (lorentzian, "Lorentzian")]:
-                area = (
-                    2
-                    * integrate.quad(
-                        lambda t: float(func(np.array([t]), 0, width)[0]), 0, np.inf
-                    )[0]
-                )
+                area = total_area(func, width)
                 assert abs(area - 1.0) < 0.001, f"{name} width={width}"
 
     def test_symmetry_properties(self):

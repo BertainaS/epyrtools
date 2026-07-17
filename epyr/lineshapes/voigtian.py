@@ -6,6 +6,8 @@ Modern implementation of the Voigt profile (convolution of Gaussian and Lorentzi
 import numpy as np
 from scipy import special
 
+from ._validation import validate_abscissa
+
 
 def voigtian(x, center, widths, derivative=0, phase=0.0, return_both=False):
     """
@@ -52,7 +54,7 @@ def voigtian(x, center, widths, derivative=0, phase=0.0, return_both=False):
     >>> y_lorentz = voigtian(x, 0, (2, 6))
     """
 
-    x = np.asarray(x, dtype=float)
+    x = validate_abscissa(x)
 
     # Input validation
     _validate_voigtian_inputs(center, widths, derivative, phase)
@@ -68,11 +70,17 @@ def voigtian(x, center, widths, derivative=0, phase=0.0, return_both=False):
     return _handle_voigt_output(abs_part, disp_part, phase, return_both)
 
 
-def _validate_voigtian_inputs(center, widths, derivative, phase):
-    """Validate Voigtian input parameters"""
-    if not isinstance(center, (int, float)):
-        raise ValueError("center must be a number")
+def validate_voigt_widths(widths):
+    """Check that widths is a valid (gaussian_width, lorentzian_width) pair.
 
+    Both widths are FWHM values in the abscissa unit; they must be
+    non-negative and at least one must be positive.
+
+    Raises
+    ------
+    ValueError
+        If widths is not a two-element tuple or violates the sign rules.
+    """
     if not (isinstance(widths, (list, tuple)) and len(widths) == 2):
         raise ValueError(
             "widths must be a tuple of two values (gaussian_width, lorentzian_width)"
@@ -84,6 +92,14 @@ def _validate_voigtian_inputs(center, widths, derivative, phase):
 
     if gaussian_width == 0 and lorentzian_width == 0:
         raise ValueError("at least one width must be positive")
+
+
+def _validate_voigtian_inputs(center, widths, derivative, phase):
+    """Validate Voigtian input parameters"""
+    if not isinstance(center, (int, float)):
+        raise ValueError("center must be a number")
+
+    validate_voigt_widths(widths)
 
     if not isinstance(derivative, int) or derivative < -1:
         raise ValueError("derivative must be integer >= -1")

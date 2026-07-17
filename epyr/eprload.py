@@ -288,24 +288,25 @@ def eprload(
     Returns
     -------
     x : np.ndarray or list of np.ndarray or None
-        Abscissa data; list of axes for 2D datasets. None on failure.
+        Abscissa data; list of axes for 2D datasets.
     y : np.ndarray or None
-        Ordinate data (signal). None on failure.
+        Ordinate data (signal).
     pars : dict or None
         Parameters extracted from the descriptor/parameter file.
-        None on failure.
     file_path : str or None
-        Resolved absolute path of the loaded file. None on failure.
+        Resolved absolute path of the loaded file.
+
+        All four values are None when the file-selection dialog is
+        cancelled or when an existing, recognized file cannot be read
+        or parsed (the error is logged). Usage errors raise instead.
 
     Raises
     ------
     FileNotFoundError
-        If the specified file or directory does not exist.
+        If the specified file does not exist.
     ValueError
-        If the file format is unsupported, scaling is invalid, or
-        parameter inconsistencies are found.
-    IOError
-        If reading files fails.
+        If the file extension is not a recognized EPR format, or the
+        scaling string contains invalid characters.
 
     Examples
     --------

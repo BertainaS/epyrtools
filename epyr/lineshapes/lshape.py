@@ -7,6 +7,8 @@ from typing import Tuple, Union
 
 import numpy as np
 
+from ._validation import validate_abscissa
+
 
 def lshape(
     x: np.ndarray,
@@ -59,7 +61,7 @@ def lshape(
     >>> mixed_widths = lshape(x, 0, (3, 7), alpha=0.3)
     """
 
-    x = np.asarray(x)
+    x = validate_abscissa(x)
 
     # Validate inputs
     if not isinstance(center, (int, float)):
