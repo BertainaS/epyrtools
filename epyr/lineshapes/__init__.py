@@ -16,6 +16,7 @@ Classes and Functions:
     voigtian: True Voigt profiles (convolution)
     pseudo_voigt: Pseudo-Voigt (linear combination)
     convspec: Spectrum convolution
+    pseudo_modulation: Simulated field-modulation lock-in detection
 
 Author: EPyR Tools Development Team
 License: MIT
@@ -42,6 +43,7 @@ from .lorentzian import (
     lorentzian_dispersion,
 )
 from .lshape import lshape, pseudo_voigt
+from .pseudo_modulation import pseudo_modulation
 from .voigtian import voigtian
 
 # Version info
@@ -62,6 +64,7 @@ __all__ = [
     "lshape",
     "pseudo_voigt",
     "convspec",
+    "pseudo_modulation",
     # Factory functions
     "create_gaussian",
     "create_lorentzian",

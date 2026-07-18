@@ -108,3 +108,10 @@ class TestPseudoModulationAnalyticLimit:
         max_dy = np.max(np.abs(dy_analytic[mask]))
 
         assert np.allclose(scaled[mask], dy_analytic[mask], atol=0.02 * max_dy)
+
+
+@pytest.mark.smoke
+def test_pseudo_modulation_importable_from_package():
+    from epyr.lineshapes import pseudo_modulation as exported
+
+    assert exported is pseudo_modulation
