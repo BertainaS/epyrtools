@@ -42,15 +42,26 @@ gives the signal detected at the n-th harmonic of the modulation frequency as
 a linear filter of the original spectrum:
 
 ```
-S_n(B) = IFFT[ FFT(A)(k) * J_n(k * Bm / 2) ]
+S_n(B) = IFFT[ FFT(A)(k) * i^n * J_n(k * Bm / 2) ]
 ```
 
 where `J_n` is the Bessel function of the first kind, order `n` (the
-harmonic), and `k = 2*pi * fftfreq(N, dx)`. The transfer function is real, so
-a real input spectrum produces a real output. In the small-amplitude limit,
-`J_1(z) ~ z/2`, so `S_1(B) -> (Bm/4) * dA/dB`: pseudomodulation with a small
-`Bm` reduces to the ordinary scaled derivative, which is the basis for the
-scientific validation test below.
+harmonic), and `k = 2*pi * fftfreq(N, dx)`. `J_n(z)` has parity `J_n(-z) =
+(-1)^n J_n(z)`, so `J_n(k * Bm/2)` alone is an odd function of `k` for odd
+`n`; multiplying a real spectrum's Hermitian-symmetric FFT by an odd real
+kernel breaks Hermitian symmetry and yields a purely imaginary `IFFT` result
+for odd `n` (the physical signal would then sit in the imaginary part, not
+the real part). The `i^n` phase factor restores Hermitian symmetry of the
+transfer function `H_n(k) = i^n * J_n(k * Bm/2)` for every `n`: using
+`J_n(-z) = (-1)^n J_n(z)` and `(-1)^n = i^{2n}`, `H_n(-k) = i^n * (-1)^n *
+J_n(k*Bm/2) = i^{3n} * J_n(k*Bm/2)`, which equals `i^{-n} * J_n(k*Bm/2) =
+conj(H_n(k))` since `i^{3n} = i^{-n}` modulo `i^4 = 1`. With
+`H_n(-k) = conj(H_n(k))` and `FFT(A)(-k) = conj(FFT(A)(k))` (real `A`), their
+product is Hermitian symmetric, so `IFFT[...]` is real for both odd and even
+harmonics. In the small-amplitude limit, `J_1(z) ~ z/2`, so
+`S_1(B) -> (Bm/4) * dA/dB`: pseudomodulation with a small `Bm` reduces to the
+ordinary scaled derivative, which is the basis for the scientific validation
+test below.
 
 ## Function
 
@@ -87,9 +98,12 @@ uniformly spaced (relative tolerance check on `np.diff(x)`), `mod_amplitude
 - Uniform spacing: `np.diff(x)` must be constant within `rtol=1e-6`.
 - Padding: `np.pad(y, pad_width, mode='edge')` with `pad_width = len(y) // 2`
   on each side; crop the result back with the matching slice.
-- Bessel transfer function via `scipy.special.jv(harmonic, k * mod_amplitude / 2)`.
+- Bessel transfer function via `(1j ** harmonic) * scipy.special.jv(harmonic, k * mod_amplitude / 2)`.
+  The `1j ** harmonic` phase factor is required, not optional: without it the
+  `IFFT` result is purely imaginary for odd `harmonic` (see Algorithm section).
 - Cast the result to real (`np.real`) when the input `y` is real, mirroring
-  the real/complex handling already used in `convspec()`.
+  the real/complex handling already used in `convspec()`. With the `i^n`
+  phase factor included, `np.real` is correct for both odd and even harmonics.
 
 ## Example
 
