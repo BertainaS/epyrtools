@@ -89,6 +89,17 @@ class TestPseudoModulationValidation:
         with pytest.raises(ValueError, match="Shape mismatch"):
             pseudo_modulation(x, y, mod_amplitude=2.0)
 
+    def test_descending_axis_matches_reversed_ascending(self):
+        x_asc = np.linspace(-50, 50, 2000)
+        y_asc = gaussian(x_asc, 0.0, 8.0)
+        x_desc = x_asc[::-1]
+        y_desc = y_asc[::-1]
+
+        for harmonic in (1, 2):
+            r_asc = pseudo_modulation(x_asc, y_asc, mod_amplitude=2.0, harmonic=harmonic)
+            r_desc = pseudo_modulation(x_desc, y_desc, mod_amplitude=2.0, harmonic=harmonic)
+            assert np.allclose(r_desc, r_asc[::-1], atol=1e-10)
+
 
 @pytest.mark.scientific
 class TestPseudoModulationAnalyticLimit:

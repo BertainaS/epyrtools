@@ -62,7 +62,7 @@ def pseudo_modulation(x, y, mod_amplitude, harmonic=1, pad=True):
 
         S_n(B) = IFFT[ FFT(A)(k) * i^n * J_n(k * mod_amplitude / 2) ]
 
-    where A is the input spectrum, k = 2*pi*fftfreq(N, |dx|) is the spatial
+    where A is the input spectrum, k = 2*pi*fftfreq(N, dx) is the spatial
     frequency conjugate to the field axis, and J_n is the Bessel function of
     the first kind of order n. The i^n phase factor is required: J_n(-z) =
     (-1)^n J_n(z), so J_n(k * mod_amplitude/2) alone is odd in k for odd n,
@@ -82,7 +82,7 @@ def pseudo_modulation(x, y, mod_amplitude, harmonic=1, pad=True):
     y = np.asarray(y)
     _validate_pseudo_modulation_inputs(x, y, mod_amplitude, harmonic)
 
-    dx = abs(x[1] - x[0])
+    dx = x[1] - x[0]
     is_complex_input = np.iscomplexobj(y)
 
     if pad:
