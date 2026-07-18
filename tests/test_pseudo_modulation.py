@@ -88,3 +88,23 @@ class TestPseudoModulationValidation:
 
         with pytest.raises(ValueError, match="Shape mismatch"):
             pseudo_modulation(x, y, mod_amplitude=2.0)
+
+
+@pytest.mark.scientific
+class TestPseudoModulationAnalyticLimit:
+    def test_first_harmonic_small_amplitude_matches_derivative(self):
+        x = np.linspace(-50, 50, 4000)
+        center, width = 0.0, 8.0
+        y = gaussian(x, center, width, derivative=0)
+        dy_analytic = gaussian(x, center, width, derivative=1)
+
+        eps = 1e-3
+        y_pm = pseudo_modulation(x, y, mod_amplitude=eps, harmonic=1)
+        scaled = y_pm / (eps / 4)
+
+        # Stay away from the outermost few points where the FFT treats
+        # the (non-periodic) signal as if it wrapped around.
+        mask = np.abs(x) < 30
+        max_dy = np.max(np.abs(dy_analytic[mask]))
+
+        assert np.allclose(scaled[mask], dy_analytic[mask], atol=0.02 * max_dy)
