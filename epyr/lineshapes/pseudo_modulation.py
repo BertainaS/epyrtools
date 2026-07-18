@@ -60,12 +60,17 @@ def pseudo_modulation(x, y, mod_amplitude, harmonic=1, pad=True):
     For a sinusoidal modulation B(t) = B0 + (mod_amplitude/2) sin(theta),
     the signal detected at the n-th harmonic of the modulation frequency is
 
-        S_n(B) = IFFT[ FFT(A)(k) * J_n(k * mod_amplitude / 2) ]
+        S_n(B) = IFFT[ FFT(A)(k) * i^n * J_n(k * mod_amplitude / 2) ]
 
     where A is the input spectrum, k = 2*pi*fftfreq(N, |dx|) is the spatial
     frequency conjugate to the field axis, and J_n is the Bessel function of
-    the first kind of order n. In the small-amplitude limit, J_1(z) ~ z/2,
-    so S_1(B) approaches (mod_amplitude/4) * dA/dB.
+    the first kind of order n. The i^n phase factor is required: J_n(-z) =
+    (-1)^n J_n(z), so J_n(k * mod_amplitude/2) alone is odd in k for odd n,
+    which breaks the Hermitian symmetry a real spectrum's FFT has and makes
+    the IFFT purely imaginary. Multiplying by i^n restores Hermitian
+    symmetry for every n, so the IFFT is real whenever A is real. In the
+    small-amplitude limit, J_1(z) ~ z/2, so S_1(B) approaches
+    (mod_amplitude/4) * dA/dB.
 
     Examples
     --------
@@ -89,7 +94,7 @@ def pseudo_modulation(x, y, mod_amplitude, harmonic=1, pad=True):
 
     n = len(y_work)
     k = 2 * np.pi * np.fft.fftfreq(n, d=dx)
-    transfer = special.jv(harmonic, k * mod_amplitude / 2)
+    transfer = (1j**harmonic) * special.jv(harmonic, k * mod_amplitude / 2)
 
     spectrum_fft = np.fft.fft(y_work)
     result = np.fft.ifft(spectrum_fft * transfer)
