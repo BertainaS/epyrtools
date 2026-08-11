@@ -16,7 +16,13 @@ from scipy import special
 from ._validation import validate_abscissa
 
 
-def pseudo_modulation(x, y, mod_amplitude, harmonic=1, pad=True):
+def pseudo_modulation(
+    x: np.ndarray,
+    y: np.ndarray,
+    mod_amplitude: float,
+    harmonic: int = 1,
+    pad: bool = True,
+) -> np.ndarray:
     """
     Compute the pseudomodulated spectrum for simulated lock-in detection.
 
@@ -108,7 +114,9 @@ def pseudo_modulation(x, y, mod_amplitude, harmonic=1, pad=True):
     return result
 
 
-def _validate_pseudo_modulation_inputs(x, y, mod_amplitude, harmonic):
+def _validate_pseudo_modulation_inputs(
+    x: np.ndarray, y: np.ndarray, mod_amplitude: float, harmonic: int
+) -> None:
     """Validate pseudo_modulation input parameters."""
     if y.ndim != 1:
         raise ValueError("y must be a 1D array")

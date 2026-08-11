@@ -411,18 +411,14 @@ corrected, baseline, info = epyr.baseline.auto_baseline_with_recommendations(
 ### Getting Help
 
 ```python
-# Package-level help
-epyr.baseline.get_help()
-
 # Function-specific help
 help(epyr.baseline.baseline_auto_1d)
 
 # Jupyter-specific help
 epyr.baseline.jupyter_help()
-
-# Interactive demo
-epyr.baseline.demo()
 ```
+
+Worked examples live in `examples/scripts/module_demos/04_baseline_demo.py`.
 
 ### Version Information
 

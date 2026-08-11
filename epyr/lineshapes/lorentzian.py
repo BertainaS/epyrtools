@@ -3,13 +3,21 @@ Lorentzian lineshape functions
 Modern, optimized implementation for EPR spectroscopy
 """
 
-import matplotlib.pyplot as plt
+from typing import Tuple, Union
+
 import numpy as np
 
 from ._validation import validate_abscissa
 
 
-def lorentzian(x, center, width, derivative=0, phase=0.0, return_both=False):
+def lorentzian(
+    x: np.ndarray,
+    center: float,
+    width: float,
+    derivative: int = 0,
+    phase: float = 0.0,
+    return_both: bool = False,
+) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """
     Area-normalized Lorentzian lineshape with derivatives and phase rotation.
 
@@ -71,7 +79,9 @@ def lorentzian(x, center, width, derivative=0, phase=0.0, return_both=False):
     return _handle_lorentzian_output(abs_part, disp_part, phase, return_both)
 
 
-def _validate_lorentzian_inputs(center, width, derivative, phase):
+def _validate_lorentzian_inputs(
+    center: float, width: float, derivative: int, phase: float
+) -> None:
     """Validate Lorentzian input parameters"""
     if not isinstance(center, (int, float)):
         raise ValueError("center must be a number")
@@ -83,7 +93,9 @@ def _validate_lorentzian_inputs(center, width, derivative, phase):
         raise ValueError("phase must be a real number")
 
 
-def _compute_lorentzian_components(u, gamma, derivative):
+def _compute_lorentzian_components(
+    u: np.ndarray, gamma: float, derivative: int
+) -> Tuple[np.ndarray, np.ndarray]:
     """Compute absorption and dispersion components"""
 
     if derivative == -1:
@@ -115,7 +127,9 @@ def _compute_lorentzian_components(u, gamma, derivative):
     return abs_part, disp_part
 
 
-def _handle_lorentzian_output(abs_part, disp_part, phase, return_both):
+def _handle_lorentzian_output(
+    abs_part: np.ndarray, disp_part: np.ndarray, phase: float, return_both: bool
+) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """Handle output formatting based on phase and return options"""
 
     # Check if phase rotation is needed
@@ -140,89 +154,18 @@ def _handle_lorentzian_output(abs_part, disp_part, phase, return_both):
 
 
 # Convenience functions for common cases
-def lorentzian_absorption(x, center, width):
+def lorentzian_absorption(x: np.ndarray, center: float, width: float) -> np.ndarray:
     """Pure absorption Lorentzian"""
     return lorentzian(x, center, width)
 
 
-def lorentzian_dispersion(x, center, width):
+def lorentzian_dispersion(x: np.ndarray, center: float, width: float) -> np.ndarray:
     """Pure dispersion Lorentzian"""
     return lorentzian(x, center, width, phase=np.pi / 2)
 
 
-def lorentzian_derivative(x, center, width, order=1):
+def lorentzian_derivative(
+    x: np.ndarray, center: float, width: float, order: int = 1
+) -> np.ndarray:
     """Lorentzian derivatives"""
     return lorentzian(x, center, width, derivative=order)
-
-
-def demo():
-    """Interactive demonstration of Lorentzian lineshapes"""
-
-    x = np.linspace(-15, 15, 1000)
-
-    # Modern colors
-    colors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"]
-
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-
-    # Different widths
-    ax = axes[0, 0]
-    widths = [2, 4, 8]
-    for i, width in enumerate(widths):
-        y = lorentzian(x, 0, width)
-        ax.plot(x, y, color=colors[i], linewidth=2.5, label=f"FWHM = {width}")
-
-    ax.set_title("Different Widths", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Derivatives
-    ax = axes[0, 1]
-    derivs = [0, 1, 2]
-    labels = ["Function", "1st derivative", "2nd derivative"]
-
-    for i, (deriv, label) in enumerate(zip(derivs, labels)):
-        y = lorentzian(x, 0, 6, derivative=deriv)
-        ax.plot(x, y, color=colors[i], linewidth=2.5, label=label)
-
-    ax.set_title("Derivatives", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Absorption vs Dispersion
-    ax = axes[1, 0]
-    abs_part, disp_part = lorentzian(x, 0, 6, return_both=True)
-
-    ax.plot(x, abs_part, color=colors[0], linewidth=2.5, label="Absorption")
-    ax.plot(x, disp_part, color=colors[1], linewidth=2.5, label="Dispersion")
-
-    ax.set_title("Absorption vs Dispersion", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Phase rotation
-    ax = axes[1, 1]
-    phases = [0, np.pi / 6, np.pi / 4, np.pi / 3, np.pi / 2]
-
-    for i, phase in enumerate(phases):
-        y = lorentzian(x, 0, 6, phase=phase)
-        label = f"φ = {phase:.2f}" if i < 4 else "φ = π/2"
-        ax.plot(x, y, color=colors[i], linewidth=2, label=label)
-
-    ax.set_title("Phase Rotation", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Style all subplots
-    for ax in axes.flat:
-        ax.set_xlabel("Position")
-        ax.set_ylabel("Intensity")
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
-    plt.tight_layout()
-    plt.show()
-
-
-if __name__ == "__main__":
-    demo()

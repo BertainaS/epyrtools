@@ -89,12 +89,7 @@ The 2D FFT capabilities enable analysis of:
 """
 
 # Import apodization windows
-from .apowin import (
-    apowin,
-    apply_window_demo,
-    frequency_response_demo,
-    window_comparison,
-)
+from .apowin import apowin
 
 # Import frequency analysis tools
 from .frequency_analysis import (
@@ -114,9 +109,6 @@ from .preprocessing import (
 __all__ = [
     # Apodization windows
     "apowin",
-    "window_comparison",
-    "frequency_response_demo",
-    "apply_window_demo",
     # Frequency analysis (FFT-based functions)
     "analyze_frequencies",  # 1D FFT analysis
     "analyze_frequencies_2d",  # 2D FFT analysis (row-by-row or full 2D)

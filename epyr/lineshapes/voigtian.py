@@ -3,13 +3,22 @@ Voigtian lineshape functions
 Modern implementation of the Voigt profile (convolution of Gaussian and Lorentzian)
 """
 
+from typing import Optional, Tuple, Union
+
 import numpy as np
 from scipy import special
 
 from ._validation import validate_abscissa
 
 
-def voigtian(x, center, widths, derivative=0, phase=0.0, return_both=False):
+def voigtian(
+    x: np.ndarray,
+    center: float,
+    widths: Tuple[float, float],
+    derivative: int = 0,
+    phase: float = 0.0,
+    return_both: bool = False,
+) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """
     Area-normalized Voigt profile - convolution of Gaussian and Lorentzian.
 
@@ -70,7 +79,7 @@ def voigtian(x, center, widths, derivative=0, phase=0.0, return_both=False):
     return _handle_voigt_output(abs_part, disp_part, phase, return_both)
 
 
-def validate_voigt_widths(widths):
+def validate_voigt_widths(widths: Tuple[float, float]) -> None:
     """Check that widths is a valid (gaussian_width, lorentzian_width) pair.
 
     Both widths are FWHM values in the abscissa unit; they must be
@@ -94,7 +103,9 @@ def validate_voigt_widths(widths):
         raise ValueError("at least one width must be positive")
 
 
-def _validate_voigtian_inputs(center, widths, derivative, phase):
+def _validate_voigtian_inputs(
+    center: float, widths: Tuple[float, float], derivative: int, phase: float
+) -> None:
     """Validate Voigtian input parameters"""
     if not isinstance(center, (int, float)):
         raise ValueError("center must be a number")
@@ -108,7 +119,13 @@ def _validate_voigtian_inputs(center, widths, derivative, phase):
         raise ValueError("phase must be a real number")
 
 
-def _voigt_faddeeva(x, center, gauss_width, lorentz_width, derivative):
+def _voigt_faddeeva(
+    x: np.ndarray,
+    center: float,
+    gauss_width: float,
+    lorentz_width: float,
+    derivative: int,
+) -> Tuple[np.ndarray, np.ndarray]:
     """Compute Voigt profile using Faddeeva function (complex error function)"""
 
     if gauss_width == 0:
@@ -182,7 +199,9 @@ def _voigt_faddeeva(x, center, gauss_width, lorentz_width, derivative):
     return abs_part, disp_part
 
 
-def _handle_voigt_output(abs_part, disp_part, phase, return_both):
+def _handle_voigt_output(
+    abs_part: np.ndarray, disp_part: np.ndarray, phase: float, return_both: bool
+) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """Handle output formatting based on phase and return options"""
 
     # Check if phase rotation is needed
@@ -207,146 +226,30 @@ def _handle_voigt_output(abs_part, disp_part, phase, return_both):
 
 
 # Convenience functions
-def voigt_equal_widths(x, center, width):
+def voigt_equal_widths(x: np.ndarray, center: float, width: float) -> np.ndarray:
     """Voigt profile with equal Gaussian and Lorentzian widths"""
     return voigtian(x, center, (width, width))
 
 
-def voigt_gaussian_dominated(x, center, gauss_width, lorentz_width=None):
+def voigt_gaussian_dominated(
+    x: np.ndarray,
+    center: float,
+    gauss_width: float,
+    lorentz_width: Optional[float] = None,
+) -> np.ndarray:
     """Voigt profile dominated by Gaussian broadening"""
     if lorentz_width is None:
         lorentz_width = gauss_width * 0.3
     return voigtian(x, center, (gauss_width, lorentz_width))
 
 
-def voigt_lorentzian_dominated(x, center, lorentz_width, gauss_width=None):
+def voigt_lorentzian_dominated(
+    x: np.ndarray,
+    center: float,
+    lorentz_width: float,
+    gauss_width: Optional[float] = None,
+) -> np.ndarray:
     """Voigt profile dominated by Lorentzian broadening"""
     if gauss_width is None:
         gauss_width = lorentz_width * 0.3
     return voigtian(x, center, (gauss_width, lorentz_width))
-
-
-def demo():
-    """Interactive demonstration of Voigtian profiles"""
-    import matplotlib.pyplot as plt
-
-    x = np.linspace(-15, 15, 1000)
-
-    # Modern colors
-    colors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"]
-
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-
-    # Different width ratios
-    ax = axes[0, 0]
-    width_pairs = [(6, 2), (4, 4), (2, 6)]
-    labels = ["Gaussian-dominated", "Equal widths", "Lorentzian-dominated"]
-
-    for i, (gw, lw) in enumerate(width_pairs):
-        y = voigtian(x, 0, (gw, lw))
-        ax.plot(x, y, color=colors[i], linewidth=2.5, label=f"{labels[i]} ({gw}, {lw})")
-
-    ax.set_title("Different Width Ratios", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Comparison with pure shapes
-    ax = axes[0, 1]
-
-    # Import individual functions for comparison
-    try:
-        from .gaussian import gaussian
-        from .lorentzian import lorentzian
-
-        pure_gauss = gaussian(x, 0, 6)
-        pure_lorentz = lorentzian(x, 0, 6)
-        voigt_mixed = voigtian(x, 0, (4, 4))
-
-        ax.plot(
-            x,
-            pure_gauss,
-            color=colors[0],
-            linewidth=2.5,
-            label="Pure Gaussian",
-            linestyle="--",
-        )
-        ax.plot(
-            x,
-            pure_lorentz,
-            color=colors[1],
-            linewidth=2.5,
-            label="Pure Lorentzian",
-            linestyle="--",
-        )
-        ax.plot(x, voigt_mixed, color=colors[2], linewidth=2.5, label="Voigt (4,4)")
-
-    except ImportError:
-        # Create simple shapes for comparison
-        sigma = 6 / (2 * np.sqrt(2 * np.log(2)))
-        pure_gauss = np.exp(-((x) ** 2) / (2 * sigma**2)) / (sigma * np.sqrt(2 * np.pi))
-
-        gamma = 3
-        pure_lorentz = (1 / np.pi) / gamma / (1 + (x / gamma) ** 2)
-
-        voigt_mixed = voigtian(x, 0, (4, 4))
-
-        ax.plot(
-            x,
-            pure_gauss,
-            color=colors[0],
-            linewidth=2.5,
-            label="Pure Gaussian",
-            linestyle="--",
-        )
-        ax.plot(
-            x,
-            pure_lorentz,
-            color=colors[1],
-            linewidth=2.5,
-            label="Pure Lorentzian",
-            linestyle="--",
-        )
-        ax.plot(x, voigt_mixed, color=colors[2], linewidth=2.5, label="Voigt (4,4)")
-
-    ax.set_title("Voigt vs Pure Shapes", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Absorption vs Dispersion
-    ax = axes[1, 0]
-    abs_part, disp_part = voigtian(x, 0, (4, 4), return_both=True)
-
-    ax.plot(x, abs_part, color=colors[0], linewidth=2.5, label="Absorption")
-    ax.plot(x, disp_part, color=colors[1], linewidth=2.5, label="Dispersion")
-
-    ax.set_title("Absorption vs Dispersion", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Effect of total width
-    ax = axes[1, 1]
-    total_widths = [4, 6, 8]
-
-    for i, total_width in enumerate(total_widths):
-        # Keep 50/50 ratio
-        gw = lw = total_width / np.sqrt(2)  # Approximate for similar total width
-        y = voigtian(x, 0, (gw, lw))
-        ax.plot(x, y, color=colors[i], linewidth=2.5, label=f"Total ≈ {total_width}")
-
-    ax.set_title("Different Total Widths", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Style all subplots
-    for ax in axes.flat:
-        ax.set_xlabel("Position")
-        ax.set_ylabel("Intensity")
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
-    plt.tight_layout()
-    plt.show()
-
-
-if __name__ == "__main__":
-    demo()

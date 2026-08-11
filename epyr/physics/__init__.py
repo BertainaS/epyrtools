@@ -56,7 +56,7 @@ from .conversions import (
 )
 
 # Import unit conversion utilities
-from .units import demo_conversions, list_conversions, unitconvert
+from .units import list_conversions, unitconvert
 
 __all__ = [
     # SI constants (direct values - preferred)
@@ -101,7 +101,6 @@ __all__ = [
     # Unit conversions
     "unitconvert",
     "list_conversions",
-    "demo_conversions",
     # Direct conversion functions
     "mhz_to_mt",
     "mt_to_mhz",

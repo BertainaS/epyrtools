@@ -3,7 +3,8 @@ Spectrum convolution with lineshapes
 Modern implementation with multi-dimensional support
 """
 
-import matplotlib.pyplot as plt
+from typing import Union
+
 import numpy as np
 from scipy import signal
 
@@ -12,7 +13,14 @@ from ..logging_config import get_logger
 logger = get_logger(__name__)
 
 
-def convspec(spectrum, step_size, width, derivative=0, alpha=1.0, phase=0.0):
+def convspec(
+    spectrum: np.ndarray,
+    step_size: Union[float, np.ndarray],
+    width: Union[float, np.ndarray],
+    derivative: Union[int, np.ndarray] = 0,
+    alpha: Union[float, np.ndarray] = 1.0,
+    phase: Union[float, np.ndarray] = 0.0,
+) -> np.ndarray:
     """
     Convolve spectrum with lineshape functions.
 
@@ -79,7 +87,7 @@ def convspec(spectrum, step_size, width, derivative=0, alpha=1.0, phase=0.0):
     return result
 
 
-def _expand_parameter(param, ndim):
+def _expand_parameter(param: Union[float, int, np.ndarray], ndim: int) -> np.ndarray:
     """Expand scalar parameters to match number of dimensions"""
     param = np.asarray(param)
     if param.ndim == 0:
@@ -92,7 +100,14 @@ def _expand_parameter(param, ndim):
         )
 
 
-def _validate_convspec_inputs(spectrum, step_size, width, derivative, alpha, phase):
+def _validate_convspec_inputs(
+    spectrum: np.ndarray,
+    step_size: np.ndarray,
+    width: np.ndarray,
+    derivative: np.ndarray,
+    alpha: np.ndarray,
+    phase: np.ndarray,
+) -> None:
     """Validate convolution parameters"""
 
     if np.any(step_size <= 0):
@@ -111,7 +126,14 @@ def _validate_convspec_inputs(spectrum, step_size, width, derivative, alpha, pha
         raise ValueError("All parameters must be finite")
 
 
-def _convolve_spectrum(spectrum, step_size, width, derivative, alpha, phase):
+def _convolve_spectrum(
+    spectrum: np.ndarray,
+    step_size: np.ndarray,
+    width: np.ndarray,
+    derivative: np.ndarray,
+    alpha: np.ndarray,
+    phase: np.ndarray,
+) -> np.ndarray:
     """Core convolution implementation using FFT"""
 
     # For simplicity, use basic convolution with scipy.signal
@@ -151,164 +173,3 @@ def _convolve_spectrum(spectrum, step_size, width, derivative, alpha, phase):
     result = signal.convolve(spectrum, kernel, mode="same")
 
     return result
-
-
-def demo():
-    """Interactive demonstration of spectrum convolution"""
-
-    # Modern colors
-    colors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"]
-
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-
-    # 1D convolution examples
-    ax = axes[0, 0]
-
-    # Create stick spectrum
-    x = np.linspace(0, 100, 1000)
-    stick = np.zeros_like(x)
-    stick[200] = 1.0  # Peak at x=20
-    stick[500] = 1.5  # Peak at x=50
-    stick[800] = 0.8  # Peak at x=80
-
-    # Different convolutions
-    try:
-        gauss = convspec(stick, 0.1, 4.0, alpha=1.0)
-        lorentz = convspec(stick, 0.1, 4.0, alpha=0.0)
-        voigt = convspec(stick, 0.1, 4.0, alpha=0.5)
-
-        ax.plot(x, stick, "k-", linewidth=3, alpha=0.7, label="Stick spectrum")
-        ax.plot(x, gauss, color=colors[0], linewidth=2, label="Gaussian")
-        ax.plot(x, lorentz, color=colors[1], linewidth=2, label="Lorentzian")
-        ax.plot(x, voigt, color=colors[2], linewidth=2, label="Pseudo-Voigt")
-    except ImportError:
-        # Fallback if lineshapes not available
-        from scipy import ndimage
-
-        gauss = ndimage.gaussian_filter1d(
-            stick, sigma=4.0 / 0.1 / (2 * np.sqrt(2 * np.log(2)))
-        )
-        ax.plot(x, stick, "k-", linewidth=3, alpha=0.7, label="Stick spectrum")
-        ax.plot(x, gauss, color=colors[0], linewidth=2, label="Gaussian (scipy)")
-
-    ax.set_title("Spectrum Convolution", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Simple broadening demonstration
-    ax = axes[0, 1]
-
-    # Single peak
-    single_peak = np.zeros_like(x)
-    single_peak[500] = 1.0
-
-    # Different widths
-    widths = [2, 4, 8]
-    for i, width in enumerate(widths):
-        try:
-            convolved = convspec(single_peak, 0.1, width)
-            ax.plot(
-                x, convolved, color=colors[i], linewidth=2.5, label=f"FWHM = {width}"
-            )
-        except Exception:
-            # Fallback
-            from scipy import ndimage
-
-            sigma = width / 0.1 / (2 * np.sqrt(2 * np.log(2)))
-            convolved = ndimage.gaussian_filter1d(single_peak, sigma=sigma)
-            ax.plot(
-                x, convolved, color=colors[i], linewidth=2.5, label=f"FWHM ≈ {width}"
-            )
-
-    ax.set_title("Different Widths", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Conceptual comparison of shapes
-    ax = axes[1, 0]
-
-    # Create theoretical shapes for comparison
-    x_theory = np.linspace(-10, 10, 200)
-
-    # Gaussian
-    sigma = 2 / (2 * np.sqrt(2 * np.log(2)))
-    gauss_theory = np.exp(-(x_theory**2) / (2 * sigma**2)) / (
-        sigma * np.sqrt(2 * np.pi)
-    )
-
-    # Lorentzian
-    gamma = 1  # half-width
-    lorentz_theory = (1 / np.pi) * gamma / (x_theory**2 + gamma**2)
-
-    # Pseudo-Voigt (50/50 mix)
-    voigt_theory = 0.5 * gauss_theory + 0.5 * lorentz_theory
-
-    ax.plot(x_theory, gauss_theory, color=colors[0], linewidth=2.5, label="Gaussian")
-    ax.plot(
-        x_theory, lorentz_theory, color=colors[1], linewidth=2.5, label="Lorentzian"
-    )
-    ax.plot(
-        x_theory, voigt_theory, color=colors[2], linewidth=2.5, label="Pseudo-Voigt"
-    )
-
-    ax.set_title("Lineshape Comparison", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Usage example
-    ax = axes[1, 1]
-
-    # Create EPR-like spectrum with multiple peaks
-    positions = [25, 35, 45, 55, 65, 75]  # Peak positions
-    intensities = [0.8, 1.2, 1.0, 0.6, 1.1, 0.9]  # Relative intensities
-
-    epr_stick = np.zeros_like(x)
-    for pos, intensity in zip(positions, intensities):
-        idx = int(pos * 10)  # Convert to array index
-        if 0 <= idx < len(epr_stick):
-            epr_stick[idx] = intensity
-
-    # Apply broadening
-    try:
-        epr_broadened = convspec(epr_stick, 0.1, 3.0, alpha=0.7)  # Mostly Gaussian
-        ax.plot(x, epr_broadened, color=colors[1], linewidth=2.5, label="Broadened")
-    except Exception:
-        from scipy import ndimage
-
-        sigma = 3.0 / 0.1 / (2 * np.sqrt(2 * np.log(2)))
-        epr_broadened = ndimage.gaussian_filter1d(epr_stick, sigma=sigma)
-        ax.plot(x, epr_broadened, color=colors[1], linewidth=2.5, label="Broadened")
-
-    # Show stick spectrum
-    ax.stem(
-        x[epr_stick > 0],
-        epr_stick[epr_stick > 0],
-        linefmt="gray",
-        markerfmt="ko",
-        basefmt=" ",
-        label="Stick spectrum",
-    )
-
-    ax.set_title("EPR-like Spectrum", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Style all subplots
-    for ax in axes.flat:
-        ax.set_xlabel("Position/Field (mT)")
-        ax.set_ylabel("Intensity")
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
-    plt.tight_layout()
-    plt.show()
-
-    logger.info("\nConvolution Demo:")
-    logger.info("- convspec() applies lineshape broadening to spectra")
-    logger.info("- Converts stick spectra to realistic lineshapes")
-    logger.info("- Supports Gaussian, Lorentzian, and pseudo-Voigt profiles")
-    logger.info("- Essential for EPR spectrum simulation")
-
-
-if __name__ == "__main__":
-    demo()

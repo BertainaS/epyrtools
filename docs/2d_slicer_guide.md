@@ -313,9 +313,6 @@ For help:
 # Integrated documentation
 help(epyr.plot_2d_slicer)
 
-# EPyR Tools support
-epyr.baseline.get_help()
-
 # Check installation
 print(epyr.__version__)  # Must be >= 0.1.8
 ```

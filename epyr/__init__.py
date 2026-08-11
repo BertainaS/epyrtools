@@ -100,7 +100,6 @@ from .physics import (
     cm_inv_to_mhz,
     constants,
     constants_summary,
-    demo_conversions,
     echarge,
     energy_conversion_table,
     evolt,

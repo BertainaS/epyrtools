@@ -494,7 +494,6 @@ class TestUtilities:
     def test_help_functions(self):
         """Test help functions don't crash."""
         # These should not raise exceptions
-        baseline.get_help()
         baseline.jupyter_help()
 
 

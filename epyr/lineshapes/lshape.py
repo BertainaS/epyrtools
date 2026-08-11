@@ -106,7 +106,14 @@ def lshape(
 
 
 # Convenience functions for common cases
-def pseudo_voigt(x, center, width, eta=0.5, derivative=0, phase=0.0):
+def pseudo_voigt(
+    x: np.ndarray,
+    center: float,
+    width: float,
+    eta: float = 0.5,
+    derivative: int = 0,
+    phase: float = 0.0,
+) -> np.ndarray:
     """
     Pseudo-Voigt profile: η*Lorentzian + (1-η)*Gaussian
 
@@ -139,87 +146,3 @@ def pseudo_voigt(x, center, width, eta=0.5, derivative=0, phase=0.0):
     >>> dy = pseudo_voigt(x, 0, 5, eta=0.5, derivative=1)
     """
     return lshape(x, center, width, derivative=derivative, alpha=1 - eta, phase=phase)
-
-
-def demo():
-    """Demonstrate different lineshape combinations"""
-    import matplotlib.pyplot as plt
-
-    x = np.linspace(-15, 15, 1000)
-
-    # Set1 colors
-    colors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"]
-
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-
-    # Pure shapes
-    ax = axes[0, 0]
-    gauss = lshape(x, 0, 8, alpha=1.0)
-    lorentz = lshape(x, 0, 8, alpha=0.0)
-
-    ax.plot(x, gauss, color=colors[0], linewidth=2.5, label="Gaussian (α=1)")
-    ax.plot(x, lorentz, color=colors[1], linewidth=2.5, label="Lorentzian (α=0)")
-    ax.set_title("Pure Lineshapes", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Mixed shapes (pseudo-Voigt)
-    ax = axes[0, 1]
-    alphas = [0.25, 0.5, 0.75]
-    for i, alpha in enumerate(alphas):
-        mixed = lshape(x, 0, 8, alpha=alpha)
-        ax.plot(x, mixed, color=colors[i], linewidth=2.5, label=f"α = {alpha}")
-
-    ax.set_title("Pseudo-Voigt Profiles", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Different widths
-    ax = axes[1, 0]
-    narrow_gauss = lshape(x, -3, (4, 8), alpha=0.7)  # Narrow Gaussian + wide Lorentzian
-    wide_gauss = lshape(x, 3, (12, 4), alpha=0.7)  # Wide Gaussian + narrow Lorentzian
-
-    ax.plot(
-        x,
-        narrow_gauss,
-        color=colors[0],
-        linewidth=2.5,
-        label="Narrow Gauss + Wide Lorentz",
-    )
-    ax.plot(
-        x,
-        wide_gauss,
-        color=colors[1],
-        linewidth=2.5,
-        label="Wide Gauss + Narrow Lorentz",
-    )
-    ax.set_title("Different Component Widths", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Derivatives
-    ax = axes[1, 1]
-    center_func = lshape(x, 0, 8, derivative=0, alpha=0.5)
-    first_deriv = lshape(x, 0, 8, derivative=1, alpha=0.5)
-    second_deriv = lshape(x, 0, 8, derivative=2, alpha=0.5)
-
-    ax.plot(x, center_func, color=colors[0], linewidth=2.5, label="Function")
-    ax.plot(x, first_deriv, color=colors[1], linewidth=2.5, label="1st derivative")
-    ax.plot(x, second_deriv, color=colors[2], linewidth=2.5, label="2nd derivative")
-    ax.set_title("Derivatives (α=0.5)", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Style all subplots
-    for ax in axes.flat:
-        ax.set_xlabel("Position")
-        ax.set_ylabel("Intensity")
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
-    plt.tight_layout()
-    plt.show()
-
-
-if __name__ == "__main__":
-    demo()

@@ -3,14 +3,22 @@ Gaussian lineshape functions
 Modern, optimized implementation for magnetic resonance spectroscopy
 """
 
-import matplotlib.pyplot as plt
+from typing import Tuple, Union
+
 import numpy as np
 from scipy import special
 
 from ._validation import validate_abscissa
 
 
-def gaussian(x, center, width, derivative=0, phase=0.0, return_both=False):
+def gaussian(
+    x: np.ndarray,
+    center: float,
+    width: float,
+    derivative: int = 0,
+    phase: float = 0.0,
+    return_both: bool = False,
+) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """
     Area-normalized Gaussian lineshape with derivatives and phase rotation.
 
@@ -72,7 +80,9 @@ def gaussian(x, center, width, derivative=0, phase=0.0, return_both=False):
     return _handle_gaussian_output(abs_part, disp_part, phase, return_both)
 
 
-def _validate_gaussian_inputs(center, width, derivative, phase):
+def _validate_gaussian_inputs(
+    center: float, width: float, derivative: int, phase: float
+) -> None:
     """Validate Gaussian input parameters"""
     if not isinstance(center, (int, float)):
         raise ValueError("center must be a number")
@@ -84,7 +94,9 @@ def _validate_gaussian_inputs(center, width, derivative, phase):
         raise ValueError("phase must be a real number")
 
 
-def _compute_gaussian_components(k, sigma, derivative):
+def _compute_gaussian_components(
+    k: np.ndarray, sigma: float, derivative: int
+) -> Tuple[np.ndarray, np.ndarray]:
     """Compute absorption and dispersion components"""
 
     if derivative == -1:
@@ -127,7 +139,9 @@ def _compute_gaussian_components(k, sigma, derivative):
     return abs_part, disp_part
 
 
-def _handle_gaussian_output(abs_part, disp_part, phase, return_both):
+def _handle_gaussian_output(
+    abs_part: np.ndarray, disp_part: np.ndarray, phase: float, return_both: bool
+) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
     """Handle output formatting based on phase and return options"""
 
     # Check if phase rotation is needed
@@ -151,7 +165,7 @@ def _handle_gaussian_output(abs_part, disp_part, phase, return_both):
             return abs_part
 
 
-def _hermite_polynomial(x, n):
+def _hermite_polynomial(x: np.ndarray, n: int) -> np.ndarray:
     """
     Physicists' Hermite polynomials H_n(x) using recurrence.
     H_0(x) = 1, H_1(x) = 2x, H_{n+1}(x) = 2x H_n(x) - 2n H_{n-1}(x)
@@ -178,7 +192,7 @@ def _hermite_polynomial(x, n):
         return H_curr
 
 
-def _dawson_derivative(x, n):
+def _dawson_derivative(x: np.ndarray, n: int) -> np.ndarray:
     """Dawson function derivatives using recurrence relations"""
     F = special.dawsn(x)  # Dawson function F(x)
 
@@ -198,111 +212,18 @@ def _dawson_derivative(x, n):
 
 
 # Convenience functions for common cases
-def gaussian_absorption(x, center, width):
+def gaussian_absorption(x: np.ndarray, center: float, width: float) -> np.ndarray:
     """Pure absorption Gaussian"""
     return gaussian(x, center, width)
 
 
-def gaussian_dispersion(x, center, width):
+def gaussian_dispersion(x: np.ndarray, center: float, width: float) -> np.ndarray:
     """Pure dispersion Gaussian"""
     return gaussian(x, center, width, phase=np.pi / 2)
 
 
-def gaussian_derivative(x, center, width, order=1):
+def gaussian_derivative(
+    x: np.ndarray, center: float, width: float, order: int = 1
+) -> np.ndarray:
     """Gaussian derivatives"""
     return gaussian(x, center, width, derivative=order)
-
-
-def demo():
-    """Interactive demonstration of Gaussian lineshapes"""
-
-    x = np.linspace(-15, 15, 1000)
-
-    # Modern colors
-    colors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00"]
-
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-
-    # Different widths
-    ax = axes[0, 0]
-    widths = [2, 4, 8]
-    for i, width in enumerate(widths):
-        y = gaussian(x, 0, width)
-        ax.plot(x, y, color=colors[i], linewidth=2.5, label=f"FWHM = {width}")
-
-    ax.set_title("Different Widths", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Derivatives
-    ax = axes[0, 1]
-    derivs = [0, 1, 2]
-    labels = ["Function", "1st derivative", "2nd derivative"]
-
-    for i, (deriv, label) in enumerate(zip(derivs, labels)):
-        y = gaussian(x, 0, 6, derivative=deriv)
-        ax.plot(x, y, color=colors[i], linewidth=2.5, label=label)
-
-    ax.set_title("Derivatives", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Absorption vs Dispersion
-    ax = axes[1, 0]
-    abs_part, disp_part = gaussian(x, 0, 6, return_both=True)
-
-    ax.plot(x, abs_part, color=colors[0], linewidth=2.5, label="Absorption")
-    ax.plot(x, disp_part, color=colors[1], linewidth=2.5, label="Dispersion")
-
-    ax.set_title("Absorption vs Dispersion", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Comparison with Lorentzian
-    ax = axes[1, 1]
-    gauss = gaussian(x, 0, 6)
-    # Import lorentzian if available
-    try:
-        from .lorentzian import lorentzian
-
-        lorentz = lorentzian(x, 0, 6)
-        ax.plot(
-            x,
-            lorentz,
-            color=colors[1],
-            linewidth=2.5,
-            label="Lorentzian",
-            linestyle="--",
-        )
-    except ImportError:
-        # Create simple Lorentzian for comparison
-        gamma = 3  # half-width
-        u = x / gamma
-        lorentz = (1 / np.pi) / gamma / (1 + u**2)
-        ax.plot(
-            x,
-            lorentz,
-            color=colors[1],
-            linewidth=2.5,
-            label="Lorentzian",
-            linestyle="--",
-        )
-
-    ax.plot(x, gauss, color=colors[0], linewidth=2.5, label="Gaussian")
-    ax.set_title("Gaussian vs Lorentzian", fontweight="bold")
-    ax.legend()
-    ax.grid(alpha=0.3)
-
-    # Style all subplots
-    for ax in axes.flat:
-        ax.set_xlabel("Position")
-        ax.set_ylabel("Intensity")
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-
-    plt.tight_layout()
-    plt.show()
-
-
-if __name__ == "__main__":
-    demo()
