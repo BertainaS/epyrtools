@@ -3,7 +3,7 @@
 # example data, archived notebooks, rendered images, build artifacts, and
 # internal planning notes that do not belong in a release.
 
-include README.md LICENSE pyproject.toml setup.py requirements.txt
+include README.md LICENSE pyproject.toml requirements.txt
 
 prune examples/data
 prune examples/notebooks/_legacy

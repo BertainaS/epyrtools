@@ -168,9 +168,6 @@ info: ## Show project information
 	@echo "Git branch: $$(git branch --show-current 2>/dev/null || echo 'Not in git repo')"
 	@echo "Git status: $$(git status --porcelain | wc -l) modified files"
 
-deps-tree: ## Show dependency tree
-	pipdeptree
-
 # Performance monitoring
 memory-test: ## Run memory usage tests
 	$(PYTEST) tests/test_performance.py -v -k "memory"

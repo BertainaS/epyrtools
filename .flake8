@@ -2,20 +2,14 @@
 # Configuration for flake8 linting
 max-line-length = 88
 
-# Extend ignore: Black compatibility + documentation + import handling
-# I100/I101/I201/I202: import order handled by isort (flake8-import-order
-# disagrees with isort's black profile, notably on stdlib classification of tkinter)
+# Extend ignore: Black compatibility + documentation
 extend-ignore =
     E203,
     W503,
     D100,
     D104,
     D105,
-    E402,
-    I100,
-    I101,
-    I201,
-    I202
+    E402
 
 # Exclude patterns
 exclude =
@@ -42,18 +36,13 @@ filename = *.py
 # These should be refactored progressively; the limit can be lowered once done.
 max-complexity = 35
 
-# Import order style (handled by isort, but defined for consistency)
-import-order-style = google
-application-import-names = epyr
-
-# Error codes to always show
-select = 
+# Error codes to always show. Import order is isort's job, not flake8's.
+select =
     E,   # pycodestyle errors
     W,   # pycodestyle warnings
     F,   # pyflakes
     C,   # mccabe complexity
     B,   # flake8-bugbear
-    I,   # isort (import order)
 
 # Per-file ignores
 per-file-ignores =
@@ -64,5 +53,4 @@ per-file-ignores =
     # CLI module may have long functions
     epyr/cli.py: C901
     # Configuration files
-    setup.py: D100
     conftest.py: D100
