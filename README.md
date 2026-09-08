@@ -37,6 +37,7 @@ The package targets EPR researchers who want a reproducible, scriptable Python w
 - Gaussian, Lorentzian, true Voigt (Faddeeva-function convolution), and pseudo-Voigt lineshapes
 - Absorption and 1st/2nd derivative forms, phase mixing, optional affine baseline term
 - `fit_epr_signal()` and `fit_multiple_shapes()` for single-model and model-comparison fitting
+- `pseudo_modulation()` simulates field-modulation lock-in detection on an unmodulated spectrum
 
 ### T1/T2 Relaxation Fitting (`epyr.relaxation`, new in v0.4.0)
 - Six decay/recovery models: mono- and stretched-exponential, bi-exponential, inversion/saturation recovery, and combined homogeneous/spectral-diffusion (Gamma0/GammaG) echo decay
