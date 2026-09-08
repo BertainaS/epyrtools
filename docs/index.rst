@@ -5,7 +5,7 @@ EPyR Tools Documentation
    :target: https://opensource.org/licenses/MIT
    :alt: License
 
-.. image:: https://img.shields.io/badge/version-0.3.8-blue
+.. image:: https://img.shields.io/badge/version-0.4.0-blue
    :alt: Version
 
 .. image:: https://img.shields.io/badge/tests-100%2B%20passed-brightgreen
@@ -32,6 +32,8 @@ Key Features
 * **g-Factor Calculations:** Precise electronic g-factor determination with field calibration
 * **Quantitative Integration:** Single and double integration for spin quantification
 * **Lineshape Analysis:** Comprehensive EPR lineshape functions (Gaussian, Lorentzian, Voigt, pseudo-Voigt)
+* **Pseudomodulation:** Simulated field-modulation lock-in detection on unmodulated spectra
+* **T1/T2 Relaxation Fitting:** Mono-/stretched-/bi-exponential and recovery models, ranked by reduced chi-squared
 
 **Visualization & Plotting**
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
