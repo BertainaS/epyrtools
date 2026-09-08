@@ -1,11 +1,11 @@
 Clean End-to-End Examples
 =========================
 
-The ``examples/clean/`` directory contains six short, standalone Python
+The ``examples/clean/`` directory contains eight short, standalone Python
 scripts that exercise the public EPyR Tools API on the bundled datasets.
 Each script is self-contained: copy, run, edit, repeat.
 
-Run all six from the repository root with:
+Run all eight from the repository root with:
 
 .. code-block:: bash
 
@@ -15,6 +15,8 @@ Run all six from the repository root with:
    python examples/clean/04_interactive_2d_slicer.py
    python examples/clean/05_rabi_frequency_analysis.py
    python examples/clean/06_relaxation_fitting.py
+   python examples/clean/07_fft_preprocessing.py
+   python examples/clean/08_pseudo_modulation.py
 
 01 -- Basic loading and plotting
 --------------------------------
@@ -126,3 +128,40 @@ side-by-side comparison table of every fitted parameter across models:
 Fit plots use ``matplotlib.rcParams`` for figure size, marker size, line
 width, and font size, so they follow whatever style you set globally (or
 the size of a figure you created beforehand) instead of a fixed layout.
+
+07 -- FFT preprocessing pipeline
+---------------------------------
+
+**File:** ``examples/clean/07_fft_preprocessing.py``
+
+Five mini-experiments building up the full time-domain preprocessing
+pipeline (``remove_baseline`` -> ``apodize`` -> ``zero_pad`` -> FFT) on
+real Rabi and HYSCORE data:
+
+1. Polynomial vs. exponential baseline removal on a Rabi decay.
+2. Apodization window comparison (Hann full/right-half, Hamming, Blackman).
+3. Zero-padding factor vs. FFT frequency resolution.
+4. Full 1D pipeline chained end to end, with peak detection on the result.
+5. Full 2D pipeline on a HYSCORE dataset: background normalization,
+   2D apodization, 2D zero-padding, and 2D FFT.
+
+Exercises :func:`epyr.signalprocessing.remove_baseline`,
+:func:`epyr.signalprocessing.apodize`,
+:func:`epyr.signalprocessing.zero_pad`, and
+:func:`epyr.signalprocessing.analyze_frequencies`.
+
+08 -- Pseudomodulation
+-----------------------
+
+**File:** ``examples/clean/08_pseudo_modulation.py``
+
+Three mini-experiments on a synthetic two-line absorption spectrum:
+
+1. Small-amplitude limit: verifies pseudomodulation converges to the
+   analytic first derivative as ``mod_amplitude -> 0``.
+2. Over-modulation: increasing ``mod_amplitude`` broadens and distorts
+   the lineshape, the classic instrumental artifact CW EPR users watch
+   for.
+3. Second-harmonic detection (``harmonic=2``).
+
+Exercises :func:`epyr.lineshapes.pseudo_modulation`.

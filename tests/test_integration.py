@@ -196,10 +196,7 @@ class TestEPRIntegration:
 
     def test_plotting_integration(self):
         """Test integration of plotting functionality."""
-        try:
-            from epyr.plot import plot_2d_spectral_map
-        except ImportError:
-            pytest.skip("Plotting module not available")
+        from epyr.plot import plot_2d_map
 
         # Create 2D EPR data
         x_axis = np.linspace(3200, 3400, 100)  # Field
@@ -211,28 +208,24 @@ class TestEPRIntegration:
             -(Y**2) / 500
         ) + np.random.normal(0, 1, X.shape)
 
-        try:
-            with patch("matplotlib.pyplot.show"):  # Prevent actual display
-                fig, ax = plot_2d_spectral_map(x_axis, y_axis, Z)
+        with patch("matplotlib.pyplot.show"):  # Prevent actual display
+            fig, ax = plot_2d_map([x_axis, y_axis], Z)
 
-                # Verify plot was created
-                assert fig is not None
-                assert ax is not None
+            # Verify plot was created
+            assert fig is not None
+            assert ax is not None
 
-                # Check basic plot properties
-                assert ax.get_xlabel() != ""
-                assert ax.get_ylabel() != ""
+            # Check basic plot properties
+            assert ax.get_xlabel() != ""
+            assert ax.get_ylabel() != ""
 
-                # Check that data was plotted
-                assert len(fig.axes) >= 1  # At least main plot
+            # Check that data was plotted
+            assert len(fig.axes) >= 1  # At least main plot
 
-                # Clean up
-                import matplotlib.pyplot as plt
+            # Clean up
+            import matplotlib.pyplot as plt
 
-                plt.close(fig)
-
-        except Exception as e:
-            pytest.skip(f"Plotting integration failed: {e}")
+            plt.close(fig)
 
     def test_isotope_gui_data_integration(self):
         """Test integration with isotope data."""

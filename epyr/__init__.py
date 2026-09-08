@@ -1,8 +1,14 @@
 """EPyR Tools - Electron Paramagnetic Resonance Tools in Python."""
 
+import sys
+
 # Submodule re-exports
 from . import baseline
 from . import eprplot as plot  # Backward-compatible alias
+
+# Register the alias in sys.modules too, so `from epyr.plot import x` works
+# (a plain package-attribute assignment only supports `epyr.plot.x`).
+sys.modules[__name__ + ".plot"] = plot
 from . import lineshapes, relaxation, signalprocessing
 
 # Baseline correction API

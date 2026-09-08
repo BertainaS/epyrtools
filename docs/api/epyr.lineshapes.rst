@@ -16,5 +16,7 @@ Submodules
    generated/epyr.lineshapes.lorentzian
    generated/epyr.lineshapes.voigtian
    generated/epyr.lineshapes.lshape
+   generated/epyr.lineshapes.pseudo_modulation
    generated/epyr.lineshapes.convspec
    generated/epyr.lineshapes.lineshape_class
+   generated/epyr.lineshapes.fitting
