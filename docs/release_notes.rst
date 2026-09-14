@@ -5,6 +5,7 @@ Release Notes
    :maxdepth: 2
    :caption: Version History:
 
+   release_notes/v0.5.0
    release_notes/v0.4.0
    release_notes/v0.3.9
    release_notes/v0.3.8
@@ -12,8 +13,17 @@ Release Notes
    release_notes/v0.3.5
    release_notes/v0.2.0
 
-Version 0.4.0 (Latest)
+Version 0.5.0 (Latest)
 ----------------------
+
+**Release Date:** September 2026
+
+New ``epyr.lineshapes.pseudo_modulation()`` simulates lock-in-detected
+field-modulated spectra from an unmodulated one, for arbitrary harmonic
+order and modulation amplitude. See :doc:`release_notes/v0.5.0`.
+
+Version 0.4.0
+--------------
 
 **Release Date:** June 2026
 

@@ -1,0 +1,36 @@
+Version 0.5.0
+=============
+
+**Release Date:** September 2026
+
+**Status:** Stable release
+
+New: pseudomodulation
+----------------------
+
+``epyr.lineshapes.pseudo_modulation()`` reproduces the signal a lock-in
+amplifier would record under sinusoidal field modulation, applied
+numerically to a spectrum recorded without field modulation (Hyde et al.,
+Appl. Magn. Reson. 1, 483-496, 1990). Supports arbitrary harmonic order and
+modulation amplitude, ascending or descending field axes, real or complex
+input, and optional zero-padding to suppress wraparound artifacts.
+
+- New example script ``examples/clean/08_pseudo_modulation.py`` demonstrates
+  first- and second-harmonic pseudomodulation on a simulated EPR spectrum.
+- Exported from ``epyr.lineshapes`` alongside the other lineshape functions.
+
+Type hints on lineshape signatures
+-----------------------------------
+
+Public lineshape functions (``gaussian``, ``lorentzian``, ``voigtian``,
+``pseudo_voigt``, and related fitting entry points) now carry type hints on
+their signatures, matching the convention already used in
+``epyr.relaxation``.
+
+Packaging cleanup
+------------------
+
+``setup.py`` removed in favor of the ``pyproject.toml``-only build; stale
+release notes and redundant development dependencies pruned.
+
+No backwards-incompatible changes.

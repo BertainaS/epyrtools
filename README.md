@@ -12,7 +12,7 @@
 
 | License | Tests | Documentation | Version |
 |---------|-------|---------------|---------|
-| [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) | ![Tests Passing](https://img.shields.io/badge/tests-369%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-Sphinx-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.4.0-blue) |
+| [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) | ![Tests Passing](https://img.shields.io/badge/tests-369%20passed-brightgreen) | [![Documentation](https://img.shields.io/badge/docs-Sphinx-blue)](docs/) | ![Version](https://img.shields.io/badge/version-0.5.0-blue) |
 
 ## What is EPyR Tools?
 
@@ -61,33 +61,21 @@ The package targets EPR researchers who want a reproducible, scriptable Python w
 - `OptimizedLoader` / `DataCache` for large files, with memory monitoring and streaming
 - `epyr.isotopes` / `epyr-isotopes`: interactive periodic-table GUI with NMR frequency calculator and X/Q/W-band presets
 
-## What's New in v0.4.0
+## What's New in v0.5.0
 
-Version 0.4.0 adds the **`epyr.relaxation`** package for T1/T2 relaxation fitting, complementing the existing field-domain lineshape fitting in `epyr.lineshapes.fitting`:
+Version 0.5.0 adds **`pseudo_modulation()`** to `epyr.lineshapes`: it reproduces the signal a lock-in amplifier would record under sinusoidal field modulation, applied numerically to a spectrum recorded without field modulation (Hyde et al., Appl. Magn. Reson. 1, 483-496, 1990).
 
 ```python
-from epyr.relaxation import fit_relaxation, fit_multiple_decays
+from epyr.lineshapes import pseudo_modulation
 
-# Single model
-result = fit_relaxation(t, y, model="stretched_exponential")
-print(result)
-# === Relaxation Fit Results - stretched_exponential ===
-# Success: True
-# R2 = 0.998452
-# ...
+# First-harmonic pseudomodulation, 2 G peak-to-peak modulation amplitude
+y_mod = pseudo_modulation(field, spectrum, mod_amplitude=2.0, harmonic=1)
 
-# Compare candidate models, ranked by reduced chi-squared (not R-squared,
-# which is biased toward models with more free parameters)
-results = fit_multiple_decays(t, y)
-print(results)
-# model                  success  R2        chi2       amplitude  T      ...
-# mono_exponential       True     0.998391  0.0004842  2.005      1.310  ...
-# stretched_exponential  True     0.998452  0.000476   1.976      1.309  ...
+# Second harmonic
+y_mod2 = pseudo_modulation(field, spectrum, mod_amplitude=2.0, harmonic=2)
 ```
 
-Fit plots in both `epyr.relaxation` and `epyr.lineshapes.fitting` now follow `matplotlib.rcParams` for figure size, marker size, line width, and font size, instead of a fixed layout.
-
-See [docs/release_notes/v0.4.0.rst](docs/release_notes/v0.4.0.rst) for full details, or [docs/release_notes.rst](docs/release_notes.rst) for the complete version history.
+See [docs/release_notes/v0.5.0.rst](docs/release_notes/v0.5.0.rst) for full details, or [docs/release_notes.rst](docs/release_notes.rst) for the complete version history.
 
 ## Installation
 

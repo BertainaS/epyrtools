@@ -96,8 +96,12 @@ class TestPseudoModulationValidation:
         y_desc = y_asc[::-1]
 
         for harmonic in (1, 2):
-            r_asc = pseudo_modulation(x_asc, y_asc, mod_amplitude=2.0, harmonic=harmonic)
-            r_desc = pseudo_modulation(x_desc, y_desc, mod_amplitude=2.0, harmonic=harmonic)
+            r_asc = pseudo_modulation(
+                x_asc, y_asc, mod_amplitude=2.0, harmonic=harmonic
+            )
+            r_desc = pseudo_modulation(
+                x_desc, y_desc, mod_amplitude=2.0, harmonic=harmonic
+            )
             assert np.allclose(r_desc, r_asc[::-1], atol=1e-10)
 
 
